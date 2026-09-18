@@ -34,8 +34,9 @@ export const AuthProvider = ({ children }) => {
       method: 'POST',
       body: JSON.stringify({ email, password })
     });
-    if (data?.customer) {
-      setCustomer(data.customer);
+    const cust = data?.data?.customer || data?.customer;
+    if (cust) {
+      setCustomer(cust);
       setIsAuthModalOpen(false);
     }
     return data;
@@ -46,8 +47,9 @@ export const AuthProvider = ({ children }) => {
       method: 'POST',
       body: JSON.stringify({ email, password })
     });
-    if (data?.customer) {
-      setCustomer(data.customer);
+    const cust = data?.data?.customer || data?.customer;
+    if (cust) {
+      setCustomer(cust);
       setIsAuthModalOpen(false);
     }
     return data;

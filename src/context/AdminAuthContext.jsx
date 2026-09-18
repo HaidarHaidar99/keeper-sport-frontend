@@ -33,17 +33,20 @@ export const AdminAuthProvider = ({ children }) => {
   }, [token]);
 
   const login = async (email, password) => {
-    const data = await apiClient('/auth/admin/login', {
+    const res = await apiClient('/auth/admin/login', {
       method: 'POST',
       body: JSON.stringify({ email, password })
     });
 
-    if (data?.token && data?.admin) {
-      localStorage.setItem('ks_admin_token', data.token);
-      setToken(data.token);
-      setAdmin(data.admin);
+    const adminToken = res?.data?.token || res?.token;
+    const adminUser = res?.data?.admin || res?.admin;
+
+    if (adminToken && adminUser) {
+      localStorage.setItem('ks_admin_token', adminToken);
+      setToken(adminToken);
+      setAdmin(adminUser);
     }
-    return data;
+    return res;
   };
 
   const logout = () => {
