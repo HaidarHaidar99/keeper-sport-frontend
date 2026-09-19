@@ -8,9 +8,11 @@ import {
   Truck, 
   RefreshCw, 
   Check, 
-  Upload, 
   AlertCircle,
-  MessageSquare
+  ChevronRight,
+  ChevronLeft,
+  Plus,
+  Minus
 } from 'lucide-react';
 import apiClient from '../services/apiClient';
 import { useCart } from '../context/CartContext';
@@ -26,44 +28,40 @@ const ProductDetailPage = () => {
   const [product, setProduct] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Review submission modal state
-  const [reviewModalOpen, setReviewModalOpen] = useState(false);
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState('');
-  const [customerName, setCustomerName] = useState('');
-  const [reviewImageFile, setReviewImageFile] = useState(null);
-  const [submittingReview, setSubmittingReview] = useState(false);
-  const [reviewSuccessMsg, setReviewSuccessMsg] = useState('');
+  const [sizeError, setSizeError] = useState(false);
+  const [addedSuccess, setAddedSuccess] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchDetail = async () => {
       setLoading(true);
       try {
         const res = await apiClient(`/products/${id}`);
-        if (res?.data) {
+        if (isMounted && res?.data) {
           setProduct(res.data);
-          // Set first available variant as default if variants exist
-          if (res.data.variants && res.data.variants.length > 0) {
-            const firstAvailable = res.data.variants.find((v) => v.is_available) || res.data.variants[0];
+          // Set first available variant if variants exist
+          if (res.data.product_variants && res.data.product_variants.length > 0) {
+            const firstAvailable = res.data.product_variants.find((v) => v.is_available) || res.data.product_variants[0];
             setSelectedVariant(firstAvailable);
           }
         }
       } catch (err) {
-        setError("Failed to load product details");
+        if (isMounted) setError("Product could not be found or is inactive.");
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchDetail();
+    return () => { isMounted = false; };
   }, [id]);
 
   if (loading) {
     return (
       <div className="container" style={{ padding: '80px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
-        Loading product details...
+        {isRtl ? "جارٍ تحميل تفاصيل المنتج..." : "Loading pitch product details..."}
       </div>
     );
   }
@@ -71,113 +69,112 @@ const ProductDetailPage = () => {
   if (error || !product) {
     return (
       <div className="container" style={{ padding: '80px 20px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '12px' }}>Product Not Found</h2>
-        <Link to="/products" className="btn btn-primary">Browse All Products</Link>
+        <h2 style={{ fontSize: '24px', fontWeight: 900, marginBottom: '12px', color: 'var(--text-primary)' }}>
+          {isRtl ? "المنتج غير متوفر" : "Product Not Found"}
+        </h2>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '20px' }}>
+          {error}
+        </p>
+        <Link to="/products" className="btn btn-primary">
+          {isRtl ? "تصفح جميع المنتجات" : "Browse All Gear"}
+        </Link>
       </div>
     );
   }
 
   const name = language === 'ar' ? (product.name_ar || product.name_en) : product.name_en;
   const description = language === 'ar' ? (product.description_ar || product.description_en) : product.description_en;
+  const categoryName = language === 'ar' 
+    ? (product.categories?.name_ar || product.categories?.name_en) 
+    : product.categories?.name_en;
   const isFav = isFavorite(product.id);
 
-  // Images list: combine images array or fallback to primary_image
-  const images = product.images && product.images.length > 0 
-    ? product.images.map((img) => img.image_url) 
+  // Images list: combine product_images array or fallback
+  const images = product.product_images && product.product_images.length > 0
+    ? product.product_images.map((img) => img.image_url)
     : [product.primary_image || product.image_url].filter(Boolean);
 
-  // Dynamic Effective Price: variant price override if set, else sale/base price
+  const variants = product.product_variants || product.variants || [];
+  const hasVariants = variants.length > 0;
+
+  // Authoritative Effective Price Calculation:
+  // If variant has specific price override, use it. Otherwise, use sale_price (if sale enabled) or base_price.
   const effectivePrice = Number(
     selectedVariant?.price !== undefined && selectedVariant?.price !== null
       ? selectedVariant.price
-      : product.sale_enabled && product.sale_price !== null
+      : product.is_sale_enabled && product.sale_price !== null
       ? product.sale_price
       : product.base_price
   );
 
   const originalPrice = Number(product.base_price);
-  const isOnSale = product.sale_enabled && product.sale_price !== null && effectivePrice < originalPrice;
+  const isOnSale = Boolean(product.is_sale_enabled) && product.sale_price !== null && effectivePrice < originalPrice;
 
-  const handleAddToCart = () => {
-    addToCart(product, selectedVariant, 1);
+  // Max orderable quantity
+  const maxAvailableQty = selectedVariant?.track_quantity
+    ? (selectedVariant.available_stock || 10)
+    : 99;
+
+  const handleQuantityChange = (delta) => {
+    setQuantity((prev) => {
+      const next = prev + delta;
+      if (next < 1) return 1;
+      if (next > maxAvailableQty) return maxAvailableQty;
+      return next;
+    });
   };
 
-  const handleReviewSubmit = async (e) => {
-    e.preventDefault();
-    setSubmittingReview(true);
-    try {
-      let uploadedImageUrl = null;
-
-      // 1. Upload review image if attached
-      if (reviewImageFile) {
-        const formData = new FormData();
-        formData.append('image', reviewImageFile);
-        const uploadRes = await apiClient('/reviews/upload', {
-          method: 'POST',
-          body: formData
-        });
-        if (uploadRes?.imageUrl) {
-          uploadedImageUrl = uploadRes.imageUrl;
-        }
-      }
-
-      // 2. Submit review to backend
-      await apiClient('/reviews', {
-        method: 'POST',
-        body: JSON.stringify({
-          product_id: product.id,
-          rating,
-          comment,
-          customer_name: customerName || undefined,
-          images: uploadedImageUrl ? [uploadedImageUrl] : []
-        })
-      });
-
-      setReviewSuccessMsg(isRtl ? "تم إرسال تقييمك بنجاح! سيظهر بعد المراجعة." : "Review submitted successfully! It will appear once approved by our moderators.");
-      setComment('');
-      setReviewImageFile(null);
-      setTimeout(() => {
-        setReviewModalOpen(false);
-        setReviewSuccessMsg('');
-      }, 2500);
-    } catch (err) {
-      alert(err.message || "Failed to submit review");
-    } finally {
-      setSubmittingReview(false);
+  const handleAddToCart = () => {
+    if (hasVariants && !selectedVariant) {
+      setSizeError(true);
+      return;
     }
+    setSizeError(false);
+    addToCart(product, selectedVariant, quantity);
+    setAddedSuccess(true);
+    setTimeout(() => setAddedSuccess(false), 2200);
   };
 
   return (
-    <div style={{ padding: '50px 0 80px' }}>
+    <div style={{ padding: '40px 0 80px' }}>
       <div className="container">
-        {/* Breadcrumb */}
-        <div style={{ display: 'flex', gap: '8px', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '32px' }}>
+        {/* Breadcrumb Navigation */}
+        <div style={{ display: 'flex', gap: '8px', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '28px', alignItems: 'center' }}>
           <Link to="/" style={{ color: 'var(--text-secondary)' }}>{t('home')}</Link>
           <span>/</span>
           <Link to="/products" style={{ color: 'var(--text-secondary)' }}>{t('shop')}</Link>
+          {categoryName && (
+            <>
+              <span>/</span>
+              <Link to={`/products?category=${product.category_id}`} style={{ color: 'var(--text-secondary)' }}>
+                {categoryName}
+              </Link>
+            </>
+          )}
           <span>/</span>
-          <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{name}</span>
+          <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{name}</span>
         </div>
 
-        {/* ── Top Section: Images + Details ── */}
+        {/* ── Top Section: Image Gallery + Product Configurator ── */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
           gap: '48px',
           alignItems: 'flex-start',
-          marginBottom: '80px'
+          marginBottom: '60px'
         }}>
-          {/* Gallery Col */}
+          {/* 1. Image Gallery */}
           <div>
             <div style={{
               width: '100%',
               paddingTop: '100%',
               position: 'relative',
-              borderRadius: 'var(--radius-xl)',
+              borderRadius: 'var(--radius-lg)',
               overflow: 'hidden',
-              backgroundColor: 'var(--bg-card)',
+              backgroundColor: 'var(--bg-surface)',
               border: '1px solid var(--border-subtle)',
-              marginBottom: '16px'
+              marginBottom: '14px',
+              boxShadow: 'var(--shadow-sm)'
             }}>
               {images[activeImageIndex] ? (
                 <img
@@ -194,24 +191,25 @@ const ProductDetailPage = () => {
                 />
               ) : (
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <ShoppingBag size={48} color="var(--text-muted)" />
+                  <ShoppingBag size={54} color="var(--text-muted)" />
                 </div>
               )}
             </div>
 
-            {/* Thumbnails (up to 3 images) */}
+            {/* Thumbnails (1 to 3 images max) */}
             {images.length > 1 && (
-              <div style={{ display: 'flex', gap: '12px' }}>
-                {images.map((img, idx) => (
+              <div style={{ display: 'flex', gap: '10px' }}>
+                {images.slice(0, 3).map((img, idx) => (
                   <button
                     key={idx}
+                    type="button"
                     onClick={() => setActiveImageIndex(idx)}
                     style={{
                       width: '74px',
                       height: '74px',
-                      borderRadius: 'var(--radius-md)',
+                      borderRadius: 'var(--radius-sm)',
                       overflow: 'hidden',
-                      border: activeImageIndex === idx ? '2px solid var(--accent-cyan)' : '1px solid var(--border-subtle)',
+                      border: activeImageIndex === idx ? '2px solid var(--brand-red)' : '1px solid var(--border-medium)',
                       opacity: activeImageIndex === idx ? 1 : 0.6,
                       transition: 'all var(--transition-fast)'
                     }}
@@ -223,36 +221,43 @@ const ProductDetailPage = () => {
             )}
           </div>
 
-          {/* Details Col */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* 2. Product Details & Purchase Configuration */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', textAlign: 'start' }}>
             <div>
-              {/* Category & Status */}
+              {/* Category & Status Badges */}
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
-                {product.category_name && (
-                  <span className="badge badge-cyan">{product.category_name}</span>
+                {categoryName && (
+                  <span className="badge badge-red">{categoryName}</span>
                 )}
-                {product.featured && <span className="badge badge-gold">{t('featured')}</span>}
+                {product.is_featured && <span className="badge badge-gold">{t('featured')}</span>}
                 {isOnSale && <span className="badge badge-sale">{t('sale')}</span>}
               </div>
 
-              <h1 style={{ fontSize: '32px', fontWeight: 900, lineHeight: 1.2 }}>{name}</h1>
+              <h1 style={{ fontSize: '30px', fontWeight: 900, lineHeight: 1.25, color: 'var(--text-primary)' }}>
+                {name}
+              </h1>
 
-              {/* Rating */}
+              {/* 5-Star Graphic Rating (NO review count on card/banner) */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
                 <div style={{ display: 'flex', gap: '2px' }}>
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={15} fill={i < Math.round(product.avg_rating || 5) ? "#FFB800" : "none"} color="#FFB800" />
+                    <Star 
+                      key={i} 
+                      size={15} 
+                      fill={i < Math.round(product.average_rating || 5) ? "var(--brand-gold)" : "none"} 
+                      color="var(--brand-gold)" 
+                    />
                   ))}
                 </div>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                  {Number(product.avg_rating || 5.0).toFixed(1)} ({product.reviews_count || 0} reviews)
+                <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-secondary)' }}>
+                  {Number(product.average_rating || 5.0).toFixed(1)}
                 </span>
               </div>
             </div>
 
             {/* Price Box */}
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px' }}>
-              <span style={{ fontSize: '36px', fontWeight: 900, color: isOnSale ? 'var(--accent-cyan)' : 'var(--text-primary)' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px' }}>
+              <span style={{ fontSize: '34px', fontWeight: 900, color: 'var(--text-primary)' }}>
                 ${effectivePrice.toFixed(2)}
               </span>
               {isOnSale && (
@@ -262,253 +267,184 @@ const ProductDetailPage = () => {
               )}
             </div>
 
-            {/* Size Variant Matrix */}
-            {product.variants && product.variants.length > 0 && (
-              <div style={{ paddingTop: '10px', borderTop: '1px solid var(--border-subtle)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <span className="form-label">{t('selectSize')}</span>
+            {/* Sizing Matrix Selection */}
+            {hasVariants && (
+              <div style={{ paddingTop: '12px', borderTop: '1px solid var(--border-subtle)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <span className="form-label" style={{ fontWeight: 800 }}>{t('selectSize')}:</span>
                   {selectedVariant && (
-                    <span style={{ fontSize: '12px', color: selectedVariant.is_available ? 'var(--accent-green)' : 'var(--accent-red)', fontWeight: 700 }}>
-                      {selectedVariant.is_available ? `✓ ${t('availableStock')} (${selectedVariant.available_stock || 10})` : `✗ ${t('outOfStock')}`}
+                    <span style={{ 
+                      fontSize: '12px', 
+                      color: selectedVariant.is_available ? 'var(--brand-green)' : 'var(--brand-red)', 
+                      fontWeight: 700 
+                    }}>
+                      {selectedVariant.is_available 
+                        ? `✓ ${t('availableStock')}${selectedVariant.track_quantity ? ` (${selectedVariant.available_stock || 0})` : ''}` 
+                        : `✗ ${t('outOfStock')}`}
                     </span>
                   )}
                 </div>
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                  {product.variants.map((v) => {
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {variants.map((v) => {
                     const isSelected = selectedVariant?.id === v.id;
-                    const isAvailable = v.is_available;
+                    const isAvailable = v.is_available !== false;
                     return (
                       <button
-                        key={v.id}
+                        key={v.id || v.size}
+                        type="button"
                         disabled={!isAvailable}
-                        onClick={() => setSelectedVariant(v)}
+                        onClick={() => {
+                          setSelectedVariant(v);
+                          setSizeError(false);
+                          setQuantity(1);
+                        }}
                         style={{
-                          padding: '10px 18px',
-                          borderRadius: 'var(--radius-md)',
+                          minWidth: '48px',
+                          height: '42px',
+                          paddingInlineStart: '12px',
+                          paddingInlineEnd: '12px',
+                          borderRadius: 'var(--radius-sm)',
                           fontSize: '13px',
                           fontWeight: 800,
-                          backgroundColor: isSelected ? 'var(--accent-cyan)' : 'var(--bg-card)',
-                          color: isSelected ? '#040914' : isAvailable ? 'var(--text-primary)' : 'var(--text-muted)',
-                          border: isSelected ? '1px solid var(--accent-cyan)' : '1px solid var(--border-subtle)',
-                          opacity: isAvailable ? 1 : 0.4,
-                          textDecoration: !isAvailable ? 'line-through' : 'none',
+                          backgroundColor: isSelected ? 'var(--brand-red-light)' : 'var(--bg-input)',
+                          color: isSelected ? 'var(--brand-red)' : isAvailable ? 'var(--text-primary)' : 'var(--text-muted)',
+                          border: isSelected ? '1.5px solid var(--brand-red)' : '1px solid var(--border-medium)',
+                          opacity: isAvailable ? 1 : 0.45,
                           cursor: isAvailable ? 'pointer' : 'not-allowed',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px',
                           transition: 'all var(--transition-fast)'
                         }}
                       >
-                        {v.size}
+                        <span>{v.size}</span>
+                        {isSelected && <Check size={14} color="var(--brand-red)" />}
                       </button>
                     );
                   })}
                 </div>
+
+                {sizeError && (
+                  <div style={{ color: 'var(--brand-red)', fontSize: '13px', fontWeight: 700, marginTop: '8px' }}>
+                    {isRtl ? "يرجى تحديد المقاس المناسب قبل الإضافة للسلة." : "Please choose a size before adding to cart."}
+                  </div>
+                )}
               </div>
             )}
 
+            {/* Quantity Selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingTop: '10px' }}>
+              <span className="form-label" style={{ fontWeight: 800 }}>
+                {isRtl ? "الكمية:" : "Quantity:"}
+              </span>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                backgroundColor: 'var(--bg-input)',
+                border: '1px solid var(--border-medium)',
+                borderRadius: 'var(--radius-sm)',
+                overflow: 'hidden'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => handleQuantityChange(-1)}
+                  disabled={quantity <= 1}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--text-primary)',
+                    opacity: quantity <= 1 ? 0.4 : 1
+                  }}
+                >
+                  <Minus size={15} />
+                </button>
+                <span style={{ width: '40px', textAlign: 'center', fontWeight: 800, fontSize: '14px' }}>
+                  {quantity}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleQuantityChange(1)}
+                  disabled={quantity >= maxAvailableQty}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--text-primary)',
+                    opacity: quantity >= maxAvailableQty ? 0.4 : 1
+                  }}
+                >
+                  <Plus size={15} />
+                </button>
+              </div>
+            </div>
+
             {/* Actions: Add to Cart & Wishlist */}
-            <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
               <button
+                type="button"
                 onClick={handleAddToCart}
-                disabled={selectedVariant && !selectedVariant.is_available}
+                disabled={hasVariants && selectedVariant && !selectedVariant.is_available}
                 className="btn btn-primary btn-lg"
                 style={{ flex: 1, gap: '10px' }}
               >
-                <ShoppingBag size={20} />
-                <span>{t('addToCart')}</span>
+                <ShoppingBag size={18} />
+                <span>{addedSuccess ? (isRtl ? "تمت الإضافة للسلة ✓" : "Added to Cart ✓") : t('addToCart')}</span>
               </button>
 
               <button
+                type="button"
                 onClick={() => toggleFavorite(product)}
-                className="btn btn-outline btn-lg btn-icon"
+                className="btn btn-secondary btn-lg"
                 title="Wishlist"
-                style={{ color: isFav ? 'var(--accent-red)' : 'var(--text-primary)' }}
+                style={{
+                  width: '48px',
+                  padding: 0,
+                  color: isFav ? 'var(--brand-red)' : 'var(--text-secondary)'
+                }}
               >
-                <Heart size={22} fill={isFav ? 'var(--accent-red)' : 'none'} />
+                <Heart size={20} fill={isFav ? 'var(--brand-red)' : 'none'} color={isFav ? 'var(--brand-red)' : 'currentColor'} />
               </button>
             </div>
 
-            {/* Store Policy Alert Box */}
+            {/* Store Policy Guarantee Banner */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
               padding: '14px 18px',
-              borderRadius: 'var(--radius-md)',
-              backgroundColor: 'rgba(255, 184, 0, 0.08)',
-              border: '1px solid rgba(255, 184, 0, 0.25)',
-              color: 'var(--accent-gold)',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: 'var(--brand-gold-light)',
+              border: '1px solid rgba(229, 169, 16, 0.25)',
+              color: 'var(--brand-gold)',
               fontSize: '13px',
-              lineHeight: 1.5
+              lineHeight: 1.5,
+              marginTop: '10px'
             }}>
               <ShieldAlert size={20} style={{ flexShrink: 0 }} />
               <div>
-                <strong>{isRtl ? "سياسة الاستبدال:" : "Exchanges Only Guarantee:"}</strong>{' '}
-                {isRtl ? "يمكنك استبدال المقاس خلال 3 أيام من الاستلام. لا يوجد استرجاع مالي." : "Replacement size exchanges are supported within 3 days of delivery. No cash refunds."}
+                <strong>{isRtl ? "ضمان استبدال المقاس:" : "Size Exchange Guarantee:"}</strong>{' '}
+                {isRtl ? "يمكنك استبدال المقاس خلال 3 أيام من الاستلام عبر مندوب التوصيل. لا يوجد استرجاع مالي." : "Size replacements are fully supported within 3 days of delivery. Exchanges only — no cash refunds."}
               </div>
             </div>
 
-            {/* Description */}
-            <div style={{ marginTop: '10px' }}>
-              <h4 style={{ fontSize: '15px', fontWeight: 800, marginBottom: '8px' }}>
-                {isRtl ? "تفاصيل ومواصفات المنتج" : "Product Details"}
+            {/* Product Description */}
+            <div style={{ marginTop: '10px', paddingTop: '14px', borderTop: '1px solid var(--border-subtle)' }}>
+              <h4 style={{ fontSize: '15px', fontWeight: 800, marginBottom: '8px', color: 'var(--text-primary)' }}>
+                {isRtl ? "مواصفات وتفاصيل الطقم" : "Product Specifications"}
               </h4>
               <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
-                {description || (isRtl ? "خامة رياضية احترافية خفيفة الوزن ومقاومة للعرق مصممة للأداء الرياضي العالي." : "Engineered high-performance breathable sportswear fabrics designed for maximum agility and pitch performance.")}
+                {description || (isRtl ? "خامة رياضية احترافية خفيفة الوزن ومقاومة للعرق مصممة للأداء الرياضي العالي في الملعب." : "Engineered with lightweight breathable performance fabric tailored for matchday speed, airflow, and elite athletic agility.")}
               </p>
             </div>
           </div>
         </div>
-
-        {/* ── Reviews & Community Section ── */}
-        <section style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '60px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-            <div>
-              <h3 style={{ fontSize: '24px', fontWeight: 900 }}>{t('reviews')}</h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-                {isRtl ? "تقييمات وصور المشترين المعتمدة لهذا المنتج" : "Verified buyer feedback and uploaded photos"}
-              </p>
-            </div>
-
-            <button onClick={() => setReviewModalOpen(true)} className="btn btn-outline btn-sm" style={{ gap: '6px' }}>
-              <MessageSquare size={16} />
-              <span>{isRtl ? "أضف تقييمك" : "Write a Review"}</span>
-            </button>
-          </div>
-
-          {/* Review List */}
-          {(!product.reviews || product.reviews.length === 0) ? (
-            <div className="glass-card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-              {isRtl ? "كن أول من يقيّم هذا المنتج!" : "Be the first to review this product!"}
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-              {product.reviews.map((rev) => (
-                <div key={rev.id} className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', gap: '2px' }}>
-                      {[...Array(rev.rating)].map((_, i) => (
-                        <Star key={i} size={14} fill="#FFB800" color="#FFB800" />
-                      ))}
-                    </div>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                      {new Date(rev.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-
-                  <p style={{ fontSize: '14px', color: 'var(--text-primary)', lineHeight: 1.5 }}>
-                    "{rev.comment}"
-                  </p>
-
-                  {/* Customer Review Image */}
-                  {rev.images && rev.images.length > 0 && (
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-                      {rev.images.map((img, i) => (
-                        <img 
-                          key={i} 
-                          src={img.image_url || img} 
-                          alt="review photo" 
-                          style={{ width: '64px', height: '64px', borderRadius: 'var(--radius-sm)', objectFit: 'cover' }} 
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  <div style={{ marginTop: 'auto', fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>
-                    {rev.customer_name || "Verified Customer"}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* ── Review Submission Modal ── */}
-        {reviewModalOpen && (
-          <div style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 300,
-            backgroundColor: 'rgba(0,0,0,0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px'
-          }}>
-            <div style={{
-              width: '100%',
-              maxWidth: '480px',
-              backgroundColor: 'var(--bg-surface)',
-              border: '1px solid var(--border-medium)',
-              borderRadius: 'var(--radius-lg)',
-              padding: '28px'
-            }}>
-              <h3 style={{ fontSize: '20px', fontWeight: 900, marginBottom: '16px' }}>
-                {isRtl ? "كتابة تقييم للمنتج" : "Write a Product Review"}
-              </h3>
-
-              {reviewSuccessMsg ? (
-                <div style={{ padding: '20px', backgroundColor: 'rgba(0,229,153,0.1)', color: 'var(--accent-green)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-                  {reviewSuccessMsg}
-                </div>
-              ) : (
-                <form onSubmit={handleReviewSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div>
-                    <label className="form-label">{isRtl ? "التقييم بالنجوم" : "Star Rating"}</label>
-                    <div style={{ display: 'flex', gap: '6px', cursor: 'pointer', marginTop: '6px' }}>
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <button key={s} type="button" onClick={() => setRating(s)}>
-                          <Star size={24} fill={s <= rating ? "#FFB800" : "none"} color="#FFB800" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="form-label">{isRtl ? "اسمك أو لقبك" : "Your Name (optional)"}</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Ahmed S."
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="form-label">{isRtl ? "رأيك في المنتج" : "Your Review"}</label>
-                    <textarea
-                      required
-                      className="form-input"
-                      rows={3}
-                      placeholder={isRtl ? "اكتب تفاصيل تجربتك وجودة القماش والمقاس..." : "Describe product quality, fabric feel, and size fit..."}
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="form-label">{isRtl ? "صورة المنتج (اختياري)" : "Attach Photo (optional)"}</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setReviewImageFile(e.target.files[0])}
-                      style={{ fontSize: '13px', color: 'var(--text-secondary)' }}
-                    />
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-                    <button type="submit" disabled={submittingReview} className="btn btn-primary" style={{ flex: 1 }}>
-                      {submittingReview ? "Submitting..." : (isRtl ? "إرسال التقييم" : "Submit Review")}
-                    </button>
-                    <button type="button" onClick={() => setReviewModalOpen(false)} className="btn btn-ghost">
-                      {isRtl ? "إلغاء" : "Cancel"}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

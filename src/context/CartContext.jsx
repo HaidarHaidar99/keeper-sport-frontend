@@ -33,12 +33,16 @@ export const CartProvider = ({ children }) => {
           item.customKey === customKey
       );
 
+      const isSale = Boolean(product.is_sale_enabled || product.sale_enabled);
+      const salePrice = product.sale_price !== null && product.sale_price !== undefined ? Number(product.sale_price) : null;
+      const basePrice = Number(product.base_price || 0);
+
       const effectivePrice = Number(
         variant?.price !== undefined && variant?.price !== null
           ? variant.price
-          : product.sale_enabled && product.sale_price !== null
-          ? product.sale_price
-          : product.base_price
+          : isSale && salePrice !== null
+          ? salePrice
+          : basePrice
       );
 
       if (existingIndex > -1) {
