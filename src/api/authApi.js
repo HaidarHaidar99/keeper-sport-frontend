@@ -76,5 +76,39 @@ export const authApi = {
     return safeRequest(`${API_BASE}/auth/me`, {
       method: 'GET'
     });
+  },
+
+  async verifyEmail(token) {
+    return safeRequest(`${API_BASE}/auth/verify-email`, {
+      method: 'POST',
+      body: JSON.stringify({ token })
+    });
+  },
+
+  async resendVerification(email) {
+    return safeRequest(`${API_BASE}/auth/resend-verification`, {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  },
+
+  async forgotPassword(email) {
+    return safeRequest(`${API_BASE}/auth/forgot-password`, {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  },
+
+  async verifyResetToken(token) {
+    return safeRequest(`${API_BASE}/auth/verify-reset-token?token=${encodeURIComponent(token)}`, {
+      method: 'GET'
+    });
+  },
+
+  async resetPassword({ token, password, confirm_password }) {
+    return safeRequest(`${API_BASE}/auth/reset-password`, {
+      method: 'POST',
+      body: JSON.stringify({ token, password, confirm_password })
+    });
   }
 };

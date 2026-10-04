@@ -134,13 +134,13 @@ html, body {
   border-color: var(--ks-border-input);
 }
 
-/* Centered Authentication Card (Completely Square 90-Degree Corners) */
+/* Centered Authentication Card (Subtle, tasteful border radius on outer container) */
 .ks-auth-card {
   width: 100%;
   max-width: 410px;
   background-color: var(--ks-bg-card);
   border: 1px solid var(--ks-border-card);
-  border-radius: 0 !important;
+  border-radius: 8px !important;
   padding: 44px 34px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
 }

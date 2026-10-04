@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Eye, EyeOff, AlertCircle, Loader2, Sun, Moon } from 'lucide-react';
+import { authApi } from '../api/authApi';
+import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, Sun, Moon } from 'lucide-react';
 
 export default function LoginPage() {
   const { login, googleLogin } = useAuth();
@@ -17,8 +18,14 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Resend verification state for unverified accounts
+  const [showResend, setShowResend] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState('');
 
   // References for keyboard navigation & Google native anchor
   const emailRef = useRef(null);
@@ -40,10 +47,14 @@ export default function LoginPage() {
             if (response.credential) {
               setGoogleLoading(true);
               setServerError('');
+              setSuccessMessage('');
               try {
                 const data = await googleLogin(response.credential);
                 if (data.success) {
-                  navigate('/login');
+                  setSuccessMessage('Logged in successfully.');
+                  setTimeout(() => {
+                    navigate('/login');
+                  }, 1200);
                 }
               } catch (err) {
                 setServerError(err.message || 'Google authentication failed.');
@@ -107,6 +118,7 @@ export default function LoginPage() {
     }
     if (serverError) {
       setServerError('');
+      setShowResend(false);
     }
   };
 
@@ -123,6 +135,9 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError('');
+    setSuccessMessage('');
+    setShowResend(false);
+    setResendSuccess('');
 
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -139,12 +154,33 @@ export default function LoginPage() {
       });
 
       if (response.success) {
-        navigate('/login');
+        setSuccessMessage('Logged in successfully.');
+        // User explicitly authenticated successfully
       }
     } catch (err) {
-      setServerError(err.message || 'Invalid email or password.');
+      const msg = err.message || 'Invalid email or password.';
+      setServerError(msg);
+      if (msg.toLowerCase().includes('verify')) {
+        setShowResend(true);
+      }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResendFromLogin = async () => {
+    if (!formData.email.trim()) return;
+    setResending(true);
+    setResendSuccess('');
+    try {
+      const res = await authApi.resendVerification(formData.email.trim().toLowerCase());
+      setResendSuccess(res.message || 'Verification email resent. Please check your inbox.');
+      setServerError('');
+      setShowResend(false);
+    } catch (err) {
+      setServerError(err.message || 'Failed to resend verification email.');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -197,7 +233,46 @@ export default function LoginPage() {
         {serverError && (
           <div className="ks-alert ks-alert-error" role="alert">
             <AlertCircle size={15} style={{ flexShrink: 0 }} />
-            <div>{serverError}</div>
+            <div style={{ flex: 1 }}>
+              <div>{serverError}</div>
+              {showResend && (
+                <button
+                  type="button"
+                  onClick={handleResendFromLogin}
+                  disabled={resending}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--ks-accent-red)',
+                    fontSize: '0.785rem',
+                    fontWeight: 700,
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                    marginTop: '6px',
+                    padding: 0,
+                    display: 'block'
+                  }}
+                >
+                  {resending ? 'Sending verification email...' : 'Resend verification email'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Resend Success Alert */}
+        {resendSuccess && (
+          <div className="ks-alert ks-alert-success" role="status">
+            <CheckCircle2 size={15} style={{ flexShrink: 0 }} />
+            <div>{resendSuccess}</div>
+          </div>
+        )}
+
+        {/* Successful Login Message */}
+        {successMessage && (
+          <div className="ks-alert ks-alert-success" role="status">
+            <CheckCircle2 size={15} style={{ flexShrink: 0 }} />
+            <div>{successMessage}</div>
           </div>
         )}
 
@@ -235,7 +310,7 @@ export default function LoginPage() {
                 name="password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
-                placeholder="At least 8 characters"
+                placeholder="Enter password"
                 className={`ks-input ks-input-has-eye ${errors.password ? 'has-error' : ''}`}
                 value={formData.password}
                 onChange={handleChange}
@@ -256,16 +331,9 @@ export default function LoginPage() {
 
           {/* Forgot Password Link (Red) */}
           <div className="ks-forgot-row">
-            <a
-              href="#forgot"
-              onClick={(e) => {
-                e.preventDefault();
-                setServerError('Password reset will be available in the upcoming slice.');
-              }}
-              className="ks-forgot-link"
-            >
+            <Link to="/forgot-password" className="ks-forgot-link">
               Forgot Password?
-            </a>
+            </Link>
           </div>
 
           {/* SIGN IN Button */}
