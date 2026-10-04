@@ -8,14 +8,16 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 
+import HomePage from './pages/HomePage';
+
 export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* If opening root URL, nothing appears */}
-            <Route path="/" element={<div style={{ minHeight: '100vh', background: 'var(--ks-bg-canvas)' }} />} />
+            {/* Keeper Sports Home Page */}
+            <Route path="/" element={<HomePage />} />
             
             {/* Customer Authentication Routes */}
             <Route path="/login" element={<LoginPage />} />
