@@ -1,476 +1,363 @@
 /* =============================================================================
-   KEEPER SPORTS — MASTER DESIGN SYSTEM & TOKENS
-   Premium Athletic Football Store
-   Brand: Keeper Sports | Tagline: Everything a footballer needs
-   Palette: White/Light Neutrals, Deep Athletic Dark, Controlled Red Accents
-   Radii: 6px (Controls/Inputs) | 12px (Cards) | 16px (Containers)
+   KEEPER SPORTS — AUTHENTICATION (EXACT 100% SPECIFICATION DESIGN)
+   Visual: Pitch Black canvas + Charcoal Card + White Buttons + Red Accent
    ============================================================================= */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;800;900&display=swap');
+
 :root {
-  /* ── Brand Red Accents (Primary Brand Color) ── */
-  --brand-red: #D00000;
-  --brand-red-hover: #B70000;
-  --brand-red-active: #9E0000;
-  --brand-red-light: rgba(208, 0, 0, 0.08);
-  --brand-red-glow: rgba(208, 0, 0, 0.22);
+  /* Canvas & Card */
+  --ks-bg-canvas: #000000;
+  --ks-bg-card: #111216;
+  --ks-border-card: #1a1c23;
 
-  /* ── Auxiliary Sports Accents ── */
-  --brand-gold: #E5A910;
-  --brand-gold-light: rgba(229, 169, 16, 0.12);
-  --brand-green: #10B981;
-  --brand-green-light: rgba(16, 185, 129, 0.12);
-  --brand-blue: #2563EB;
+  /* Inputs */
+  --ks-bg-input: #060709;
+  --ks-border-input: #1f222b;
+  --ks-border-input-focus: #E10600;
+  --ks-text-input: #FFFFFF;
+  --ks-placeholder: #454a58;
 
-  /* ── Dark Theme (Default) ── */
-  --bg-primary: #0A0D14;
-  --bg-surface: #121722;
-  --bg-card: #161D2B;
-  --bg-card-hover: #1D2638;
-  --bg-input: #0F1420;
-  --bg-input-focus: #141B2B;
-  --bg-elevated: #1F293D;
-  --bg-glass: rgba(18, 23, 34, 0.88);
-  --bg-glass-card: rgba(22, 29, 43, 0.92);
+  /* Typography */
+  --ks-font-serif: 'Playfair Display', Georgia, serif;
+  --ks-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+  --ks-text-title: #FFFFFF;
+  --ks-text-subtitle: #8e94a4;
+  --ks-text-label: #727888;
+  --ks-text-muted: #535866;
 
-  --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
-  --text-inverse: #0A0D14;
+  /* Accent Red (Replaces the gold in screenshot) */
+  --ks-accent-red: #E10600;
+  --ks-accent-red-hover: #ff2a24;
+  --ks-accent-red-glow: rgba(225, 6, 0, 0.2);
 
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.16);
-  --border-strong: rgba(255, 255, 255, 0.24);
-  --border-focus: var(--brand-red);
+  /* Primary Button (Solid White with Black Text) */
+  --ks-btn-primary-bg: #FFFFFF;
+  --ks-btn-primary-text: #000000;
+  --ks-btn-primary-hover: #EAEAEA;
 
-  /* ── Radius System (Restrained & Strictly Consistent) ── */
-  --radius-xs: 4px;       /* Badges, tiny tags */
-  --radius-sm: 6px;       /* Inputs, buttons, small controls */
-  --radius-md: 12px;      /* Product cards, dropdowns */
-  --radius-lg: 16px;      /* Modals, major containers, hero */
-  --radius-full: 9999px;  /* Circle badges & circular icon buttons */
+  /* Google Button */
+  --ks-btn-google-bg: #060709;
+  --ks-btn-google-border: #20242f;
+  --ks-btn-google-text: #FFFFFF;
+  --ks-btn-google-hover: #0c0e14;
 
-  /* ── Restrained Athletic Shadows ── */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
-  --shadow-red: 0 4px 16px rgba(208, 0, 0, 0.25);
-
-  /* ── Typography & Transitions ── */
-  --font-latin: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-arabic: 'Cairo', 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-body: var(--font-latin);
-
-  --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-
-  --header-height: 72px;
-
-  /* Backward Compatibility Aliases for Refactored Components */
-  --accent-cyan: var(--brand-red);
-  --accent-cyan-rgb: 208, 0, 0;
-  --accent-cyan-glow: var(--brand-red-glow);
-  --accent-red: var(--brand-red);
-  --accent-gold: var(--brand-gold);
-  --accent-green: var(--brand-green);
+  /* Status Colors */
+  --ks-error-red: #EF4444;
+  --ks-error-bg: rgba(239, 68, 68, 0.1);
+  --ks-error-border: rgba(239, 68, 68, 0.25);
+  --ks-success-green: #10B981;
+  --ks-success-bg: rgba(16, 185, 129, 0.1);
+  --ks-success-border: rgba(16, 185, 129, 0.25);
 }
 
-/* ── Light Mode (Clean, High-Contrast Athletic Surfaces) ── */
-[data-theme="light"] {
-  --bg-primary: #F8FAFC;
-  --bg-surface: #FFFFFF;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #F1F5F9;
-  --bg-input: #FFFFFF;
-  --bg-input-focus: #FFFFFF;
-  --bg-elevated: #E2E8F0;
-  --bg-glass: rgba(255, 255, 255, 0.92);
-  --bg-glass-card: rgba(255, 255, 255, 0.95);
-
-  --text-primary: #0F172A;
-  --text-secondary: #475569;
-  --text-muted: #94A3B8;
-  --text-inverse: #FFFFFF;
-
-  --border-subtle: #E2E8F0;
-  --border-medium: #CBD5E1;
-  --border-strong: #94A3B8;
-  --border-focus: var(--brand-red);
-
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
-  --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 12px 30px rgba(15, 23, 42, 0.12);
-  --shadow-red: 0 4px 16px rgba(208, 0, 0, 0.18);
-}
-
-/* ── Arabic Typography & Direction ── */
-[dir="rtl"] {
-  --font-body: var(--font-arabic);
-}
-
-/* ── Base Reset & Normalization ── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html {
-  font-family: var(--font-body);
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  scroll-behavior: smooth;
-  text-rendering: optimizeLegibility;
+html, body {
+  min-height: 100%;
+  height: 100%;
+  background-color: var(--ks-bg-canvas);
+  color: var(--ks-text-title);
+  font-family: var(--ks-font-sans);
+  line-height: 1.4;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-body {
+/* Fullscreen Centering Canvas */
+.ks-auth-canvas {
   min-height: 100vh;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  overflow-x: hidden;
-  line-height: 1.5;
-  font-size: 15px;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--ks-bg-canvas);
+  padding: 24px 16px;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-button {
-  font-family: inherit;
-  cursor: pointer;
-  border: none;
-  background: none;
-}
-
-img, svg {
-  display: block;
-  max-width: 100%;
-}
-
-/* ── Custom Scrollbar ── */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg-primary);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border-medium);
-  border-radius: var(--radius-full);
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--brand-red);
-}
-
-/* ── Standard Layout Container ── */
-.container {
+/* Exact Centered Card */
+.ks-auth-card {
   width: 100%;
-  max-width: 1280px;
-  margin-inline-start: auto;
-  margin-inline-end: auto;
-  padding-inline-start: 20px;
-  padding-inline-end: 20px;
+  max-width: 410px;
+  background-color: var(--ks-bg-card);
+  border: 1px solid var(--ks-border-card);
+  border-radius: 14px;
+  padding: 44px 34px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
 }
 
 @media (max-width: 480px) {
-  .container {
-    padding-inline-start: 14px;
-    padding-inline-end: 14px;
+  .ks-auth-card {
+    padding: 32px 20px;
+    border-radius: 12px;
   }
 }
 
-/* ── Standard Surface & Card Styles ── */
-.card, .glass-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-normal), border-color var(--transition-normal), box-shadow var(--transition-normal);
-}
-
-.card:hover, .glass-card:hover {
-  border-color: var(--border-medium);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-
-.card-clickable:hover {
-  border-color: var(--brand-red);
-}
-
-/* ── Standard Button System (Consistent Height, Padding, Radius & Typography) ── */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 42px;
-  padding-inline-start: 20px;
-  padding-inline-end: 20px;
-  font-size: 14px;
-  font-weight: 700;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-  user-select: none;
-  border: 1px solid transparent;
-}
-
-.btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.btn-sm {
-  height: 34px;
-  padding-inline-start: 12px;
-  padding-inline-end: 12px;
-  font-size: 13px;
-  border-radius: var(--radius-sm);
-}
-
-.btn-lg {
-  height: 48px;
-  padding-inline-start: 28px;
-  padding-inline-end: 28px;
-  font-size: 15px;
-  border-radius: var(--radius-sm);
-}
-
-/* Primary Button: Controlled Keeper Sports Red */
-.btn-primary {
-  background-color: var(--brand-red);
-  color: #FFFFFF;
-  box-shadow: var(--shadow-red);
-}
-.btn-primary:hover {
-  background-color: var(--brand-red-hover);
-  transform: translateY(-1px);
-}
-.btn-primary:active {
-  background-color: var(--brand-red-active);
-  transform: translateY(0);
-}
-
-/* Secondary Neutral Button */
-.btn-secondary {
-  background-color: transparent;
-  border-color: var(--border-medium);
-  color: var(--text-primary);
-}
-.btn-secondary:hover {
-  background-color: var(--bg-card-hover);
-  border-color: var(--border-strong);
-}
-
-/* Outline Red Button */
-.btn-outline-red {
-  background-color: transparent;
-  border-color: var(--brand-red);
-  color: var(--brand-red);
-}
-.btn-outline-red:hover {
-  background-color: var(--brand-red);
-  color: #FFFFFF;
-}
-
-/* Dark Sports Action Button */
-.btn-dark {
-  background-color: #0F172A;
-  color: #FFFFFF;
-  border-color: rgba(255, 255, 255, 0.12);
-}
-.btn-dark:hover {
-  background-color: #1E293B;
-}
-
-/* Gold Accent Button */
-.btn-gold {
-  background-color: var(--brand-gold);
-  color: #0A0D14;
+/* Header: Serif Title + Muted Subtitle */
+.ks-auth-title {
+  font-family: var(--ks-font-serif);
+  font-size: 2.25rem;
   font-weight: 800;
-}
-.btn-gold:hover {
-  background-color: #CCA010;
-  transform: translateY(-1px);
+  letter-spacing: -0.01em;
+  color: var(--ks-text-title);
+  margin-bottom: 6px;
+  line-height: 1.15;
 }
 
-/* ── Standard Input System ── */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.ks-auth-subtitle {
+  font-size: 0.85rem;
+  color: var(--ks-text-subtitle);
+  margin-bottom: 28px;
+}
+
+/* Form Groups & Labels */
+.ks-form-group {
   margin-bottom: 16px;
-  text-align: start;
 }
 
-.form-label {
-  font-size: 13px;
+.ks-label {
+  display: block;
+  font-size: 0.685rem;
   font-weight: 700;
-  color: var(--text-secondary);
-}
-
-.form-input, .form-select, .form-textarea {
-  width: 100%;
-  height: 42px;
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-sm);
-  padding-inline-start: 14px;
-  padding-inline-end: 14px;
-  color: var(--text-primary);
-  font-size: 14px;
-  font-family: inherit;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-  outline: none;
-}
-
-.form-textarea {
-  height: auto;
-  min-height: 90px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  resize: vertical;
-}
-
-.form-input:focus, .form-select:focus, .form-textarea:focus {
-  border-color: var(--border-focus);
-  background-color: var(--bg-input-focus);
-  box-shadow: 0 0 0 3px var(--brand-red-light);
-}
-
-.form-input::placeholder, .form-textarea::placeholder {
-  color: var(--text-muted);
-}
-
-/* ── Badge System ── */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  font-size: 11px;
-  font-weight: 800;
-  border-radius: var(--radius-xs);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
+  color: var(--ks-text-label);
+  margin-bottom: 7px;
 }
 
-.badge-sale {
-  background-color: var(--brand-red);
-  color: #FFFFFF;
+/* Input Styling */
+.ks-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.badge-red {
-  background-color: var(--brand-red-light);
-  color: var(--brand-red);
-  border: 1px solid rgba(208, 0, 0, 0.25);
+.ks-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  background-color: var(--ks-bg-input);
+  border: 1px solid var(--ks-border-input);
+  border-radius: 6px;
+  color: var(--ks-text-input);
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.badge-gold {
-  background-color: var(--brand-gold-light);
-  color: var(--brand-gold);
-  border: 1px solid rgba(229, 169, 16, 0.25);
+.ks-input::placeholder {
+  color: var(--ks-placeholder);
+  font-size: 0.825rem;
 }
 
-.badge-green {
-  background-color: var(--brand-green-light);
-  color: var(--brand-green);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+.ks-input:focus {
+  outline: none;
+  border-color: var(--ks-border-input-focus);
+  box-shadow: 0 0 0 2px var(--ks-accent-red-glow);
 }
 
-.badge-dark {
-  background-color: rgba(0, 0, 0, 0.4);
-  color: #FFFFFF;
-  border: 1px solid var(--border-subtle);
+.ks-input.has-error {
+  border-color: var(--ks-error-red);
 }
 
-/* Legacy Badge Cyan mapping */
-.badge-cyan {
-  background-color: var(--brand-red-light);
-  color: var(--brand-red);
-  border: 1px solid rgba(208, 0, 0, 0.25);
+.ks-input-has-eye {
+  padding-right: 42px;
 }
 
-/* ── Modal System ── */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+/* Show/Hide Password Eye Button */
+.ks-eye-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--ks-text-muted);
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  padding: 20px;
+  padding: 4px;
+  transition: color 0.15s ease;
 }
 
-.modal-content {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  max-width: 520px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-  padding: 28px;
+.ks-eye-btn:hover {
+  color: #FFFFFF;
 }
 
-/* ── Section Titles ── */
-.section-header {
-  margin-bottom: 32px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.section-title {
-  font-size: clamp(22px, 3.5vw, 32px);
-  font-weight: 900;
-  letter-spacing: -0.5px;
-  color: var(--text-primary);
-}
-
-.section-subtitle {
-  font-size: 14px;
-  color: var(--text-secondary);
+/* Error Message Under Input */
+.ks-field-error {
+  font-size: 0.75rem;
+  color: var(--ks-error-red);
   margin-top: 4px;
 }
 
-/* ── Responsive Grid Breakpoints ── */
-.grid-products {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+/* Right-aligned Forgot Password (Red instead of Gold) */
+.ks-forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -6px;
+  margin-bottom: 20px;
 }
 
-@media (max-width: 1100px) {
-  .grid-products {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
+.ks-forgot-link {
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: var(--ks-accent-red);
+  text-decoration: none;
+  transition: color 0.15s ease;
 }
 
-@media (max-width: 768px) {
-  .grid-products {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
+.ks-forgot-link:hover {
+  color: var(--ks-accent-red-hover);
+  text-decoration: underline;
 }
 
-@media (max-width: 380px) {
-  .grid-products {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
+/* Primary Button (Solid White with Black Text) */
+.ks-btn-primary {
+  width: 100%;
+  height: 46px;
+  background-color: var(--ks-btn-primary-bg);
+  color: var(--ks-btn-primary-text);
+  border: none;
+  border-radius: 6px;
+  font-family: var(--ks-font-sans);
+  font-size: 0.785rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.05s ease;
+  user-select: none;
+}
+
+.ks-btn-primary:hover:not(:disabled) {
+  background-color: var(--ks-btn-primary-hover);
+}
+
+.ks-btn-primary:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.ks-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Switch Text (Red Link instead of Gold) */
+.ks-switch-text {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--ks-text-subtitle);
+  margin: 22px 0 20px;
+}
+
+.ks-switch-link {
+  color: var(--ks-accent-red);
+  font-weight: 700;
+  text-decoration: none;
+  margin-left: 4px;
+  transition: color 0.15s ease;
+}
+
+.ks-switch-link:hover {
+  color: var(--ks-accent-red-hover);
+  text-decoration: underline;
+}
+
+/* Divider with Centered Uppercase Text */
+.ks-divider {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  color: var(--ks-text-muted);
+  font-size: 0.685rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ks-divider::before,
+.ks-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #1a1d26;
+}
+
+.ks-divider span {
+  padding: 0 12px;
+}
+
+/* Google Button */
+.ks-btn-google {
+  width: 100%;
+  height: 44px;
+  background-color: var(--ks-btn-google-bg);
+  color: var(--ks-btn-google-text);
+  border: 1px solid var(--ks-btn-google-border);
+  border-radius: 6px;
+  font-family: var(--ks-font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+}
+
+.ks-btn-google:hover:not(:disabled) {
+  background-color: var(--ks-btn-google-hover);
+  border-color: #313645;
+}
+
+.ks-btn-google:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Alerts */
+.ks-alert {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ks-alert-error {
+  background-color: var(--ks-error-bg);
+  border: 1px solid var(--ks-error-border);
+  color: var(--ks-error-red);
+}
+
+.ks-alert-success {
+  background-color: var(--ks-success-bg);
+  border: 1px solid var(--ks-success-border);
+  color: var(--ks-success-green);
+}
+
+/* Loading Spinner */
+@keyframes ksSpinAnim {
+  to { transform: rotate(360deg); }
+}
+
+.ks-spinner-icon {
+  animation: ksSpinAnim 0.75s linear infinite;
 }
