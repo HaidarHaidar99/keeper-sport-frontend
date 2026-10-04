@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -65,7 +65,7 @@ export default function LoginPage() {
       });
 
       if (response.success) {
-        navigate('/login'); // or authenticated view
+        navigate('/login');
       }
     } catch (err) {
       setServerError(err.message || 'Invalid email or password.');
@@ -93,17 +93,9 @@ export default function LoginPage() {
         callback: async (response) => {
           try {
             if (response.credential) {
-              const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://keeper-sport-backend.vercel.app'}/api/auth/google`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ credential: response.credential })
-              });
-              const data = await res.json();
+              const data = await googleLogin(response.credential);
               if (data.success) {
                 navigate('/login');
-              } else {
-                setServerError(data.message || 'Google authentication failed.');
               }
             }
           } catch (err) {
@@ -192,7 +184,14 @@ export default function LoginPage() {
 
           {/* Forgot Password Link (Red instead of Gold) */}
           <div className="ks-forgot-row">
-            <a href="#forgot" onClick={(e) => { e.preventDefault(); setServerError('Password reset will be available in the upcoming slice.'); }} className="ks-forgot-link">
+            <a
+              href="#forgot"
+              onClick={(e) => {
+                e.preventDefault();
+                setServerError('Password reset will be available in the upcoming slice.');
+              }}
+              className="ks-forgot-link"
+            >
               Forgot Password?
             </a>
           </div>

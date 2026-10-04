@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function SignUpPage() {
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -117,17 +117,9 @@ export default function SignUpPage() {
         callback: async (response) => {
           try {
             if (response.credential) {
-              const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://keeper-sport-backend.vercel.app'}/api/auth/google`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ credential: response.credential })
-              });
-              const data = await res.json();
+              const data = await googleLogin(response.credential);
               if (data.success) {
                 navigate('/login');
-              } else {
-                setServerError(data.message || 'Google registration failed.');
               }
             }
           } catch (err) {
