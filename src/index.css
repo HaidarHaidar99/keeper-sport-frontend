@@ -1,47 +1,45 @@
 /* =============================================================================
-   KEEPER SPORTS — AUTHENTICATION (EXACT 100% SPECIFICATION DESIGN)
-   Visual: Pitch Black canvas + Charcoal Card + White Buttons + Red Accent
+   KEEPER SPORTS — AUTHENTICATION DESIGN SYSTEM
+   Visual: 90-Degree Square Corners | No Glow | Perfect Autofill | Light + Dark
    ============================================================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;800;900&display=swap');
 
-:root {
-  /* Canvas & Card */
+:root,
+[data-theme="dark"] {
+  /* Canvas & Card (Dark Mode) */
   --ks-bg-canvas: #000000;
   --ks-bg-card: #111216;
-  --ks-border-card: #1a1c23;
+  --ks-border-card: #1c1f27;
 
-  /* Inputs */
+  /* Inputs (Dark Mode) */
   --ks-bg-input: #060709;
   --ks-border-input: #1f222b;
   --ks-border-input-focus: #E10600;
   --ks-text-input: #FFFFFF;
-  --ks-placeholder: #454a58;
+  --ks-placeholder: #535868;
 
-  /* Typography */
-  --ks-font-serif: 'Playfair Display', Georgia, serif;
-  --ks-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  
+  /* Typography (Dark Mode) */
   --ks-text-title: #FFFFFF;
   --ks-text-subtitle: #8e94a4;
   --ks-text-label: #727888;
   --ks-text-muted: #535866;
+  --ks-divider-line: #1c202a;
 
-  /* Accent Red (Replaces the gold in screenshot) */
+  /* Accent Red */
   --ks-accent-red: #E10600;
   --ks-accent-red-hover: #ff2a24;
-  --ks-accent-red-glow: rgba(225, 6, 0, 0.2);
 
-  /* Primary Button (Solid White with Black Text) */
+  /* Primary Button (Dark Mode: Solid White with Black text) */
   --ks-btn-primary-bg: #FFFFFF;
   --ks-btn-primary-text: #000000;
-  --ks-btn-primary-hover: #EAEAEA;
+  --ks-btn-primary-hover: #E2E2E2;
 
-  /* Google Button */
+  /* Google Button (Dark Mode) */
   --ks-btn-google-bg: #060709;
   --ks-btn-google-border: #20242f;
   --ks-btn-google-text: #FFFFFF;
-  --ks-btn-google-hover: #0c0e14;
+  --ks-btn-google-hover: #0d0f14;
 
   /* Status Colors */
   --ks-error-red: #EF4444;
@@ -50,6 +48,38 @@
   --ks-success-green: #10B981;
   --ks-success-bg: rgba(16, 185, 129, 0.1);
   --ks-success-border: rgba(16, 185, 129, 0.25);
+}
+
+[data-theme="light"] {
+  /* Canvas & Card (Light Mode) */
+  --ks-bg-canvas: #F4F5F7;
+  --ks-bg-card: #FFFFFF;
+  --ks-border-card: #E2E5EB;
+
+  /* Inputs (Light Mode) */
+  --ks-bg-input: #FFFFFF;
+  --ks-border-input: #CBD0DC;
+  --ks-border-input-focus: #E10600;
+  --ks-text-input: #000000;
+  --ks-placeholder: #8A92A4;
+
+  /* Typography (Light Mode) */
+  --ks-text-title: #0A0A0A;
+  --ks-text-subtitle: #5A6273;
+  --ks-text-label: #4B5263;
+  --ks-text-muted: #7E8696;
+  --ks-divider-line: #E2E5EB;
+
+  /* Primary Button (Light Mode: Solid Black with White text) */
+  --ks-btn-primary-bg: #0A0A0A;
+  --ks-btn-primary-text: #FFFFFF;
+  --ks-btn-primary-hover: #222222;
+
+  /* Google Button (Light Mode) */
+  --ks-btn-google-bg: #FFFFFF;
+  --ks-btn-google-border: #CBD0DC;
+  --ks-btn-google-text: #0A0A0A;
+  --ks-btn-google-hover: #F8F9FA;
 }
 
 *, *::before, *::after {
@@ -63,7 +93,7 @@ html, body {
   height: 100%;
   background-color: var(--ks-bg-canvas);
   color: var(--ks-text-title);
-  font-family: var(--ks-font-sans);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.4;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -78,29 +108,52 @@ html, body {
   justify-content: center;
   background-color: var(--ks-bg-canvas);
   padding: 24px 16px;
+  position: relative;
 }
 
-/* Exact Centered Card */
+/* Theme Toggle Button (Square, Subtle) */
+.ks-theme-toggle {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 36px;
+  height: 36px;
+  background-color: var(--ks-bg-card);
+  border: 1px solid var(--ks-border-card);
+  border-radius: 0 !important;
+  color: var(--ks-text-subtitle);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.ks-theme-toggle:hover {
+  color: var(--ks-text-title);
+  border-color: var(--ks-border-input);
+}
+
+/* Centered Authentication Card (Completely Square 90-Degree Corners) */
 .ks-auth-card {
   width: 100%;
   max-width: 410px;
   background-color: var(--ks-bg-card);
   border: 1px solid var(--ks-border-card);
-  border-radius: 14px;
+  border-radius: 0 !important;
   padding: 44px 34px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
 }
 
 @media (max-width: 480px) {
   .ks-auth-card {
     padding: 32px 20px;
-    border-radius: 12px;
   }
 }
 
 /* Header: Serif Title + Muted Subtitle */
 .ks-auth-title {
-  font-family: var(--ks-font-serif);
+  font-family: 'Playfair Display', Georgia, serif;
   font-size: 2.25rem;
   font-weight: 800;
   letter-spacing: -0.01em;
@@ -130,7 +183,7 @@ html, body {
   margin-bottom: 7px;
 }
 
-/* Input Styling */
+/* Input Container & Input (Completely Square, No Glow / No Shadow) */
 .ks-input-container {
   position: relative;
   display: flex;
@@ -143,11 +196,13 @@ html, body {
   padding: 0 14px;
   background-color: var(--ks-bg-input);
   border: 1px solid var(--ks-border-input);
-  border-radius: 6px;
+  border-radius: 0 !important;
   color: var(--ks-text-input);
   font-size: 0.875rem;
   font-family: inherit;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease;
+  outline: none;
+  box-shadow: none !important;
 }
 
 .ks-input::placeholder {
@@ -155,21 +210,54 @@ html, body {
   font-size: 0.825rem;
 }
 
+/* CLEAN FOCUS: No glow, no halo, no shadow */
 .ks-input:focus {
-  outline: none;
-  border-color: var(--ks-border-input-focus);
-  box-shadow: 0 0 0 2px var(--ks-accent-red-glow);
+  outline: none !important;
+  border-color: var(--ks-border-input-focus) !important;
+  box-shadow: none !important;
 }
 
 .ks-input.has-error {
-  border-color: var(--ks-error-red);
+  border-color: var(--ks-error-red) !important;
 }
 
 .ks-input-has-eye {
   padding-right: 42px;
 }
 
-/* Show/Hide Password Eye Button */
+/* =============================================================================
+   BROWSER AUTOFILL FIX (Chrome, WebKit, Edge, Safari, Firefox)
+   Preserves correct dark/light background and text color without turning white!
+   ============================================================================= */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--ks-bg-input) inset !important;
+  box-shadow: 0 0 0 1000px var(--ks-bg-input) inset !important;
+  -webkit-text-fill-color: var(--ks-text-input) !important;
+  caret-color: var(--ks-text-input) !important;
+  border-color: var(--ks-border-input) !important;
+  border-radius: 0 !important;
+  font-family: inherit !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+input:-webkit-autofill:focus {
+  border-color: var(--ks-border-input-focus) !important;
+  outline: none !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--ks-bg-input) inset !important;
+  box-shadow: 0 0 0 1000px var(--ks-bg-input) inset !important;
+}
+
+input:autofill {
+  background-color: var(--ks-bg-input) !important;
+  color: var(--ks-text-input) !important;
+  border-color: var(--ks-border-input) !important;
+  border-radius: 0 !important;
+}
+
+/* Eye Toggle Button */
 .ks-eye-btn {
   position: absolute;
   right: 12px;
@@ -177,6 +265,7 @@ html, body {
   transform: translateY(-50%);
   background: none;
   border: none;
+  border-radius: 0 !important;
   color: var(--ks-text-muted);
   cursor: pointer;
   display: flex;
@@ -187,17 +276,17 @@ html, body {
 }
 
 .ks-eye-btn:hover {
-  color: #FFFFFF;
+  color: var(--ks-text-title);
 }
 
-/* Error Message Under Input */
+/* Error Text Under Field */
 .ks-field-error {
   font-size: 0.75rem;
   color: var(--ks-error-red);
   margin-top: 4px;
 }
 
-/* Right-aligned Forgot Password (Red instead of Gold) */
+/* Forgot Password Row (Red) */
 .ks-forgot-row {
   display: flex;
   justify-content: flex-end;
@@ -218,15 +307,15 @@ html, body {
   text-decoration: underline;
 }
 
-/* Primary Button (Solid White with Black Text) */
+/* Primary Action Button (Square 90-Degree, No Glow) */
 .ks-btn-primary {
   width: 100%;
   height: 46px;
   background-color: var(--ks-btn-primary-bg);
   color: var(--ks-btn-primary-text);
   border: none;
-  border-radius: 6px;
-  font-family: var(--ks-font-sans);
+  border-radius: 0 !important;
+  font-family: inherit;
   font-size: 0.785rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -236,7 +325,9 @@ html, body {
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.05s ease;
+  transition: background-color 0.15s ease;
+  outline: none;
+  box-shadow: none !important;
   user-select: none;
 }
 
@@ -244,16 +335,12 @@ html, body {
   background-color: var(--ks-btn-primary-hover);
 }
 
-.ks-btn-primary:active:not(:disabled) {
-  transform: scale(0.99);
-}
-
 .ks-btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Switch Text (Red Link instead of Gold) */
+/* Switch Link: Don't have an account? Create Account (Red) */
 .ks-switch-text {
   text-align: center;
   font-size: 0.8rem;
@@ -290,22 +377,27 @@ html, body {
 .ks-divider::after {
   content: "";
   flex: 1;
-  border-bottom: 1px solid #1a1d26;
+  border-bottom: 1px solid var(--ks-divider-line);
 }
 
 .ks-divider span {
   padding: 0 12px;
 }
 
-/* Google Button */
+/* Google Button Container & Square Button */
+.ks-google-wrapper {
+  position: relative;
+  width: 100%;
+}
+
 .ks-btn-google {
   width: 100%;
   height: 44px;
   background-color: var(--ks-btn-google-bg);
   color: var(--ks-btn-google-text);
   border: 1px solid var(--ks-btn-google-border);
-  border-radius: 6px;
-  font-family: var(--ks-font-sans);
+  border-radius: 0 !important;
+  font-family: inherit;
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -317,11 +409,13 @@ html, body {
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;
   user-select: none;
+  outline: none;
+  box-shadow: none !important;
 }
 
 .ks-btn-google:hover:not(:disabled) {
   background-color: var(--ks-btn-google-hover);
-  border-color: #313645;
+  border-color: var(--ks-border-input);
 }
 
 .ks-btn-google:disabled {
@@ -329,10 +423,29 @@ html, body {
   cursor: not-allowed;
 }
 
-/* Alerts */
+/* Invisible overlay anchor for Google's native iframe button */
+.ks-google-native-anchor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.001;
+  overflow: hidden;
+  z-index: 10;
+  cursor: pointer;
+}
+
+.ks-google-native-anchor iframe {
+  width: 100% !important;
+  height: 100% !important;
+  cursor: pointer !important;
+}
+
+/* Alerts (Square) */
 .ks-alert {
   padding: 10px 14px;
-  border-radius: 6px;
+  border-radius: 0 !important;
   font-size: 0.8rem;
   line-height: 1.4;
   margin-bottom: 18px;
