@@ -567,7 +567,7 @@ input:autofill {
 .ks-navbar-desktop-nav {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 24px;
 }
 
 .ks-nav-desktop-item {
@@ -596,27 +596,49 @@ input:autofill {
 }
 
 .ks-nav-desktop-label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
   line-height: 1;
 }
 
-/* Active Page Red Line Indicator (Desktop) */
-.ks-nav-desktop-indicator {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
+.ks-nav-inline-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 9px;
   background-color: var(--ks-accent-red);
-  animation: ksRedLineGrow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #ffffff;
+  font-size: 0.625rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-left: 5px;
 }
 
-@keyframes ksRedLineGrow {
+/* Active Page Red Line Indicator IN the Word (Desktop) */
+.ks-nav-desktop-indicator-in-word {
+  position: absolute;
+  top: 50%;
+  left: -3px;
+  right: -3px;
+  height: 2px;
+  background-color: var(--ks-accent-red);
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 2;
+  animation: ksRedLineStrike 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes ksRedLineStrike {
   from {
-    transform: scaleX(0);
+    transform: translateY(-50%) scaleX(0);
     opacity: 0;
   }
   to {
-    transform: scaleX(1);
+    transform: translateY(-50%) scaleX(1);
     opacity: 1;
   }
 }
@@ -628,10 +650,62 @@ input:autofill {
   gap: 16px;
 }
 
-.ks-navbar-desktop-utilities {
+/* Desktop Icons Grouped Next to Each Other */
+.ks-navbar-desktop-icons-group {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+}
+
+/* Desktop Top Right Auth Button / Profile Icon */
+.ks-navbar-desktop-auth {
+  display: flex;
+  align-items: center;
+  margin-left: 6px;
+}
+
+.ks-nav-desktop-signin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 18px;
+  background-color: #FFFFFF;
+  color: #000000;
+  font-size: 0.785rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  border-radius: 0 !important;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+[data-theme="light"] .ks-nav-desktop-signin-btn {
+  background-color: #0A0A0A;
+  color: #FFFFFF;
+}
+
+.ks-nav-desktop-signin-btn:hover {
+  background-color: #E2E2E2;
+  transform: translateY(-1px);
+}
+
+[data-theme="light"] .ks-nav-desktop-signin-btn:hover {
+  background-color: #222222;
+}
+
+.ks-nav-profile-btn {
+  width: 38px;
+  height: 38px;
+}
+
+/* Mobile Controls Wrapper (< 1024px) */
+.ks-navbar-mobile-controls {
+  display: none;
+  align-items: center;
+  gap: 12px;
 }
 
 /* Consistent Minimal Action Button */
@@ -652,24 +726,6 @@ input:autofill {
 }
 
 .ks-nav-action-btn:hover {
-  color: var(--ks-accent-red);
-}
-
-.ks-nav-auth-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.785rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ks-text-title);
-  text-decoration: none;
-  padding: 6px 12px;
-  transition: color 0.15s ease;
-}
-
-.ks-nav-auth-link:hover {
   color: var(--ks-accent-red);
 }
 
@@ -817,12 +873,22 @@ input:autofill {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: ksMenuFadeIn 0.22s ease forwards;
+  animation: ksMenuFadeIn 0.28s ease forwards;
 }
 
 [data-theme="light"] .ks-mobile-fullscreen-root {
   background-color: #FFFFFF;
   color: #0A0A0A;
+}
+
+/* Closing Animation */
+.ks-mobile-fullscreen-root.is-closing {
+  animation: ksMenuFadeOut 0.28s ease forwards;
+}
+
+.ks-mobile-fullscreen-root.is-closing .ks-mobile-nav-item,
+.ks-mobile-fullscreen-root.is-closing .ks-mobile-nav-group {
+  animation: ksMenuWordSlideOut 0.24s cubic-bezier(0.4, 0, 1, 1) forwards !important;
 }
 
 @keyframes ksMenuFadeIn {
@@ -831,6 +897,26 @@ input:autofill {
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes ksMenuFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ksMenuWordSlideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-32px);
   }
 }
 
@@ -902,7 +988,7 @@ input:autofill {
   transform: rotate(90deg);
 }
 
-/* Main Navigation (Left-aligned, Editorial, Sequential Slide Entrance) */
+/* Main Navigation (Left-aligned, Editorial, Slower Flow Sequential Slide Entrance) */
 .ks-mobile-fullscreen-nav {
   flex: 1;
   overflow-y: auto;
@@ -916,8 +1002,8 @@ input:autofill {
 .ks-mobile-nav-item,
 .ks-mobile-nav-group {
   opacity: 0;
-  transform: translateX(-28px);
-  animation: ksMenuWordSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform: translateX(-30px);
+  animation: ksMenuWordSlide 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes ksMenuWordSlide {
@@ -966,6 +1052,7 @@ input:autofill {
 }
 
 .ks-mobile-word-text {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -986,14 +1073,18 @@ input:autofill {
   line-height: 1;
 }
 
-/* Active Page Red Line Indicator (Mobile) */
-.ks-mobile-active-red-line {
-  display: block;
-  width: 44px;
-  height: 2.5px;
+/* Active Page Red Line Indicator IN the Word (Mobile) */
+.ks-mobile-active-red-line-in-word {
+  position: absolute;
+  top: 50%;
+  left: -4px;
+  right: -4px;
+  height: 3px;
   background-color: var(--ks-accent-red);
-  margin-top: 5px;
-  animation: ksRedLineGrow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 2;
+  animation: ksRedLineStrike 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .ks-mobile-category-toggle {
@@ -1096,6 +1187,79 @@ input:autofill {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+/* Real SIGN IN Button Row for Mobile */
+.ks-mobile-footer-auth-row {
+  margin-top: 16px;
+  width: 100%;
+}
+
+.ks-mobile-real-signin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 48px;
+  background-color: #FFFFFF;
+  color: #000000;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  border-radius: 0 !important;
+  transition: background-color 0.15s ease;
+}
+
+[data-theme="light"] .ks-mobile-real-signin-btn {
+  background-color: #0A0A0A;
+  color: #FFFFFF;
+}
+
+.ks-mobile-real-signin-btn:hover {
+  background-color: #E2E2E2;
+}
+
+.ks-mobile-auth-logged-in {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 4px 0;
+}
+
+.ks-mobile-profile-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ks-text-title);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.ks-mobile-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--ks-border-input);
+  color: var(--ks-text-muted);
+  padding: 6px 12px;
+  font-size: 0.725rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.ks-mobile-logout-btn:hover {
+  color: var(--ks-accent-red);
+  border-color: var(--ks-accent-red);
 }
 
 /* -----------------------------------------------------------------------------
@@ -1412,8 +1576,16 @@ input:autofill {
     display: none;
   }
 
-  .ks-navbar-desktop-utilities {
+  .ks-navbar-desktop-icons-group {
     display: none;
+  }
+
+  .ks-navbar-desktop-auth {
+    display: none;
+  }
+
+  .ks-navbar-mobile-controls {
+    display: flex;
   }
 
   .ks-hamburger-trigger {

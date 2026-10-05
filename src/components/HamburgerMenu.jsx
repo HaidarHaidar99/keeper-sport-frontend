@@ -10,8 +10,7 @@ import {
   Moon,
   Bell,
   User,
-  LogOut,
-  LogIn
+  LogOut
 } from 'lucide-react';
 
 export default function HamburgerMenu({
@@ -27,17 +26,28 @@ export default function HamburgerMenu({
   const navigate = useNavigate();
 
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+
+  // Smooth closing handler with animation
+  const handleCloseWithAnim = () => {
+    if (isClosing) return;
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 280);
+  };
 
   // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen) {
-        onClose();
+        handleCloseWithAnim();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   // Lock body scroll when full-screen menu is open
   useEffect(() => {
@@ -53,17 +63,18 @@ export default function HamburgerMenu({
 
   const handleLogout = async () => {
     await logout();
-    onClose();
+    handleCloseWithAnim();
     navigate('/login');
   };
 
-  if (!isOpen) return null;
+  if (!isOpen && !isClosing) return null;
 
-  // Navigation Items (Clean Word-Based)
+  // Navigation Items (Clean Word-Based including OFFERS)
   const navItems = [
     { label: 'HOME', path: '/' },
     { label: 'PRODUCTS', path: '/products' },
     { label: 'CATEGORIES', path: '/categories', hasSubmenu: true },
+    { label: 'OFFERS', path: '/offers' },
     { label: 'MY ORDERS', path: '/orders' },
     { label: 'CART', path: '/cart', count: counts.cart },
     { label: 'FAVORITES', path: '/favorites', count: counts.favorites },
@@ -84,18 +95,18 @@ export default function HamburgerMenu({
   const activeIndex = navItems.findIndex((item) => isItemActive(item.path));
 
   // Compute staggered animation delay: active item gets index 0 (enters first),
-  // subsequent items enter one-by-one with staggered timing.
+  // subsequent items enter one-by-one with a slower, more graceful flow.
   const getAnimationDelay = (index) => {
     if (index === activeIndex) {
-      return '0.08s';
+      return '0.12s';
     }
     const offset = index > activeIndex ? index : index + 1;
-    return `${0.12 + offset * 0.055}s`;
+    return `${0.18 + offset * 0.085}s`;
   };
 
   return (
     <div
-      className="ks-mobile-fullscreen-root"
+      className={`ks-mobile-fullscreen-root ${isClosing ? 'is-closing' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-label="Navigation Menu"
@@ -151,7 +162,7 @@ export default function HamburgerMenu({
           <button
             type="button"
             className="ks-mobile-close-btn"
-            onClick={onClose}
+            onClick={handleCloseWithAnim}
             aria-label="Close navigation menu"
           >
             <X size={26} strokeWidth={1.75} />
@@ -175,10 +186,14 @@ export default function HamburgerMenu({
                     <Link
                       to={item.path}
                       className={`ks-mobile-nav-word ${active ? 'is-active' : ''}`}
-                      onClick={onClose}
+                      onClick={handleCloseWithAnim}
                     >
-                      <span className="ks-mobile-word-text">{item.label}</span>
-                      {active && <span className="ks-mobile-active-red-line" aria-hidden="true" />}
+                      <span className="ks-mobile-word-text">
+                        {item.label}
+                        {active && (
+                          <span className="ks-mobile-active-red-line-in-word" aria-hidden="true" />
+                        )}
+                      </span>
                     </Link>
 
                     {categories && categories.length > 0 && (
@@ -209,7 +224,7 @@ export default function HamburgerMenu({
                           key={cat.id || cat.slug}
                           to={`/categories/${cat.slug || cat.id}`}
                           className="ks-mobile-subcategory-item"
-                          onClick={onClose}
+                          onClick={handleCloseWithAnim}
                         >
                           {cat.name}
                         </Link>
@@ -229,21 +244,26 @@ export default function HamburgerMenu({
                 <Link
                   to={item.path}
                   className={`ks-mobile-nav-word ${active ? 'is-active' : ''}`}
-                  onClick={onClose}
+                  onClick={handleCloseWithAnim}
                 >
-                  <span className="ks-mobile-word-text">{item.label}</span>
-                  {item.count > 0 && (
-                    <span className="ks-mobile-word-badge">{item.count}</span>
-                  )}
-                  {active && <span className="ks-mobile-active-red-line" aria-hidden="true" />}
+                  <span className="ks-mobile-word-text">
+                    {item.label}
+                    {item.count > 0 && (
+                      <span className="ks-mobile-word-badge">{item.count}</span>
+                    )}
+                    {active && (
+                      <span className="ks-mobile-active-red-line-in-word" aria-hidden="true" />
+                    )}
+                  </span>
                 </Link>
               </div>
             );
           })}
         </nav>
 
-        {/* Bottom Utility Area (Separated, Icons Allowed Here) */}
+        {/* Bottom Utility Area */}
         <div className="ks-mobile-fullscreen-footer">
+          {/* Top Row in Footer: Theme and Alerts */}
           <div className="ks-mobile-footer-utilities">
             {/* Light / Dark Theme Toggle */}
             <button
@@ -267,7 +287,7 @@ export default function HamburgerMenu({
             <Link
               to="/notifications"
               className="ks-mobile-footer-icon-btn"
-              onClick={onClose}
+              onClick={handleCloseWithAnim}
               aria-label="Notifications"
             >
               <div className="ks-mobile-footer-icon-wrapper">
@@ -278,27 +298,38 @@ export default function HamburgerMenu({
               </div>
               <span className="ks-mobile-footer-label">ALERTS</span>
             </Link>
+          </div>
 
-            {/* Profile / Auth State */}
+          {/* Bottom Row in Footer: Real SIGN IN Button (or Profile/Logout if Authenticated) */}
+          <div className="ks-mobile-footer-auth-row">
             {user ? (
-              <button
-                type="button"
-                className="ks-mobile-footer-icon-btn"
-                onClick={handleLogout}
-                aria-label="Log Out"
-              >
-                <LogOut size={20} strokeWidth={1.75} />
-                <span className="ks-mobile-footer-label">LOGOUT</span>
-              </button>
+              <div className="ks-mobile-auth-logged-in">
+                <Link
+                  to="/profile"
+                  className="ks-mobile-profile-link"
+                  onClick={handleCloseWithAnim}
+                >
+                  <User size={18} strokeWidth={1.75} />
+                  <span>{user.full_name || 'MY ACCOUNT'}</span>
+                </Link>
+                <button
+                  type="button"
+                  className="ks-mobile-logout-btn"
+                  onClick={handleLogout}
+                  aria-label="Log Out"
+                >
+                  <LogOut size={16} strokeWidth={1.75} />
+                  <span>LOGOUT</span>
+                </button>
+              </div>
             ) : (
               <Link
                 to="/login"
-                className="ks-mobile-footer-icon-btn"
-                onClick={onClose}
+                className="ks-mobile-real-signin-btn"
+                onClick={handleCloseWithAnim}
                 aria-label="Sign In"
               >
-                <LogIn size={20} strokeWidth={1.75} />
-                <span className="ks-mobile-footer-label">SIGN IN</span>
+                SIGN IN
               </Link>
             )}
           </div>

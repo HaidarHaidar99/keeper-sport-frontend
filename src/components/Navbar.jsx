@@ -60,6 +60,9 @@ export default function Navbar({ siteSettings = {}, categories = [], counts = {}
     { label: 'HOME', path: '/' },
     { label: 'PRODUCTS', path: '/products' },
     { label: 'CATEGORIES', path: '/categories' },
+    { label: 'OFFERS', path: '/offers' },
+    { label: 'MY ORDERS', path: '/orders', count: counts.orders },
+    { label: 'CART', path: '/cart', count: counts.cart },
     { label: 'REVIEWS', path: '/reviews' },
     { label: 'ABOUT US', path: '/about' },
     { label: 'CONTACT US', path: '/contact' }
@@ -120,7 +123,7 @@ export default function Navbar({ siteSettings = {}, categories = [], counts = {}
             </Link>
           </div>
 
-          {/* Center: Desktop Horizontal Navigation Links with Dynamic Active Red Line */}
+          {/* Center: Desktop Horizontal Navigation Links (with red line IN the active word) */}
           <nav className="ks-navbar-desktop-nav" aria-label="Main Navigation">
             {desktopNavItems.map((item) => {
               const active = isActiveRoute(item.path);
@@ -130,29 +133,36 @@ export default function Navbar({ siteSettings = {}, categories = [], counts = {}
                   to={item.path}
                   className={`ks-nav-desktop-item ${active ? 'is-active' : ''}`}
                 >
-                  <span className="ks-nav-desktop-label">{item.label}</span>
-                  {active && <span className="ks-nav-desktop-indicator" aria-hidden="true" />}
+                  <span className="ks-nav-desktop-label">
+                    {item.label}
+                    {item.count > 0 && (
+                      <span className="ks-nav-inline-badge">{item.count}</span>
+                    )}
+                    {active && (
+                      <span className="ks-nav-desktop-indicator-in-word" aria-hidden="true" />
+                    )}
+                  </span>
                 </Link>
               );
             })}
           </nav>
 
-          {/* Right: Utility Actions (Search, Favorites, Orders, Cart, Notifications, Auth, Mobile Hamburger) */}
+          {/* Right: Desktop Icons (Search, Favorites, Notifications) + Top Right Sign In / Profile */}
           <div className="ks-navbar-right">
-            {/* Search Trigger Button */}
-            <button
-              type="button"
-              onClick={() => setSearchOpen(!searchOpen)}
-              className={`ks-nav-action-btn ${searchOpen ? 'is-active' : ''}`}
-              aria-label={searchOpen ? 'Close search' : 'Open search'}
-              title="Search"
-            >
-              {searchOpen ? <X size={19} strokeWidth={1.75} /> : <Search size={19} strokeWidth={1.75} />}
-            </button>
+            {/* Desktop Icons Grouped Next to Each Other */}
+            <div className="ks-navbar-desktop-icons-group">
+              {/* Search Button */}
+              <button
+                type="button"
+                onClick={() => setSearchOpen(!searchOpen)}
+                className={`ks-nav-action-btn ${searchOpen ? 'is-active' : ''}`}
+                aria-label={searchOpen ? 'Close search' : 'Open search'}
+                title="Search"
+              >
+                {searchOpen ? <X size={19} strokeWidth={1.75} /> : <Search size={19} strokeWidth={1.75} />}
+              </button>
 
-            {/* Desktop Utility Icons (Visible on laptop/desktop) */}
-            <div className="ks-navbar-desktop-utilities">
-              {/* Favorites */}
+              {/* Favorites Icon Button */}
               <Link
                 to="/favorites"
                 className="ks-nav-action-btn"
@@ -165,20 +175,7 @@ export default function Navbar({ siteSettings = {}, categories = [], counts = {}
                 )}
               </Link>
 
-              {/* Orders */}
-              <Link
-                to="/orders"
-                className="ks-nav-action-btn"
-                aria-label="My Orders"
-                title="My Orders"
-              >
-                <Package size={19} strokeWidth={1.75} />
-                {counts.orders > 0 && (
-                  <span className="ks-nav-badge ks-nav-badge-neutral">{counts.orders}</span>
-                )}
-              </Link>
-
-              {/* Notifications */}
+              {/* Notifications Icon Button */}
               <Link
                 to="/notifications"
                 className="ks-nav-action-btn"
@@ -190,54 +187,67 @@ export default function Navbar({ siteSettings = {}, categories = [], counts = {}
                   <span className="ks-nav-badge">{counts.notifications}</span>
                 )}
               </Link>
+            </div>
 
-              {/* Auth / Profile State */}
+            {/* Top Right Desktop Auth Control: Normal Sign In Button, or Profile Icon if Signed In */}
+            <div className="ks-navbar-desktop-auth">
               {user ? (
                 <Link
                   to="/profile"
-                  className="ks-nav-action-btn ks-nav-user-btn"
-                  aria-label="Account Profile"
-                  title={user.full_name || 'Profile'}
+                  className="ks-nav-action-btn ks-nav-profile-btn"
+                  aria-label="My Profile"
+                  title={user.full_name || 'My Profile'}
                 >
                   <User size={19} strokeWidth={1.75} />
                 </Link>
               ) : (
                 <Link
                   to="/login"
-                  className="ks-nav-auth-link"
+                  className="ks-nav-desktop-signin-btn"
                   aria-label="Sign In"
                 >
-                  <LogIn size={16} strokeWidth={1.75} />
-                  <span>SIGN IN</span>
+                  SIGN IN
                 </Link>
               )}
             </div>
 
-            {/* Cart Icon (Redesigned luxury shopping bag, real count only) */}
-            <Link
-              to="/cart"
-              className="ks-nav-action-btn ks-nav-cart-btn"
-              aria-label="Shopping Cart"
-              title="Shopping Cart"
-            >
-              <ShoppingBag size={19} strokeWidth={1.75} />
-              {counts.cart > 0 && (
-                <span className="ks-nav-badge">{counts.cart}</span>
-              )}
-            </Link>
+            {/* Mobile / Tablet Utility Controls (< 1024px) */}
+            <div className="ks-navbar-mobile-controls">
+              {/* Mobile Search Button */}
+              <button
+                type="button"
+                onClick={() => setSearchOpen(!searchOpen)}
+                className="ks-nav-action-btn"
+                aria-label={searchOpen ? 'Close search' : 'Open search'}
+              >
+                {searchOpen ? <X size={19} strokeWidth={1.75} /> : <Search size={19} strokeWidth={1.75} />}
+              </button>
 
-            {/* Mobile / Tablet Luxury Hamburger Button (Hidden on Desktop) */}
-            <button
-              type="button"
-              className="ks-hamburger-trigger"
-              onClick={() => setMenuOpen(true)}
-              aria-label="Open navigation menu"
-              aria-expanded={menuOpen}
-              title="Menu"
-            >
-              <span className="ks-hamburger-line ks-line-top" />
-              <span className="ks-hamburger-line ks-line-bottom" />
-            </button>
+              {/* Mobile Cart Button */}
+              <Link
+                to="/cart"
+                className="ks-nav-action-btn ks-nav-cart-btn"
+                aria-label="Shopping Cart"
+              >
+                <ShoppingBag size={19} strokeWidth={1.75} />
+                {counts.cart > 0 && (
+                  <span className="ks-nav-badge">{counts.cart}</span>
+                )}
+              </Link>
+
+              {/* Luxury Hamburger Trigger */}
+              <button
+                type="button"
+                className="ks-hamburger-trigger"
+                onClick={() => setMenuOpen(true)}
+                aria-label="Open navigation menu"
+                aria-expanded={menuOpen}
+                title="Menu"
+              >
+                <span className="ks-hamburger-line ks-line-top" />
+                <span className="ks-hamburger-line ks-line-bottom" />
+              </button>
+            </div>
           </div>
 
           {/* Centered Search Overlay (Expands gracefully with balanced space on both sides) */}
