@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import {
@@ -8,23 +8,22 @@ import {
   ChevronRight,
   Sun,
   Moon,
-  Home,
-  ShoppingBag,
-  Grid,
-  Heart,
-  ShoppingCart,
-  Package,
-  Star,
-  Info,
-  Mail,
+  Bell,
   User,
   LogOut,
   LogIn
 } from 'lucide-react';
 
-export default function HamburgerMenu({ isOpen, onClose, categories = [], counts = {} }) {
+export default function HamburgerMenu({
+  isOpen,
+  onClose,
+  siteSettings = {},
+  categories = [],
+  counts = {}
+}) {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const location = useLocation();
   const navigate = useNavigate();
 
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -40,7 +39,7 @@ export default function HamburgerMenu({ isOpen, onClose, categories = [], counts
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Lock body scroll when drawer is open
+  // Lock body scroll when full-screen menu is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -60,181 +59,249 @@ export default function HamburgerMenu({ isOpen, onClose, categories = [], counts
 
   if (!isOpen) return null;
 
-  return (
-    <div className="ks-drawer-root" role="dialog" aria-modal="true" aria-label="Navigation Menu">
-      {/* Backdrop */}
-      <div className="ks-drawer-backdrop" onClick={onClose} />
+  // Navigation Items (Clean Word-Based)
+  const navItems = [
+    { label: 'HOME', path: '/' },
+    { label: 'PRODUCTS', path: '/products' },
+    { label: 'CATEGORIES', path: '/categories', hasSubmenu: true },
+    { label: 'MY ORDERS', path: '/orders' },
+    { label: 'CART', path: '/cart', count: counts.cart },
+    { label: 'FAVORITES', path: '/favorites', count: counts.favorites },
+    { label: 'REVIEWS', path: '/reviews' },
+    { label: 'ABOUT US', path: '/about' },
+    { label: 'CONTACT US', path: '/contact' }
+  ];
 
-      {/* Drawer Container */}
-      <div className="ks-drawer-panel">
-        {/* Header */}
-        <div className="ks-drawer-header">
-          <div className="ks-drawer-brand">
-            KEEPER SPORTS
+  // Helper to check active status based on current route
+  const isItemActive = (path) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(path);
+  };
+
+  // Determine active item index so it enters FIRST in the sequential entrance animation
+  const activeIndex = navItems.findIndex((item) => isItemActive(item.path));
+
+  // Compute staggered animation delay: active item gets index 0 (enters first),
+  // subsequent items enter one-by-one with staggered timing.
+  const getAnimationDelay = (index) => {
+    if (index === activeIndex) {
+      return '0.08s';
+    }
+    const offset = index > activeIndex ? index : index + 1;
+    return `${0.12 + offset * 0.055}s`;
+  };
+
+  return (
+    <div
+      className="ks-mobile-fullscreen-root"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Navigation Menu"
+    >
+      {/* Full-Screen Container */}
+      <div className="ks-mobile-fullscreen-container">
+        {/* Top Header: Logo + Minimal Close Button */}
+        <div className="ks-mobile-fullscreen-header">
+          <div className="ks-mobile-header-logo">
+            {siteSettings?.logo_path ? (
+              <img
+                src={siteSettings.logo_path}
+                alt={siteSettings?.site_name || 'Store Logo'}
+                className="ks-mobile-logo-img"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.parentElement?.querySelector('.ks-mobile-logo-placeholder');
+                  if (fallback) fallback.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div
+              className="ks-mobile-logo-placeholder"
+              style={{ display: siteSettings?.logo_path ? 'none' : 'flex' }}
+              aria-label="Store Logo"
+            >
+              <svg
+                className="ks-mobile-logo-mark"
+                viewBox="0 0 40 40"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M20 4L34 11V21C34 29.5 28 35.5 20 38C12 35.5 6 29.5 6 21V11L20 4Z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M20 13V27M13 20H27"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity="0.6"
+                />
+              </svg>
+            </div>
           </div>
+
           <button
             type="button"
-            className="ks-drawer-close-btn"
+            className="ks-mobile-close-btn"
             onClick={onClose}
-            aria-label="Close menu"
+            aria-label="Close navigation menu"
           >
-            <X size={20} />
+            <X size={26} strokeWidth={1.75} />
           </button>
         </div>
 
-        {/* User Info Bar if Authenticated */}
-        {user && (
-          <div className="ks-drawer-user-info">
-            <div className="ks-drawer-user-avatar">
-              <User size={16} />
-            </div>
-            <div className="ks-drawer-user-details">
-              <div className="ks-drawer-user-name">{user.full_name || 'Customer'}</div>
-              <div className="ks-drawer-user-email">{user.email}</div>
-            </div>
-          </div>
-        )}
+        {/* Main Editorial Word-Based Navigation Links */}
+        <nav className="ks-mobile-fullscreen-nav" aria-label="Mobile Navigation">
+          {navItems.map((item, index) => {
+            const active = isItemActive(item.path);
+            const animDelay = getAnimationDelay(index);
 
-        {/* Scrollable Navigation Links */}
-        <div className="ks-drawer-nav">
-          {/* Home */}
-          <Link to="/" className="ks-drawer-link" onClick={onClose}>
-            <Home size={17} className="ks-drawer-icon" />
-            <span>Home</span>
-          </Link>
-
-          {/* Products */}
-          <Link to="/products" className="ks-drawer-link" onClick={onClose}>
-            <ShoppingBag size={17} className="ks-drawer-icon" />
-            <span>Products</span>
-          </Link>
-
-          {/* Categories with Clickable Word + Chevron Submenu Toggle */}
-          <div className="ks-drawer-category-group">
-            <div className="ks-drawer-category-row">
-              <Link to="/categories" className="ks-drawer-link-inner" onClick={onClose}>
-                <Grid size={17} className="ks-drawer-icon" />
-                <span>Categories</span>
-              </Link>
-              <button
-                type="button"
-                className="ks-drawer-chevron-btn"
-                onClick={() => setCategoriesOpen(!categoriesOpen)}
-                aria-label={categoriesOpen ? 'Collapse categories' : 'Expand categories'}
-                aria-expanded={categoriesOpen}
-              >
-                {categoriesOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-              </button>
-            </div>
-
-            {/* Submenu */}
-            {categoriesOpen && (
-              <div className="ks-drawer-submenu">
-                {categories && categories.length > 0 ? (
-                  categories.map((cat) => (
+            if (item.hasSubmenu) {
+              return (
+                <div
+                  key={item.label}
+                  className={`ks-mobile-nav-group ${active ? 'is-active' : ''}`}
+                  style={{ animationDelay: animDelay }}
+                >
+                  <div className="ks-mobile-nav-row">
                     <Link
-                      key={cat.id || cat.slug}
-                      to={`/categories/${cat.slug || cat.id}`}
-                      className="ks-drawer-sublink"
+                      to={item.path}
+                      className={`ks-mobile-nav-word ${active ? 'is-active' : ''}`}
                       onClick={onClose}
                     >
-                      {cat.name}
+                      <span className="ks-mobile-word-text">{item.label}</span>
+                      {active && <span className="ks-mobile-active-red-line" aria-hidden="true" />}
                     </Link>
-                  ))
-                ) : (
-                  <div className="ks-drawer-empty-note">
-                    No categories available
+
+                    {categories && categories.length > 0 && (
+                      <button
+                        type="button"
+                        className="ks-mobile-category-toggle"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCategoriesOpen(!categoriesOpen);
+                        }}
+                        aria-label={categoriesOpen ? 'Collapse categories' : 'Expand categories'}
+                        aria-expanded={categoriesOpen}
+                      >
+                        {categoriesOpen ? (
+                          <ChevronDown size={22} strokeWidth={1.75} />
+                        ) : (
+                          <ChevronRight size={22} strokeWidth={1.75} />
+                        )}
+                      </button>
+                    )}
                   </div>
-                )}
+
+                  {/* Expandable Subcategories */}
+                  {categoriesOpen && categories && categories.length > 0 && (
+                    <div className="ks-mobile-subcategories-list">
+                      {categories.map((cat) => (
+                        <Link
+                          key={cat.id || cat.slug}
+                          to={`/categories/${cat.slug || cat.id}`}
+                          className="ks-mobile-subcategory-item"
+                          onClick={onClose}
+                        >
+                          {cat.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <div
+                key={item.label}
+                className={`ks-mobile-nav-item ${active ? 'is-active' : ''}`}
+                style={{ animationDelay: animDelay }}
+              >
+                <Link
+                  to={item.path}
+                  className={`ks-mobile-nav-word ${active ? 'is-active' : ''}`}
+                  onClick={onClose}
+                >
+                  <span className="ks-mobile-word-text">{item.label}</span>
+                  {item.count > 0 && (
+                    <span className="ks-mobile-word-badge">{item.count}</span>
+                  )}
+                  {active && <span className="ks-mobile-active-red-line" aria-hidden="true" />}
+                </Link>
               </div>
-            )}
-          </div>
+            );
+          })}
+        </nav>
 
-          {/* My Orders */}
-          <Link to="/orders" className="ks-drawer-link" onClick={onClose}>
-            <Package size={17} className="ks-drawer-icon" />
-            <span>My Orders</span>
-            {counts.orders > 0 && (
-              <span className="ks-drawer-badge">{counts.orders}</span>
-            )}
-          </Link>
-
-          {/* Cart */}
-          <Link to="/cart" className="ks-drawer-link" onClick={onClose}>
-            <ShoppingCart size={17} className="ks-drawer-icon" />
-            <span>Cart</span>
-            {counts.cart > 0 && (
-              <span className="ks-drawer-badge">{counts.cart}</span>
-            )}
-          </Link>
-
-          {/* Favorites */}
-          <Link to="/favorites" className="ks-drawer-link" onClick={onClose}>
-            <Heart size={17} className="ks-drawer-icon" />
-            <span>Favorites</span>
-            {counts.favorites > 0 && (
-              <span className="ks-drawer-badge">{counts.favorites}</span>
-            )}
-          </Link>
-
-          {/* Reviews */}
-          <Link to="/reviews" className="ks-drawer-link" onClick={onClose}>
-            <Star size={17} className="ks-drawer-icon" />
-            <span>Reviews</span>
-          </Link>
-
-          {/* About Us */}
-          <Link to="/about" className="ks-drawer-link" onClick={onClose}>
-            <Info size={17} className="ks-drawer-icon" />
-            <span>About Us</span>
-          </Link>
-
-          {/* Contact Us */}
-          <Link to="/contact" className="ks-drawer-link" onClick={onClose}>
-            <Mail size={17} className="ks-drawer-icon" />
-            <span>Contact Us</span>
-          </Link>
-        </div>
-
-        {/* Drawer Footer Actions */}
-        <div className="ks-drawer-footer">
-          {/* Theme Toggle */}
-          <button
-            type="button"
-            className="ks-drawer-theme-btn"
-            onClick={toggleTheme}
-            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-              <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
-            </div>
-            <span style={{ fontSize: '0.75rem', opacity: 0.7, textTransform: 'uppercase' }}>
-              {theme}
-            </span>
-          </button>
-
-          {/* Auth Button */}
-          {user ? (
+        {/* Bottom Utility Area (Separated, Icons Allowed Here) */}
+        <div className="ks-mobile-fullscreen-footer">
+          <div className="ks-mobile-footer-utilities">
+            {/* Light / Dark Theme Toggle */}
             <button
               type="button"
-              className="ks-drawer-auth-btn"
-              onClick={handleLogout}
+              className="ks-mobile-footer-icon-btn"
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              title="Toggle Theme"
             >
-              <LogOut size={16} />
-              <span>LOGOUT</span>
+              {theme === 'dark' ? (
+                <Sun size={20} strokeWidth={1.75} />
+              ) : (
+                <Moon size={20} strokeWidth={1.75} />
+              )}
+              <span className="ks-mobile-footer-label">
+                {theme === 'dark' ? 'LIGHT' : 'DARK'}
+              </span>
             </button>
-          ) : (
+
+            {/* Notifications */}
             <Link
-              to="/login"
-              className="ks-drawer-auth-btn"
+              to="/notifications"
+              className="ks-mobile-footer-icon-btn"
               onClick={onClose}
-              style={{ textDecoration: 'none' }}
+              aria-label="Notifications"
             >
-              <LogIn size={16} />
-              <span>SIGN IN</span>
+              <div className="ks-mobile-footer-icon-wrapper">
+                <Bell size={20} strokeWidth={1.75} />
+                {counts.notifications > 0 && (
+                  <span className="ks-nav-badge ks-mobile-footer-badge">{counts.notifications}</span>
+                )}
+              </div>
+              <span className="ks-mobile-footer-label">ALERTS</span>
             </Link>
-          )}
+
+            {/* Profile / Auth State */}
+            {user ? (
+              <button
+                type="button"
+                className="ks-mobile-footer-icon-btn"
+                onClick={handleLogout}
+                aria-label="Log Out"
+              >
+                <LogOut size={20} strokeWidth={1.75} />
+                <span className="ks-mobile-footer-label">LOGOUT</span>
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="ks-mobile-footer-icon-btn"
+                onClick={onClose}
+                aria-label="Sign In"
+              >
+                <LogIn size={20} strokeWidth={1.75} />
+                <span className="ks-mobile-footer-label">SIGN IN</span>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </div>
