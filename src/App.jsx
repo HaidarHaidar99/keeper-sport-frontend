@@ -11,6 +11,19 @@ import VerifyEmailPage from './pages/VerifyEmailPage';
 import HomePage from './pages/HomePage';
 import ProductsPage from './pages/ProductsPage';
 
+// Admin Components & Pages
+import AdminGuard from './components/admin/AdminGuard';
+import AdminLayout from './components/admin/AdminLayout';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminHomePage from './pages/admin/AdminHomePage';
+import AdminProductsPage from './pages/admin/AdminProductsPage';
+import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
+import AdminOrdersPage from './pages/admin/AdminOrdersPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminReviewsPage from './pages/admin/AdminReviewsPage';
+import AdminNotificationsPage from './pages/admin/AdminNotificationsPage';
+import AdminSettingsPage from './pages/admin/AdminSettingsPage';
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -21,6 +34,26 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/shop" element={<ProductsPage />} />
+            
+            {/* Protected Admin Panel Routes */}
+            <Route
+              path="/admin"
+              element={
+                <AdminGuard>
+                  <AdminLayout />
+                </AdminGuard>
+              }
+            >
+              <Route index element={<AdminDashboardPage />} />
+              <Route path="home" element={<AdminHomePage />} />
+              <Route path="products" element={<AdminProductsPage />} />
+              <Route path="categories" element={<AdminCategoriesPage />} />
+              <Route path="orders" element={<AdminOrdersPage />} />
+              <Route path="users" element={<AdminUsersPage />} />
+              <Route path="reviews" element={<AdminReviewsPage />} />
+              <Route path="notifications" element={<AdminNotificationsPage />} />
+              <Route path="settings" element={<AdminSettingsPage />} />
+            </Route>
             
             {/* Customer Authentication Routes */}
             <Route path="/login" element={<LoginPage />} />
