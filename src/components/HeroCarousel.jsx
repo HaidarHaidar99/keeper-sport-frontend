@@ -1,41 +1,38 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, Shield, ArrowRight } from 'lucide-react';
 
 export default function HeroCarousel({ slides = [] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const videoRefs = useRef({});
 
-  // Clean empty/fallback state when no slides are configured in the backend
-  if (!slides || slides.length === 0) {
+  const validSlides = Array.isArray(slides) ? slides.filter((s) => s && (s.media_path || s.title)) : [];
+
+  // Default rich showcase when no slides are configured in the database
+  if (validSlides.length === 0) {
     return (
-      <section className="ks-hero-root ks-hero-empty" aria-label="Hero Showcase">
+      <section className="ks-hero-root ks-hero-fallback-active" aria-label="Hero Showcase">
         <div className="ks-hero-container">
           <div className="ks-hero-ambient-canvas" />
-          <div className="ks-hero-overlay" />
-          <div className="ks-hero-empty-content">
-            <div className="ks-hero-empty-emblem" aria-hidden="true">
-              <svg
-                viewBox="0 0 60 60"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="ks-hero-empty-icon"
-              >
-                <path
-                  d="M30 6L50 16.5V31.5C50 44.25 41.5 53.25 30 57C18.5 53.25 10 44.25 10 31.5V16.5L30 6Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M30 19.5V40.5M19.5 30H40.5"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  opacity="0.4"
-                />
-              </svg>
+          <div className="ks-hero-fallback-card">
+            <div className="ks-hero-badge-pill">
+              <Shield size={14} className="ks-hero-badge-icon" />
+              <span>KEEPER SPORTS • OFFICIAL STORE</span>
+            </div>
+            <h1 className="ks-hero-title">
+              PRO GOALKEEPER GEAR &amp; APPAREL
+            </h1>
+            <p className="ks-hero-subtitle">
+              Engineered for matchday dominance. Explore professional goalkeeper gloves, match kits, boots, and training essentials.
+            </p>
+            <div className="ks-hero-actions">
+              <Link to="/products" className="ks-hero-btn-primary">
+                <span>EXPLORE PRODUCTS</span>
+                <ArrowRight size={16} />
+              </Link>
+              <Link to="/products?on_sale=true" className="ks-hero-btn-secondary">
+                <span>VIEW OFFERS</span>
+              </Link>
             </div>
           </div>
         </div>
@@ -43,29 +40,29 @@ export default function HeroCarousel({ slides = [] }) {
     );
   }
 
-  const currentSlide = slides[currentIndex] || slides[0];
+  const currentSlide = validSlides[currentIndex] || validSlides[0] || {};
 
   // Auto rotation if multiple slides
   useEffect(() => {
-    if (slides.length <= 1) return;
+    if (validSlides.length <= 1) return;
 
-    const duration = (currentSlide?.duration_seconds || 6) * 1000;
+    const duration = Math.max(2, currentSlide?.duration_seconds || 6) * 1000;
     const timer = setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % slides.length);
+      setCurrentIndex((prev) => (prev + 1) % validSlides.length);
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [currentIndex, slides, currentSlide]);
+  }, [currentIndex, validSlides, currentSlide]);
 
   return (
     <section className="ks-hero-root" aria-label="Hero Showcase">
       <div className="ks-hero-container">
         {/* Media Background */}
         <div className="ks-hero-media-wrapper">
-          {currentSlide.media_type === 'video' && currentSlide.media_path ? (
+          {currentSlide?.media_type === 'video' && currentSlide?.media_path ? (
             <video
               ref={(el) => {
-                if (currentSlide.id) videoRefs.current[currentSlide.id] = el;
+                if (currentSlide?.id) videoRefs.current[currentSlide.id] = el;
               }}
               key={currentSlide.media_path}
               src={currentSlide.media_path}
@@ -76,7 +73,7 @@ export default function HeroCarousel({ slides = [] }) {
               playsInline
               className="ks-hero-media ks-hero-video"
             />
-          ) : currentSlide.media_path ? (
+          ) : currentSlide?.media_path ? (
             <img
               src={currentSlide.media_path}
               alt={currentSlide.title || 'Hero Banner'}
@@ -93,11 +90,11 @@ export default function HeroCarousel({ slides = [] }) {
           <div className="ks-hero-overlay" />
         </div>
 
-        {/* Dynamic Content Group (Only renders fields that actually exist) */}
-        {(currentSlide.title ||
-          currentSlide.subtitle ||
-          (currentSlide.primary_button_text && currentSlide.primary_button_route) ||
-          (currentSlide.secondary_button_text && currentSlide.secondary_button_route)) && (
+        {/* Dynamic Content Group */}
+        {(currentSlide?.title ||
+          currentSlide?.subtitle ||
+          (currentSlide?.primary_button_text && currentSlide?.primary_button_route) ||
+          (currentSlide?.secondary_button_text && currentSlide?.secondary_button_route)) && (
           <div className="ks-hero-content-group">
             {currentSlide.title && (
               <h1 className="ks-hero-title">
@@ -111,7 +108,7 @@ export default function HeroCarousel({ slides = [] }) {
               </p>
             )}
 
-            {/* Action Buttons (Only render if text and route exist) */}
+            {/* Action Buttons */}
             {((currentSlide.primary_button_text && currentSlide.primary_button_route) ||
               (currentSlide.secondary_button_text && currentSlide.secondary_button_route)) && (
               <div className="ks-hero-actions">
@@ -137,10 +134,10 @@ export default function HeroCarousel({ slides = [] }) {
           </div>
         )}
 
-        {/* Carousel Slide Indicators (Only if multiple slides) */}
-        {slides.length > 1 && (
+        {/* Carousel Slide Indicators */}
+        {validSlides.length > 1 && (
           <div className="ks-hero-indicators" role="tablist" aria-label="Hero Slides">
-            {slides.map((slide, idx) => (
+            {validSlides.map((slide, idx) => (
               <button
                 key={slide.id || idx}
                 type="button"

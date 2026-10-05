@@ -1,85 +1,105 @@
 /* =============================================================================
-   KEEPER SPORTS — AUTHENTICATION DESIGN SYSTEM
-   Visual: 90-Degree Square Corners | No Glow | Perfect Autofill | Light + Dark
+   KEEPER SPORTS — BRAND DESIGN SYSTEM & THEME
+   Visual: Modern Athletic Luxury | Warm Off-White Canvas | Pure White Cards | Keeper Red Accents
    ============================================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
 :root,
-[data-theme="dark"] {
-  /* Canvas & Card (Dark Mode) */
-  --ks-bg-canvas: #000000;
-  --ks-bg-card: #111216;
-  --ks-border-card: #1c1f27;
-
-  /* Inputs (Dark Mode) */
-  --ks-bg-input: #060709;
-  --ks-border-input: #1f222b;
-  --ks-border-input-focus: #E10600;
-  --ks-text-input: #FFFFFF;
-  --ks-placeholder: #535868;
-
-  /* Typography (Dark Mode) */
-  --ks-text-title: #FFFFFF;
-  --ks-text-subtitle: #8e94a4;
-  --ks-text-label: #727888;
-  --ks-text-muted: #535866;
-  --ks-divider-line: #1c202a;
-
-  /* Accent Red */
-  --ks-accent-red: #E10600;
-  --ks-accent-red-hover: #ff2a24;
-
-  /* Primary Button (Dark Mode: Solid White with Black text) */
-  --ks-btn-primary-bg: #FFFFFF;
-  --ks-btn-primary-text: #000000;
-  --ks-btn-primary-hover: #E2E2E2;
-
-  /* Google Button (Dark Mode) */
-  --ks-btn-google-bg: #060709;
-  --ks-btn-google-border: #20242f;
-  --ks-btn-google-text: #FFFFFF;
-  --ks-btn-google-hover: #0d0f14;
-
-  /* Status Colors */
-  --ks-error-red: #EF4444;
-  --ks-error-bg: rgba(239, 68, 68, 0.1);
-  --ks-error-border: rgba(239, 68, 68, 0.25);
-  --ks-success-green: #10B981;
-  --ks-success-bg: rgba(16, 185, 129, 0.1);
-  --ks-success-border: rgba(16, 185, 129, 0.25);
-}
-
 [data-theme="light"] {
-  /* Canvas & Card (Light Mode) */
-  --ks-bg-canvas: #F4F5F7;
+  /* Canvas & Card (Light Mode - Keeper Sports Primary Brand Identity) */
+  --ks-bg-canvas: #FCFAF5;
   --ks-bg-card: #FFFFFF;
-  --ks-border-card: #E2E5EB;
+  --ks-border-card: #E5E7EB;
 
   /* Inputs (Light Mode) */
   --ks-bg-input: #FFFFFF;
-  --ks-border-input: #CBD0DC;
+  --ks-border-input: #D1D5DB;
   --ks-border-input-focus: #E10600;
-  --ks-text-input: #000000;
-  --ks-placeholder: #8A92A4;
+  --ks-text-input: #111317;
+  --ks-placeholder: #8C93A3;
 
   /* Typography (Light Mode) */
-  --ks-text-title: #0A0A0A;
-  --ks-text-subtitle: #5A6273;
-  --ks-text-label: #4B5263;
-  --ks-text-muted: #7E8696;
-  --ks-divider-line: #E2E5EB;
+  --ks-text-title: #111317;
+  --ks-text-subtitle: #4B5563;
+  --ks-text-label: #374151;
+  --ks-text-muted: #6B7280;
+  --ks-divider-line: #E5E7EB;
 
-  /* Primary Button (Light Mode: Solid Black with White text) */
-  --ks-btn-primary-bg: #0A0A0A;
+  /* Accent Red */
+  --ks-accent-red: #E10600;
+  --ks-accent-red-hover: #C70500;
+
+  /* Primary Button (Keeper Sports Signature Red with White text) */
+  --ks-btn-primary-bg: #E10600;
   --ks-btn-primary-text: #FFFFFF;
-  --ks-btn-primary-hover: #222222;
+  --ks-btn-primary-hover: #C70500;
 
-  /* Google Button (Light Mode) */
+  /* Secondary / Google Button (Light Mode) */
   --ks-btn-google-bg: #FFFFFF;
-  --ks-btn-google-border: #CBD0DC;
-  --ks-btn-google-text: #0A0A0A;
-  --ks-btn-google-hover: #F8F9FA;
+  --ks-btn-google-border: #D1D5DB;
+  --ks-btn-google-text: #111317;
+  --ks-btn-google-hover: #F9FAFB;
+
+  /* Status Colors */
+  --ks-error-red: #DC2626;
+  --ks-error-bg: rgba(220, 38, 38, 0.08);
+  --ks-error-border: rgba(220, 38, 38, 0.25);
+  --ks-success-green: #10B981;
+  --ks-success-bg: rgba(16, 185, 129, 0.08);
+  --ks-success-border: rgba(16, 185, 129, 0.25);
+
+  /* Radius Tokens (Consistent modern rounded ~10-16px) */
+  --ks-radius-xs: 6px;
+  --ks-radius-sm: 8px;
+  --ks-radius-md: 10px;
+  --ks-radius-lg: 14px;
+  --ks-radius-xl: 16px;
+  --ks-radius-full: 9999px;
+}
+
+[data-theme="dark"] {
+  /* Canvas & Card (Dark Mode) */
+  --ks-bg-canvas: #0A0B0E;
+  --ks-bg-card: #14161C;
+  --ks-border-card: #222632;
+
+  /* Inputs (Dark Mode) */
+  --ks-bg-input: #0E1015;
+  --ks-border-input: #262B38;
+  --ks-border-input-focus: #E10600;
+  --ks-text-input: #F3F4F6;
+  --ks-placeholder: #5A6275;
+
+  /* Typography (Dark Mode) */
+  --ks-text-title: #FFFFFF;
+  --ks-text-subtitle: #9CA3AF;
+  --ks-text-label: #8C94A6;
+  --ks-text-muted: #6B7280;
+  --ks-divider-line: #222632;
+
+  /* Accent Red */
+  --ks-accent-red: #E10600;
+  --ks-accent-red-hover: #FF2E28;
+
+  /* Primary Button (Keeper Sports Signature Red in dark mode too) */
+  --ks-btn-primary-bg: #E10600;
+  --ks-btn-primary-text: #FFFFFF;
+  --ks-btn-primary-hover: #FF2E28;
+
+  /* Google Button (Dark Mode) */
+  --ks-btn-google-bg: #14161C;
+  --ks-btn-google-border: #262B38;
+  --ks-btn-google-text: #FFFFFF;
+  --ks-btn-google-hover: #1C1F28;
+
+  /* Status Colors */
+  --ks-error-red: #EF4444;
+  --ks-error-bg: rgba(239, 68, 68, 0.12);
+  --ks-error-border: rgba(239, 68, 68, 0.3);
+  --ks-success-green: #10B981;
+  --ks-success-bg: rgba(16, 185, 129, 0.12);
+  --ks-success-border: rgba(16, 185, 129, 0.3);
 }
 
 *, *::before, *::after {
@@ -94,9 +114,15 @@ html, body {
   background-color: var(--ks-bg-canvas);
   color: var(--ks-text-title);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.4;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .ks-font-display {
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 /* Fullscreen Centering Canvas */
@@ -120,7 +146,7 @@ html, body {
   height: 36px;
   background-color: var(--ks-bg-card);
   border: 1px solid var(--ks-border-card);
-  border-radius: 0 !important;
+  border-radius: var(--ks-radius-md, 10px);
   color: var(--ks-text-subtitle);
   display: inline-flex;
   align-items: center;
@@ -135,12 +161,7 @@ html, body {
 }
 
 /* Centered Authentication Card (Subtle, tasteful border radius on outer container) */
-.ks-auth-card {
-  width: 100%;
-  max-width: 410px;
-  background-color: var(--ks-bg-card);
-  border: 1px solid var(--ks-border-card);
-  border-radius: 8px !important;
+.ks-auth-card {-radius: var(--ks-radius-lg, 14px);
   padding: 44px 34px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
 }
@@ -153,7 +174,7 @@ html, body {
 
 /* Header: Serif Title + Muted Subtitle */
 .ks-auth-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 2.25rem;
   font-weight: 800;
   letter-spacing: -0.01em;
@@ -196,7 +217,7 @@ html, body {
   padding: 0 14px;
   background-color: var(--ks-bg-input);
   border: 1px solid var(--ks-border-input);
-  border-radius: 0 !important;
+  border-radius: var(--ks-radius-md, 10px);
   color: var(--ks-text-input);
   font-size: 0.875rem;
   font-family: inherit;
@@ -238,7 +259,7 @@ input:-webkit-autofill:active {
   -webkit-text-fill-color: var(--ks-text-input) !important;
   caret-color: var(--ks-text-input) !important;
   border-color: var(--ks-border-input) !important;
-  border-radius: 0 !important;
+  border-radius: var(--ks-radius-md, 10px);
   font-family: inherit !important;
   transition: background-color 5000s ease-in-out 0s;
 }
@@ -254,7 +275,7 @@ input:autofill {
   background-color: var(--ks-bg-input) !important;
   color: var(--ks-text-input) !important;
   border-color: var(--ks-border-input) !important;
-  border-radius: 0 !important;
+  border-radius: var(--ks-radius-md, 10px);
 }
 
 /* Eye Toggle Button */
@@ -265,7 +286,7 @@ input:autofill {
   transform: translateY(-50%);
   background: none;
   border: none;
-  border-radius: 0 !important;
+  border-radius: var(--ks-radius-md, 10px);
   color: var(--ks-text-muted);
   cursor: pointer;
   display: flex;
@@ -314,7 +335,7 @@ input:autofill {
   background-color: var(--ks-btn-primary-bg);
   color: var(--ks-btn-primary-text);
   border: none;
-  border-radius: 0 !important;
+  border-radius: var(--ks-radius-md, 10px);
   font-family: inherit;
   font-size: 0.785rem;
   font-weight: 800;
@@ -396,7 +417,7 @@ input:autofill {
   background-color: var(--ks-btn-google-bg);
   color: var(--ks-btn-google-text);
   border: 1px solid var(--ks-btn-google-border);
-  border-radius: 0 !important;
+  border-radius: var(--ks-radius-md, 10px);
   font-family: inherit;
   font-size: 0.75rem;
   font-weight: 700;
@@ -445,7 +466,7 @@ input:autofill {
 /* Alerts (Square) */
 .ks-alert {
   padding: 10px 14px;
-  border-radius: 0 !important;
+  border-radius: var(--ks-radius-md, 10px);
   font-size: 0.8rem;
   line-height: 1.4;
   margin-bottom: 18px;
@@ -678,7 +699,7 @@ input:autofill {
   text-transform: uppercase;
   text-decoration: none;
   border: none;
-  border-radius: 0 !important;
+  border-radius: var(--ks-radius-md, 10px);
   transition: background-color 0.15s ease, transform 0.15s ease;
 }
 
@@ -781,7 +802,7 @@ input:autofill {
   align-items: center;
   background-color: #0A0A0A;
   border: 1px solid #222222;
-  border-radius: 0 !important;
+  border-radius: var(--ks-radius-md, 10px);
   height: 44px;
   padding: 0 14px;
   gap: 10px;
@@ -1209,7 +1230,7 @@ input:autofill {
   text-transform: uppercase;
   text-decoration: none;
   border: none;
-  border-radius: 0 !important;
+  border-radius: var(--ks-radius-md, 10px);
   transition: background-color 0.15s ease;
 }
 
@@ -1433,7 +1454,7 @@ input:autofill {
 }
 
 .ks-hero-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: clamp(2.15rem, 5.5vw, 4.25rem);
   font-weight: 900;
   letter-spacing: -0.01em;
@@ -1474,13 +1495,14 @@ input:autofill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   min-width: 190px;
   height: 50px;
   padding: 0 32px;
-  background-color: #FFFFFF;
-  color: #000000;
+  background-color: var(--ks-accent-red);
+  color: #FFFFFF;
   border: none;
-  border-radius: 0 !important;
+  border-radius: var(--ks-radius-md, 10px);
   font-family: inherit;
   font-size: 0.8125rem;
   font-weight: 800;
@@ -1488,34 +1510,37 @@ input:autofill {
   text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 4px 16px rgba(225, 6, 0, 0.28);
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 [data-theme="light"] .ks-hero-btn-primary {
-  background-color: #0A0A0A;
+  background-color: var(--ks-accent-red);
   color: #FFFFFF;
 }
 
 .ks-hero-btn-primary:hover {
-  background-color: #E2E2E2;
-  transform: translateY(-1px);
+  background-color: var(--ks-accent-red-hover, #C70500);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(225, 6, 0, 0.38);
 }
 
 [data-theme="light"] .ks-hero-btn-primary:hover {
-  background-color: #222222;
+  background-color: var(--ks-accent-red-hover, #C70500);
 }
 
 .ks-hero-btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   min-width: 190px;
   height: 50px;
   padding: 0 32px;
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.08);
   color: #FFFFFF;
-  border: 1.5px solid #FFFFFF;
-  border-radius: 0 !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  border-radius: var(--ks-radius-md, 10px);
   font-family: inherit;
   font-size: 0.8125rem;
   font-weight: 800;
@@ -1523,23 +1548,26 @@ input:autofill {
   text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  backdrop-filter: blur(8px);
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
 }
 
 [data-theme="light"] .ks-hero-btn-secondary {
-  color: #0A0A0A;
-  border-color: #0A0A0A;
+  background-color: rgba(0, 0, 0, 0.03);
+  color: #111317;
+  border-color: #D1D5DB;
 }
 
 .ks-hero-btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.18);
   border-color: #FFFFFF;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 [data-theme="light"] .ks-hero-btn-secondary:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  border-color: #0A0A0A;
+  background-color: rgba(0, 0, 0, 0.06);
+  border-color: #9CA3AF;
+  color: #000000;
 }
 
 .ks-hero-indicators {
@@ -1620,6 +1648,471 @@ input:autofill {
   }
 }
 
+/* Hero Fallback Showcase (When DB has 0 hero slides or during loading) */
+.ks-hero-fallback-active {
+  background-color: var(--ks-bg-canvas);
+  min-height: calc(100vh - 102px);
+  min-height: calc(100dvh - 102px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+}
+
+.ks-hero-fallback-card {
+  position: relative;
+  z-index: 10;
+  max-width: 760px;
+  width: 100%;
+  text-align: center;
+  margin: 0 auto;
+  padding: 48px 32px;
+  background-color: var(--ks-bg-card);
+  border: 1px solid var(--ks-border-card);
+  border-radius: var(--ks-radius-xl, 16px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+}
+
+.ks-hero-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background-color: rgba(225, 6, 0, 0.08);
+  border: 1px solid rgba(225, 6, 0, 0.2);
+  border-radius: var(--ks-radius-full, 9999px);
+  color: var(--ks-accent-red);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.ks-hero-badge-icon {
+  color: var(--ks-accent-red);
+}
+
+/* =============================================================================
+   MOBILE SLIDING DRAWER NAVIGATION (Right-Side Curtain with Red Active Indicators)
+   ============================================================================= */
+.ks-mobile-drawer-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.ks-mobile-drawer-root.is-open {
+  pointer-events: auto;
+}
+
+.ks-mobile-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  opacity: 0;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ks-mobile-drawer-root.is-open .ks-mobile-drawer-backdrop {
+  opacity: 1;
+}
+
+.ks-mobile-drawer-root.is-closing .ks-mobile-drawer-backdrop {
+  opacity: 0;
+}
+
+.ks-mobile-drawer-panel {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 340px;
+  height: 100%;
+  height: 100dvh;
+  background-color: var(--ks-bg-card);
+  color: var(--ks-text-title);
+  border-left: 1px solid var(--ks-border-card);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.25);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ks-mobile-drawer-root.is-open .ks-mobile-drawer-panel {
+  transform: translateX(0);
+}
+
+.ks-mobile-drawer-root.is-closing .ks-mobile-drawer-panel {
+  transform: translateX(100%);
+}
+
+.ks-mobile-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--ks-border-card);
+  flex-shrink: 0;
+}
+
+.ks-mobile-drawer-brand {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--ks-text-title);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ks-mobile-drawer-close {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ks-radius-md, 10px);
+  background-color: var(--ks-bg-canvas);
+  border: 1px solid var(--ks-border-card);
+  color: var(--ks-text-subtitle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ks-mobile-drawer-close:hover {
+  color: var(--ks-accent-red);
+  border-color: var(--ks-accent-red);
+}
+
+.ks-mobile-drawer-user-card {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--ks-border-card);
+  background-color: var(--ks-bg-canvas);
+  flex-shrink: 0;
+}
+
+.ks-mobile-drawer-user-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ks-mobile-drawer-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--ks-radius-full, 9999px);
+  background-color: var(--ks-accent-red);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.ks-mobile-drawer-nav {
+  padding: 12px 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.ks-mobile-drawer-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 22px;
+  color: var(--ks-text-title);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.ks-mobile-drawer-link:hover,
+.ks-mobile-drawer-link.is-active {
+  background-color: rgba(225, 6, 0, 0.05);
+  color: var(--ks-accent-red);
+}
+
+.ks-mobile-active-bar {
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3.5px;
+  background-color: var(--ks-accent-red);
+  border-radius: 0 4px 4px 0;
+}
+
+.ks-mobile-submenu {
+  background-color: var(--ks-bg-canvas);
+  padding: 6px 0;
+  border-top: 1px solid var(--ks-border-card);
+  border-bottom: 1px solid var(--ks-border-card);
+}
+
+.ks-mobile-sublink {
+  display: block;
+  padding: 9px 24px 9px 38px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ks-text-subtitle);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.ks-mobile-sublink:hover,
+.ks-mobile-sublink.is-active {
+  color: var(--ks-accent-red);
+}
+
+.ks-mobile-drawer-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background-color: var(--ks-accent-red);
+  color: #FFFFFF;
+  border-radius: var(--ks-radius-full, 9999px);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.ks-mobile-drawer-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--ks-border-card);
+  background-color: var(--ks-bg-canvas);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* =============================================================================
+   ADMIN PRODUCTS: MULTI-IMAGE GALLERY, SIZES, COLORS & MATRIX
+   ============================================================================= */
+.ks-product-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.ks-product-thumb-card {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--ks-radius-md, 10px);
+  overflow: hidden;
+  border: 1.5px solid var(--ks-border-card);
+  background-color: var(--ks-bg-canvas);
+  cursor: pointer;
+  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ks-product-thumb-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--ks-accent-red);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.ks-product-thumb-card.is-cover {
+  border-color: var(--ks-accent-red);
+  border-width: 2px;
+  box-shadow: 0 0 0 2px rgba(225, 6, 0, 0.2);
+}
+
+.ks-product-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ks-product-thumb-cover-tag {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  right: 6px;
+  padding: 3px 6px;
+  background-color: var(--ks-accent-red);
+  color: #FFFFFF;
+  border-radius: var(--ks-radius-xs, 6px);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.ks-product-thumb-delete {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--ks-radius-full, 9999px);
+  background-color: rgba(0, 0, 0, 0.65);
+  color: #FFFFFF;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.ks-product-thumb-delete:hover {
+  background-color: var(--ks-accent-red);
+  transform: scale(1.1);
+}
+
+/* Quick Pills & Badges for Sizes & Colors */
+.ks-quick-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ks-quick-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 11px;
+  border-radius: var(--ks-radius-full, 9999px);
+  border: 1px solid var(--ks-border-card);
+  background-color: var(--ks-bg-card);
+  color: var(--ks-text-title);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ks-quick-pill:hover {
+  border-color: var(--ks-accent-red);
+  color: var(--ks-accent-red);
+}
+
+.ks-quick-pill.is-active {
+  background-color: var(--ks-accent-red);
+  border-color: var(--ks-accent-red);
+  color: #FFFFFF;
+}
+
+.ks-badge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--ks-radius-sm, 8px);
+  background-color: var(--ks-bg-canvas);
+  border: 1px solid var(--ks-border-card);
+  color: var(--ks-text-title);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.ks-badge-chip-delete {
+  background: transparent;
+  border: none;
+  color: var(--ks-text-muted);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.ks-badge-chip-delete:hover {
+  color: var(--ks-accent-red);
+}
+
+.ks-color-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ks-color-presets-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ks-color-preset-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--ks-radius-full, 9999px);
+  border: 1.5px solid var(--ks-border-card);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.ks-color-preset-dot:hover {
+  transform: scale(1.15);
+  border-color: var(--ks-accent-red);
+}
+
+/* Variant Matrix Table */
+.ks-variants-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--ks-radius-md, 10px);
+  border: 1px solid var(--ks-border-card);
+  background-color: var(--ks-bg-card);
+  margin-top: 12px;
+}
+
+.ks-variants-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.825rem;
+}
+
+.ks-variants-table th {
+  padding: 10px 14px;
+  background-color: var(--ks-bg-canvas);
+  color: var(--ks-text-subtitle);
+  font-weight: 600;
+  text-align: left;
+  border-bottom: 1px solid var(--ks-border-card);
+}
+
+.ks-variants-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--ks-border-card);
+  color: var(--ks-text-title);
+  vertical-align: middle;
+}
+
+.ks-variants-table tr:last-child td {
+  border-bottom: none;
+}
+
 /* =============================================================================
    KEEPER SPORTS — PRODUCTS & SHOP PAGE DESIGN SYSTEM
    Visual Identity: Minimal | Sports E-commerce | Black/White | Red Accent (#E10600)
@@ -1665,7 +2158,7 @@ input:autofill {
 }
 
 .ks-shop-heading {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 2.25rem;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -1717,7 +2210,7 @@ input:autofill {
   color: var(--ks-text-input);
   font-size: 0.88rem;
   outline: none;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   transition: border-color 0.2s ease;
 }
 
@@ -1762,7 +2255,7 @@ input:autofill {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   position: relative;
   transition: all 0.2s ease;
 }
@@ -1800,7 +2293,7 @@ input:autofill {
   font-weight: 600;
   letter-spacing: 0.04em;
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   outline: none;
   transition: border-color 0.2s ease;
 }
@@ -1914,7 +2407,7 @@ input:autofill {
 }
 
 .ks-featured-rail-heading {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.01em;
@@ -1938,7 +2431,7 @@ input:autofill {
   border: 1px solid var(--ks-border-card);
   color: var(--ks-text-title);
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   transition: all 0.2s ease;
 }
 
@@ -2007,7 +2500,7 @@ input:autofill {
 }
 
 .ks-catalog-divider-title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1.15rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -2061,7 +2554,7 @@ input:autofill {
   position: relative;
   background: var(--ks-bg-card);
   border: 1px solid var(--ks-border-card);
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -2125,7 +2618,7 @@ input:autofill {
 }
 
 .ks-card-fallback-brand {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 0.85rem;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -2153,7 +2646,7 @@ input:autofill {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 2px 6px;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   line-height: 1.2;
 }
 
@@ -2188,7 +2681,7 @@ input:autofill {
   border: 1px solid var(--ks-border-card);
   color: var(--ks-text-muted);
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   z-index: 3;
   transition: all 0.2s ease;
 }
@@ -2362,7 +2855,7 @@ input:autofill {
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
@@ -2443,7 +2936,7 @@ input:autofill {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   transition: all 0.2s ease;
 }
 
@@ -2491,7 +2984,7 @@ input:autofill {
 }
 
 .ks-state-title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1.4rem;
   font-weight: 800;
   color: var(--ks-text-title);
@@ -2516,7 +3009,7 @@ input:autofill {
   font-weight: 700;
   letter-spacing: 0.08em;
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   transition: background 0.2s ease;
 }
 
@@ -2545,7 +3038,7 @@ input:autofill {
 .ks-skeleton-line {
   height: 12px;
   background: rgba(128, 128, 128, 0.1);
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   animation: ksSkeletonPulse 1.5s ease-in-out infinite;
 }
 
@@ -2626,7 +3119,7 @@ input:autofill {
 }
 
 .ks-filter-drawer-title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: -0.01em;
@@ -2681,7 +3174,7 @@ input:autofill {
   border: 1px solid var(--ks-border-input);
   color: var(--ks-text-title);
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   transition: all 0.2s ease;
 }
 
@@ -2703,7 +3196,7 @@ input:autofill {
   border: 1px solid var(--ks-border-input);
   color: var(--ks-text-input);
   font-size: 0.82rem;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   outline: none;
 }
 
@@ -2734,7 +3227,7 @@ input:autofill {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   transition: all 0.2s ease;
 }
 
@@ -2788,7 +3281,7 @@ input:autofill {
   color: var(--ks-text-input);
   font-size: 0.82rem;
   outline: none;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
 }
 
 .ks-price-divider {
@@ -2816,7 +3309,7 @@ input:autofill {
   font-weight: 700;
   letter-spacing: 0.05em;
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
 }
 
 .ks-filter-btn-apply {
@@ -2833,7 +3326,7 @@ input:autofill {
   font-weight: 700;
   letter-spacing: 0.08em;
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
 }
 
 .ks-filter-btn-apply:hover {
@@ -2954,7 +3447,7 @@ input:autofill {
 }
 
 .ks-admin-brand-title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 0.88rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -3005,7 +3498,7 @@ input:autofill {
   font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.02em;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   border-left: 2px solid transparent;
   transition: all 0.15s ease;
   white-space: nowrap;
@@ -3056,7 +3549,7 @@ input:autofill {
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   transition: all 0.2s ease;
 }
 
@@ -3112,7 +3605,7 @@ input:autofill {
   font-size: 0.75rem;
   font-weight: 600;
   text-decoration: none;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   transition: all 0.2s ease;
 }
 
@@ -3137,7 +3630,7 @@ input:autofill {
   border: 1px solid var(--ks-border-card);
   color: var(--ks-text-title);
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   position: relative;
   text-decoration: none;
   transition: all 0.2s ease;
@@ -3174,7 +3667,7 @@ input:autofill {
   border: 1px solid var(--ks-border-card);
   padding: 4px 10px 4px 6px;
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   transition: border-color 0.2s ease;
 }
 
@@ -3320,7 +3813,7 @@ input:autofill {
 }
 
 .ks-admin-page-title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1.85rem;
   font-weight: 800;
   letter-spacing: -0.01em;
@@ -3425,7 +3918,7 @@ input:autofill {
 .ks-admin-panel {
   background: var(--ks-bg-card);
   border: 1px solid var(--ks-border-card);
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   overflow: hidden;
 }
 
@@ -3450,7 +3943,7 @@ input:autofill {
 }
 
 .ks-admin-panel-title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--ks-text-title);
@@ -3599,7 +4092,7 @@ input:autofill {
   border: 1px solid var(--ks-border-card);
   color: var(--ks-text-title);
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   transition: all 0.2s ease;
 }
 
@@ -3693,7 +4186,7 @@ input:autofill {
   font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   transition: all 0.2s ease;
 }
 
@@ -3715,7 +4208,7 @@ input:autofill {
   letter-spacing: 0.06em;
   padding: 3px 8px;
   text-transform: uppercase;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
 }
 
 .ks-stock-pill.is-in {
@@ -3742,7 +4235,7 @@ input:autofill {
   letter-spacing: 0.06em;
   padding: 3px 8px;
   text-transform: uppercase;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
 }
 
 .ks-status-badge.is-pending {
@@ -3772,7 +4265,7 @@ input:autofill {
   color: var(--ks-text-title);
   font-size: 0.72rem;
   font-weight: 600;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   outline: none;
 }
 
@@ -3796,7 +4289,7 @@ input:autofill {
   border: 1px solid var(--ks-border-input);
   color: var(--ks-text-title);
   font-size: 0.72rem;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   outline: none;
 }
 
@@ -3900,7 +4393,7 @@ input:autofill {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   transition: all 0.2s ease;
   white-space: nowrap;
 }
@@ -3929,7 +4422,7 @@ input:autofill {
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   transition: all 0.2s ease;
   white-space: nowrap;
 }
@@ -3958,7 +4451,7 @@ input:autofill {
   font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
 }
 
 .ks-admin-form {
@@ -4001,7 +4494,7 @@ input:autofill {
   border: 1px solid var(--ks-border-input);
   color: var(--ks-text-input);
   font-size: 0.82rem;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   outline: none;
   transition: border-color 0.2s ease;
 }
@@ -4055,7 +4548,7 @@ input:autofill {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
 }
 
 .ks-checkbox-wrap input:checked + .ks-checkbox-custom {
@@ -4091,7 +4584,7 @@ input:autofill {
   max-width: 480px;
   background: var(--ks-bg-card);
   border: 1px solid var(--ks-border-card);
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   animation: ksModalFade 0.2s ease-out;
 }
@@ -4130,7 +4623,7 @@ input:autofill {
 }
 
 .ks-admin-modal-title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1.2rem;
   font-weight: 800;
   color: var(--ks-text-title);
@@ -4203,7 +4696,7 @@ input:autofill {
   padding: 16px;
   background: var(--ks-bg-input);
   border: 1px solid var(--ks-border-input);
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -4325,7 +4818,7 @@ input:autofill {
 }
 
 .ks-unauthorized-title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1.75rem;
   font-weight: 800;
   color: var(--ks-text-title);
@@ -4351,7 +4844,7 @@ input:autofill {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-decoration: none;
-  border-radius: 0;
+  border-radius: var(--ks-radius-md, 10px);
   transition: background 0.2s ease;
 }
 

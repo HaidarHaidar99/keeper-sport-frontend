@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, Sun, Moon } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, ArrowLeft } from 'lucide-react';
 
 export default function SignUpPage() {
   const { register, googleLogin } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -24,14 +24,13 @@ export default function SignUpPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // References for keyboard navigation & Google native anchor
   const nameRef = useRef(null);
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
   const googleAnchorRef = useRef(null);
 
-  // 1. Google Identity Services Setup
+  // Google Identity Services Setup
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     if (!clientId) return;
@@ -49,7 +48,7 @@ export default function SignUpPage() {
               try {
                 const data = await googleLogin(response.credential);
                 if (data.success) {
-                  navigate('/login');
+                  navigate('/');
                 }
               } catch (err) {
                 setServerError(err.message || 'Google registration failed.');
@@ -66,7 +65,7 @@ export default function SignUpPage() {
             type: 'standard',
             theme: theme === 'dark' ? 'filled_black' : 'outline',
             size: 'large',
-            text: 'continue_with',
+            text: 'signup_with',
             shape: 'rectangular',
             width: googleAnchorRef.current.offsetWidth || 340
           });
@@ -81,7 +80,7 @@ export default function SignUpPage() {
     if (!initGsi()) {
       const interval = setInterval(() => {
         if (initGsi()) clearInterval(interval);
-      }, 200);
+      }, 250);
       return () => clearInterval(interval);
     }
   }, [googleLogin, navigate, theme]);
@@ -93,7 +92,7 @@ export default function SignUpPage() {
     if (!formData.full_name.trim()) {
       errs.full_name = 'Full name is required.';
     } else if (formData.full_name.trim().length < 2) {
-      errs.full_name = 'At least 2 characters.';
+      errs.full_name = 'Full name must be at least 2 characters.';
     }
 
     if (!formData.email.trim()) {
@@ -105,11 +104,11 @@ export default function SignUpPage() {
     if (!formData.password) {
       errs.password = 'Password is required.';
     } else if (formData.password.length < 8) {
-      errs.password = 'Minimum 8 characters.';
+      errs.password = 'Password must be at least 8 characters long.';
     }
 
     if (!formData.confirm_password) {
-      errs.confirm_password = 'Confirm your password.';
+      errs.confirm_password = 'Confirm password is required.';
     } else if (formData.password !== formData.confirm_password) {
       errs.confirm_password = 'Passwords do not match.';
     }
@@ -123,62 +122,40 @@ export default function SignUpPage() {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
-    if (serverError) {
-      setServerError('');
-    }
-  };
-
-  // Keyboard navigation on Enter
-  const handleNameKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      emailRef.current?.focus();
-    }
-  };
-
-  const handleEmailKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      passwordRef.current?.focus();
-    }
-  };
-
-  const handlePasswordKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      confirmPasswordRef.current?.focus();
-    }
+    if (serverError) setServerError('');
   };
 
   const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
+    e.preventDefault();
     setServerError('');
     setSuccessMessage('');
 
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      const firstField = Object.keys(validationErrors)[0];
+      if (firstField === 'full_name') nameRef.current?.focus();
+      else if (firstField === 'email') emailRef.current?.focus();
+      else if (firstField === 'password') passwordRef.current?.focus();
+      else if (firstField === 'confirm_password') confirmPasswordRef.current?.focus();
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const response = await register({
-        full_name: formData.full_name.trim(),
-        email: formData.email.trim().toLowerCase(),
-        password: formData.password,
-        confirm_password: formData.confirm_password
-      });
+      const data = await register(formData);
 
-      if (response.success) {
-        setSuccessMessage('Account created successfully. Please verify your email before logging in.');
+      if (data && data.success) {
+        setSuccessMessage('Account created successfully! Please check your email to verify your account.');
         setTimeout(() => {
           navigate('/login');
-        }, 2000);
+        }, 1800);
+      } else {
+        setServerError(data?.message || 'Could not complete registration.');
       }
     } catch (err) {
-      setServerError(err.message || 'Registration failed. Please check your details.');
+      setServerError(err.message || 'An error occurred during account creation.');
     } finally {
       setIsSubmitting(false);
     }
@@ -187,7 +164,7 @@ export default function SignUpPage() {
   const handleGoogleClick = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     if (!clientId) {
-      setServerError('Google Sign-In is configured. Please provide VITE_GOOGLE_CLIENT_ID in your Vercel environment.');
+      setServerError('Google registration is currently being initialized.');
       return;
     }
 
@@ -199,38 +176,20 @@ export default function SignUpPage() {
           if (btn) btn.click();
         }
       });
-    } else {
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-      setServerError('Connecting to Google service... Please click once more.');
     }
   };
 
   return (
     <div className="ks-auth-canvas">
-      {/* Theme Toggle Button (Square) */}
-      <button
-        type="button"
-        className="ks-theme-toggle"
-        onClick={toggleTheme}
-        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-      >
-        {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-      </button>
-
       <div className="ks-auth-card">
         {/* Title & Subtitle */}
-        <h1 className="ks-auth-title">Sign Up</h1>
-        <p className="ks-auth-subtitle">Create an account. Please enter your details.</p>
+        <h1 className="ks-auth-title">Create Account</h1>
+        <p className="ks-auth-subtitle">Join Keeper Sports for exclusive gear drops, tracking, and express checkout.</p>
 
         {/* Server Alert */}
         {serverError && (
           <div className="ks-alert ks-alert-error" role="alert">
-            <AlertCircle size={15} style={{ flexShrink: 0 }} />
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
             <div>{serverError}</div>
           </div>
         )}
@@ -238,7 +197,7 @@ export default function SignUpPage() {
         {/* Success Alert */}
         {successMessage && (
           <div className="ks-alert ks-alert-success" role="status">
-            <CheckCircle2 size={15} style={{ flexShrink: 0 }} />
+            <CheckCircle2 size={16} style={{ flexShrink: 0 }} />
             <div>{successMessage}</div>
           </div>
         )}
@@ -246,63 +205,64 @@ export default function SignUpPage() {
         <form onSubmit={handleSubmit} noValidate>
           {/* Full Name */}
           <div className="ks-form-group">
-            <label className="ks-label" htmlFor="signup-name">
+            <label className="ks-label" htmlFor="reg-name">
               FULL NAME
             </label>
-            <input
-              id="signup-name"
-              ref={nameRef}
-              name="full_name"
-              type="text"
-              autoComplete="name"
-              placeholder="Your Name"
-              className={`ks-input ${errors.full_name ? 'has-error' : ''}`}
-              value={formData.full_name}
-              onChange={handleChange}
-              onKeyDown={handleNameKeyDown}
-              disabled={isSubmitting}
-            />
+            <div className="ks-input-container">
+              <input
+                id="reg-name"
+                ref={nameRef}
+                name="full_name"
+                type="text"
+                autoComplete="name"
+                placeholder="e.g. John Doe"
+                className={`ks-input ${errors.full_name ? 'has-error' : ''}`}
+                value={formData.full_name}
+                onChange={handleChange}
+                disabled={isSubmitting}
+              />
+            </div>
             {errors.full_name && <div className="ks-field-error">{errors.full_name}</div>}
           </div>
 
           {/* Email Address */}
           <div className="ks-form-group">
-            <label className="ks-label" htmlFor="signup-email">
+            <label className="ks-label" htmlFor="reg-email">
               EMAIL ADDRESS
             </label>
-            <input
-              id="signup-email"
-              ref={emailRef}
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder="your.email@example.com"
-              className={`ks-input ${errors.email ? 'has-error' : ''}`}
-              value={formData.email}
-              onChange={handleChange}
-              onKeyDown={handleEmailKeyDown}
-              disabled={isSubmitting}
-            />
+            <div className="ks-input-container">
+              <input
+                id="reg-email"
+                ref={emailRef}
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder="your.email@example.com"
+                className={`ks-input ${errors.email ? 'has-error' : ''}`}
+                value={formData.email}
+                onChange={handleChange}
+                disabled={isSubmitting}
+              />
+            </div>
             {errors.email && <div className="ks-field-error">{errors.email}</div>}
           </div>
 
           {/* Password */}
           <div className="ks-form-group">
-            <label className="ks-label" htmlFor="signup-password">
-              PASSWORD
+            <label className="ks-label" htmlFor="reg-password">
+              PASSWORD (MIN. 8 CHARACTERS)
             </label>
             <div className="ks-input-container">
               <input
-                id="signup-password"
+                id="reg-password"
                 ref={passwordRef}
                 name="password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="new-password"
-                placeholder="At least 8 characters"
+                placeholder="Create strong password"
                 className={`ks-input ks-input-has-eye ${errors.password ? 'has-error' : ''}`}
                 value={formData.password}
                 onChange={handleChange}
-                onKeyDown={handlePasswordKeyDown}
                 disabled={isSubmitting}
               />
               <button
@@ -319,18 +279,18 @@ export default function SignUpPage() {
           </div>
 
           {/* Confirm Password */}
-          <div className="ks-form-group" style={{ marginBottom: '24px' }}>
-            <label className="ks-label" htmlFor="signup-confirm-password">
+          <div className="ks-form-group" style={{ marginBottom: '20px' }}>
+            <label className="ks-label" htmlFor="reg-confirm-password">
               CONFIRM PASSWORD
             </label>
             <div className="ks-input-container">
               <input
-                id="signup-confirm-password"
+                id="reg-confirm-password"
                 ref={confirmPasswordRef}
                 name="confirm_password"
                 type={showConfirmPassword ? 'text' : 'password'}
                 autoComplete="new-password"
-                placeholder="Re-enter password"
+                placeholder="Repeat password"
                 className={`ks-input ks-input-has-eye ${errors.confirm_password ? 'has-error' : ''}`}
                 value={formData.confirm_password}
                 onChange={handleChange}
@@ -340,7 +300,7 @@ export default function SignUpPage() {
                 type="button"
                 className="ks-eye-btn"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                 tabIndex={-1}
               >
                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -349,11 +309,12 @@ export default function SignUpPage() {
             {errors.confirm_password && <div className="ks-field-error">{errors.confirm_password}</div>}
           </div>
 
-          {/* CREATE ACCOUNT Button */}
+          {/* CREATE ACCOUNT BUTTON (RED) */}
           <button
             type="submit"
             className="ks-btn-primary"
             disabled={isSubmitting}
+            style={{ width: '100%' }}
           >
             {isSubmitting ? (
               <>
@@ -366,7 +327,7 @@ export default function SignUpPage() {
           </button>
         </form>
 
-        {/* Switch Link: Already have an account? Sign In (Red) */}
+        {/* Link to Sign In */}
         <div className="ks-switch-text">
           <span>Already have an account?</span>
           <Link to="/login" className="ks-switch-link">
@@ -374,12 +335,12 @@ export default function SignUpPage() {
           </Link>
         </div>
 
-        {/* Divider */}
+        {/* Clean "OR" Divider */}
         <div className="ks-divider">
-          <span>OR CONTINUE WITH EMAIL</span>
+          <span>OR</span>
         </div>
 
-        {/* CONTINUE WITH GOOGLE (Square Button with Integrated Transparent GSI Overlay) */}
+        {/* Continue with Google */}
         <div className="ks-google-wrapper">
           <div ref={googleAnchorRef} className="ks-google-native-anchor" />
           <button
@@ -394,20 +355,28 @@ export default function SignUpPage() {
                 fill="#4285F4"
               />
               <path
-                d="M9 18c2.43 0 4.4673-.806 5.9564-2.1805l-2.9087-2.2581c-.8059.54-1.8368.859-3.0477.859-2.3441 0-4.3282-1.5831-5.036-3.7104H.9573v2.3318C2.4382 15.9832 5.4818 18 9 18z"
+                d="M9 18c2.43 0 4.4673-.806 5.9564-2.1805l-2.9087-2.2581c-.8059.54-1.8368.859-3.0477.859-2.344 0-4.3282-1.5831-5.036-3.7104H.9573v2.3318C2.4382 15.9832 5.4818 18 9 18z"
                 fill="#34A853"
               />
               <path
-                d="M3.964 10.71c-.18-.54-.2822-1.1168-.2822-1.71s.1022-1.17.2822-1.71V4.9582H.9573A8.9965 8.9965 0 0 0 0 9c0 1.4523.3477 2.8268.9573 4.0418L3.964 10.71z"
+                d="M3.964 10.71c-.18-.54-.2822-1.1168-.2822-1.71s.1023-1.17.2823-1.71V4.9582H.9573A8.9965 8.9965 0 000 9c0 1.4523.3477 2.8268.9573 4.0418L3.964 10.71z"
                 fill="#FBBC05"
               />
               <path
-                d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.346l2.5813-2.5814C13.4632.9245 11.4259 0 9 0 5.4818 0 2.4382 2.0168.9573 4.9582L3.964 7.29C4.6718 5.1627 6.6559 3.5795 9 3.5795z"
+                d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.346l2.5813-2.5814C13.4632.9205 11.426 0 9 0 5.4818 0 2.4382 2.0168.9573 4.9582L3.964 7.29C4.6718 5.1627 6.656 3.5795 9 3.5795z"
                 fill="#EA4335"
               />
             </svg>
-            <span>{googleLoading ? 'CONNECTING...' : 'CONTINUE WITH GOOGLE'}</span>
+            <span>{googleLoading ? 'Connecting to Google...' : 'Continue with Google'}</span>
           </button>
+        </div>
+
+        {/* Back to Home Link */}
+        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+          <Link to="/" style={{ color: 'var(--ks-text-muted)', fontSize: '0.82rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <ArrowLeft size={14} />
+            <span>Back to Storefront</span>
+          </Link>
         </div>
       </div>
     </div>

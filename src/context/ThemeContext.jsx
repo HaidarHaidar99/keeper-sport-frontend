@@ -8,13 +8,11 @@ export function ThemeProvider({ children }) {
     try {
       const saved = localStorage.getItem(THEME_STORAGE_KEY);
       if (saved === 'light' || saved === 'dark') return saved;
-      if (typeof window !== 'undefined' && window.matchMedia) {
-        return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-      }
+      return 'light';
     } catch (e) {
       // fallback
     }
-    return 'dark';
+    return 'light';
   });
 
   useEffect(() => {

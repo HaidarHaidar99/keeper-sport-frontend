@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import {
   LayoutDashboard,
   Home,
+  Sparkles,
   Package,
   Tags,
   ShoppingBag,
@@ -96,7 +97,7 @@ export default function AdminLayout() {
 
   const navItems = [
     { label: 'Dashboard', path: '/admin', icon: LayoutDashboard, exact: true },
-    { label: 'Home', path: '/admin/home', icon: Home },
+    { label: 'Hero', path: '/admin/home', icon: Sparkles },
     { label: 'Products', path: '/admin/products', icon: Package },
     { label: 'Categories', path: '/admin/categories', icon: Tags },
     { label: 'Orders', path: '/admin/orders', icon: ShoppingBag },

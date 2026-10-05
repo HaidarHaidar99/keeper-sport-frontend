@@ -16,9 +16,9 @@ export default function AdminGuard({ children }) {
     );
   }
 
-  // If user is unauthenticated, redirect to existing login flow preserving target location
+  // If user is unauthenticated, redirect to dedicated admin login portal
   if (!user) {
-    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   // If authenticated but unauthorized, render clean luxury 403 state

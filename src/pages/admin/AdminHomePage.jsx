@@ -327,8 +327,8 @@ export default function AdminHomePage() {
       {/* Header */}
       <div className="ks-admin-header-row">
         <div>
-          <span className="ks-admin-header-eyebrow">STOREFRONT CONTENT</span>
-          <h1 className="ks-admin-page-title">Home Page Management</h1>
+          <span className="ks-admin-header-eyebrow">STOREFRONT HERO SHOWCASE</span>
+          <h1 className="ks-admin-page-title">Hero &amp; Announcement Banners</h1>
         </div>
       </div>
 

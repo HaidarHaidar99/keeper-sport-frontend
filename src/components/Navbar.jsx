@@ -140,9 +140,6 @@ export default function Navbar({ siteSettings = {}, categories = [], counts = {}
                     {item.count > 0 && (
                       <span className="ks-nav-inline-badge">{item.count}</span>
                     )}
-                    {active && (
-                      <span className="ks-nav-desktop-indicator-in-word" aria-hidden="true" />
-                    )}
                   </span>
                 </Link>
               );

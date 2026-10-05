@@ -151,6 +151,10 @@ export const adminApi = {
     return adminRequest(`${API_BASE}/products${query ? `?${query}` : ''}`);
   },
 
+  async getProduct(id) {
+    return adminRequest(`${API_BASE}/products/${id}`);
+  },
+
   async createProduct(data) {
     return adminRequest(`${API_BASE}/products`, {
       method: 'POST',

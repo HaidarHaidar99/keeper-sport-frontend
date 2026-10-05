@@ -52,7 +52,13 @@ export default function AdminSettingsPage() {
       const res = await adminApi.uploadMedia(file);
       if (res && res.success && res.url) {
         setFormData((prev) => ({ ...prev, logo_path: res.url }));
-        showToast('Logo uploaded. Click "Save Settings" to apply to public website.');
+        // Immediately persist logo to site_settings so it is never lost on refresh
+        const saveRes = await adminApi.updateSettings({ logo_path: res.url });
+        if (saveRes?.success) {
+          showToast('Logo uploaded and saved! Storefront updated in real time.');
+        } else {
+          showToast('Logo uploaded to storage. Click "Save Settings" to persist.');
+        }
       } else {
         showToast(res.message || 'Logo upload failed.');
       }
@@ -60,6 +66,16 @@ export default function AdminSettingsPage() {
       showToast('Network error uploading logo.');
     } finally {
       setUploadingLogo(false);
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    setFormData((prev) => ({ ...prev, logo_path: '' }));
+    try {
+      await adminApi.updateSettings({ logo_path: null });
+      showToast('Store logo removed. Neutral brand mark will be used.');
+    } catch {
+      showToast('Error removing store logo.');
     }
   };
 
@@ -172,7 +188,17 @@ export default function AdminSettingsPage() {
 
             {formData.logo_path && (
               <div className="ks-settings-logo-preview">
-                <span className="ks-preview-tag">CURRENT STORE LOGO PREVIEW:</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span className="ks-preview-tag">CURRENT STORE LOGO PREVIEW:</span>
+                  <button
+                    type="button"
+                    onClick={handleRemoveLogo}
+                    className="ks-admin-btn-secondary"
+                    style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', color: 'var(--ks-error-red)' }}
+                  >
+                    Remove Logo
+                  </button>
+                </div>
                 <div className="ks-logo-box">
                   <img src={formData.logo_path} alt="Store Logo Preview" className="ks-logo-preview-img" />
                 </div>

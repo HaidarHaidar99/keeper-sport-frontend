@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { authApi } from '../api/authApi';
-import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, Sun, Moon } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, ArrowLeft } from 'lucide-react';
 
 export default function LoginPage() {
   const { login, googleLogin } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const redirectParam = searchParams.get('redirect') || '';
 
   const [formData, setFormData] = useState({
     email: '',
@@ -27,12 +30,31 @@ export default function LoginPage() {
   const [resending, setResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState('');
 
-  // References for keyboard navigation & Google native anchor
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
   const googleAnchorRef = useRef(null);
 
-  // 1. Google Identity Services Setup
+  // Helper to handle safe customer redirect
+  const handleSuccessfulAuthRedirect = (userData) => {
+    // If user is admin/super_admin and requested an admin route, permit redirect
+    if (redirectParam.startsWith('/admin')) {
+      if (userData?.role === 'admin' || userData?.role === 'super_admin') {
+        navigate(redirectParam, { replace: true });
+        return;
+      }
+      // Non-admins are sent to storefront
+      navigate('/', { replace: true });
+      return;
+    }
+
+    if (redirectParam && !redirectParam.startsWith('/admin')) {
+      navigate(redirectParam, { replace: true });
+    } else {
+      navigate('/', { replace: true });
+    }
+  };
+
+  // Google Identity Services Setup
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     if (!clientId) return;
@@ -51,10 +73,10 @@ export default function LoginPage() {
               try {
                 const data = await googleLogin(response.credential);
                 if (data.success) {
-                  setSuccessMessage('Logged in successfully.');
+                  setSuccessMessage('Signed in successfully.');
                   setTimeout(() => {
-                    navigate('/login');
-                  }, 1200);
+                    handleSuccessfulAuthRedirect(data.user);
+                  }, 800);
                 }
               } catch (err) {
                 setServerError(err.message || 'Google authentication failed.');
@@ -65,14 +87,13 @@ export default function LoginPage() {
           }
         });
 
-        // Render official button into transparent overlay anchor if ref available
         if (googleAnchorRef.current) {
           googleAnchorRef.current.innerHTML = '';
           window.google.accounts.id.renderButton(googleAnchorRef.current, {
             type: 'standard',
             theme: theme === 'dark' ? 'filled_black' : 'outline',
             size: 'large',
-            text: 'continue_with',
+            text: 'signin_with',
             shape: 'rectangular',
             width: googleAnchorRef.current.offsetWidth || 340
           });
@@ -84,14 +105,13 @@ export default function LoginPage() {
       }
     };
 
-    // Try immediately, or wait for script load
     if (!initGsi()) {
       const interval = setInterval(() => {
         if (initGsi()) clearInterval(interval);
-      }, 200);
+      }, 250);
       return () => clearInterval(interval);
     }
-  }, [googleLogin, navigate, theme]);
+  }, [googleLogin, theme, redirectParam]);
 
   const validate = () => {
     const errs = {};
@@ -116,20 +136,7 @@ export default function LoginPage() {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
-    if (serverError) {
-      setServerError('');
-      setShowResend(false);
-    }
-  };
-
-  // 4. Enter Key Moves Focus from Email to Password
-  const handleEmailKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (passwordRef.current) {
-        passwordRef.current.focus();
-      }
-    }
+    if (serverError) setServerError('');
   };
 
   const handleSubmit = async (e) => {
@@ -142,27 +149,33 @@ export default function LoginPage() {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      const firstField = Object.keys(validationErrors)[0];
+      if (firstField === 'email') emailRef.current?.focus();
+      else if (firstField === 'password') passwordRef.current?.focus();
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const response = await login({
-        email: formData.email.trim().toLowerCase(),
+      const data = await login({
+        email: formData.email.trim(),
         password: formData.password
       });
 
-      if (response.success) {
-        setSuccessMessage('Logged in successfully.');
-        // User explicitly authenticated successfully
+      if (data && data.success) {
+        setSuccessMessage('Welcome back! Signed in successfully.');
+        setTimeout(() => {
+          handleSuccessfulAuthRedirect(data.user);
+        }, 800);
+      } else {
+        setServerError(data?.message || 'Invalid email or password.');
       }
     } catch (err) {
-      const msg = err.message || 'Invalid email or password.';
-      setServerError(msg);
-      if (msg.toLowerCase().includes('verify')) {
+      if (err.requires_verification) {
         setShowResend(true);
       }
+      setServerError(err.message || 'Authentication failed. Please verify your credentials.');
     } finally {
       setIsSubmitting(false);
     }
@@ -173,12 +186,10 @@ export default function LoginPage() {
     setResending(true);
     setResendSuccess('');
     try {
-      const res = await authApi.resendVerification(formData.email.trim().toLowerCase());
-      setResendSuccess(res.message || 'Verification email resent. Please check your inbox.');
-      setServerError('');
-      setShowResend(false);
+      await authApi.resendVerification(formData.email.trim());
+      setResendSuccess('Verification email resent. Please check your inbox.');
     } catch (err) {
-      setServerError(err.message || 'Failed to resend verification email.');
+      setServerError(err.message || 'Could not send verification email.');
     } finally {
       setResending(false);
     }
@@ -187,12 +198,11 @@ export default function LoginPage() {
   const handleGoogleClick = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     if (!clientId) {
-      setServerError('Google Sign-In is configured. Please provide VITE_GOOGLE_CLIENT_ID in your Vercel environment.');
+      setServerError('Google Sign-In is currently being initialized.');
       return;
     }
 
     if (window.google?.accounts?.id) {
-      // Trigger Google One Tap or click the rendered anchor
       window.google.accounts.id.prompt((notification) => {
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
           const btn = googleAnchorRef.current?.querySelector('div[role="button"]') ||
@@ -200,39 +210,20 @@ export default function LoginPage() {
           if (btn) btn.click();
         }
       });
-    } else {
-      // Script might still be loading, dynamically append
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-      setServerError('Connecting to Google service... Please click once more.');
     }
   };
 
   return (
     <div className="ks-auth-canvas">
-      {/* Theme Toggle Button (Square) */}
-      <button
-        type="button"
-        className="ks-theme-toggle"
-        onClick={toggleTheme}
-        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-      >
-        {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-      </button>
-
       <div className="ks-auth-card">
         {/* Title & Subtitle */}
-        <h1 className="ks-auth-title">Sign In</h1>
-        <p className="ks-auth-subtitle">Welcome back. Please enter your details.</p>
+        <h1 className="ks-auth-title">Customer Sign In</h1>
+        <p className="ks-auth-subtitle">Welcome back. Enter your email and password to access your account.</p>
 
         {/* Server Alert */}
         {serverError && (
           <div className="ks-alert ks-alert-error" role="alert">
-            <AlertCircle size={15} style={{ flexShrink: 0 }} />
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
               <div>{serverError}</div>
               {showResend && (
@@ -240,18 +231,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={handleResendFromLogin}
                   disabled={resending}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--ks-accent-red)',
-                    fontSize: '0.785rem',
-                    fontWeight: 700,
-                    textDecoration: 'underline',
-                    cursor: 'pointer',
-                    marginTop: '6px',
-                    padding: 0,
-                    display: 'block'
-                  }}
+                  className="ks-resend-inline-btn"
                 >
                   {resending ? 'Sending verification email...' : 'Resend verification email'}
                 </button>
@@ -263,7 +243,7 @@ export default function LoginPage() {
         {/* Resend Success Alert */}
         {resendSuccess && (
           <div className="ks-alert ks-alert-success" role="status">
-            <CheckCircle2 size={15} style={{ flexShrink: 0 }} />
+            <CheckCircle2 size={16} style={{ flexShrink: 0 }} />
             <div>{resendSuccess}</div>
           </div>
         )}
@@ -271,30 +251,32 @@ export default function LoginPage() {
         {/* Successful Login Message */}
         {successMessage && (
           <div className="ks-alert ks-alert-success" role="status">
-            <CheckCircle2 size={15} style={{ flexShrink: 0 }} />
+            <CheckCircle2 size={16} style={{ flexShrink: 0 }} />
             <div>{successMessage}</div>
           </div>
         )}
 
+        {/* Standard Email/Password Form */}
         <form onSubmit={handleSubmit} noValidate>
           {/* Email Address */}
           <div className="ks-form-group">
             <label className="ks-label" htmlFor="login-email">
               EMAIL ADDRESS
             </label>
-            <input
-              id="login-email"
-              ref={emailRef}
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder="your.email@example.com"
-              className={`ks-input ${errors.email ? 'has-error' : ''}`}
-              value={formData.email}
-              onChange={handleChange}
-              onKeyDown={handleEmailKeyDown}
-              disabled={isSubmitting}
-            />
+            <div className="ks-input-container">
+              <input
+                id="login-email"
+                ref={emailRef}
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder="your.email@example.com"
+                className={`ks-input ${errors.email ? 'has-error' : ''}`}
+                value={formData.email}
+                onChange={handleChange}
+                disabled={isSubmitting}
+              />
+            </div>
             {errors.email && <div className="ks-field-error">{errors.email}</div>}
           </div>
 
@@ -329,18 +311,19 @@ export default function LoginPage() {
             {errors.password && <div className="ks-field-error">{errors.password}</div>}
           </div>
 
-          {/* Forgot Password Link (Red) */}
+          {/* Forgot Password Link */}
           <div className="ks-forgot-row">
             <Link to="/forgot-password" className="ks-forgot-link">
               Forgot Password?
             </Link>
           </div>
 
-          {/* SIGN IN Button */}
+          {/* SIGN IN BUTTON (RED) */}
           <button
             type="submit"
             className="ks-btn-primary"
             disabled={isSubmitting}
+            style={{ width: '100%' }}
           >
             {isSubmitting ? (
               <>
@@ -353,7 +336,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Switch Link: Don't have an account? Create Account (Red) */}
+        {/* Customer Sign Up Option */}
         <div className="ks-switch-text">
           <span>Don't have an account?</span>
           <Link to="/signup" className="ks-switch-link">
@@ -361,12 +344,12 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        {/* Divider */}
+        {/* Clean "OR" Divider */}
         <div className="ks-divider">
-          <span>OR CONTINUE WITH EMAIL</span>
+          <span>OR</span>
         </div>
 
-        {/* CONTINUE WITH GOOGLE (Square Button with Integrated Transparent GSI Overlay) */}
+        {/* Google Sign-In Option */}
         <div className="ks-google-wrapper">
           <div ref={googleAnchorRef} className="ks-google-native-anchor" />
           <button
@@ -381,20 +364,28 @@ export default function LoginPage() {
                 fill="#4285F4"
               />
               <path
-                d="M9 18c2.43 0 4.4673-.806 5.9564-2.1805l-2.9087-2.2581c-.8059.54-1.8368.859-3.0477.859-2.3441 0-4.3282-1.5831-5.036-3.7104H.9573v2.3318C2.4382 15.9832 5.4818 18 9 18z"
+                d="M9 18c2.43 0 4.4673-.806 5.9564-2.1805l-2.9087-2.2581c-.8059.54-1.8368.859-3.0477.859-2.344 0-4.3282-1.5831-5.036-3.7104H.9573v2.3318C2.4382 15.9832 5.4818 18 9 18z"
                 fill="#34A853"
               />
               <path
-                d="M3.964 10.71c-.18-.54-.2822-1.1168-.2822-1.71s.1022-1.17.2822-1.71V4.9582H.9573A8.9965 8.9965 0 0 0 0 9c0 1.4523.3477 2.8268.9573 4.0418L3.964 10.71z"
+                d="M3.964 10.71c-.18-.54-.2822-1.1168-.2822-1.71s.1023-1.17.2823-1.71V4.9582H.9573A8.9965 8.9965 0 000 9c0 1.4523.3477 2.8268.9573 4.0418L3.964 10.71z"
                 fill="#FBBC05"
               />
               <path
-                d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.346l2.5813-2.5814C13.4632.9245 11.4259 0 9 0 5.4818 0 2.4382 2.0168.9573 4.9582L3.964 7.29C4.6718 5.1627 6.6559 3.5795 9 3.5795z"
+                d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.346l2.5813-2.5814C13.4632.9205 11.426 0 9 0 5.4818 0 2.4382 2.0168.9573 4.9582L3.964 7.29C4.6718 5.1627 6.656 3.5795 9 3.5795z"
                 fill="#EA4335"
               />
             </svg>
-            <span>{googleLoading ? 'CONNECTING...' : 'CONTINUE WITH GOOGLE'}</span>
+            <span>{googleLoading ? 'Signing in with Google...' : 'Continue with Google'}</span>
           </button>
+        </div>
+
+        {/* Back to Home Link */}
+        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+          <Link to="/" style={{ color: 'var(--ks-text-muted)', fontSize: '0.82rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <ArrowLeft size={14} />
+            <span>Back to Storefront</span>
+          </Link>
         </div>
       </div>
     </div>
