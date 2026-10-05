@@ -6,20 +6,20 @@ import { productApi } from '../api/productApi';
 import { launchFootballToCart } from '../utils/cartAnimation';
 
 export default function ProductCard({
-  product,
+  product = {},
   onCartUpdated,
   onFavoriteToggled
 }) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [isFavorited, setIsFavorited] = useState(Boolean(product.isFavorited));
+  const [isFavorited, setIsFavorited] = useState(Boolean(product?.isFavorited));
   const [favLoading, setFavLoading] = useState(false);
   const [cartLoading, setCartLoading] = useState(false);
   const [cartSuccess, setCartSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
-  const productUrl = `/products/${product.slug || product.id}`;
+  const productUrl = `/products/${product?.slug || product?.id || ''}`;
 
   // Navigate to product details
   const handleCardClick = (e) => {

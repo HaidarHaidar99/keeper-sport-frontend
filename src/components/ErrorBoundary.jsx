@@ -54,9 +54,33 @@ export default class ErrorBoundary extends React.Component {
             <h1 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '10px' }}>
               Something went wrong
             </h1>
-            <p style={{ color: 'var(--ks-text-subtitle, #555555)', fontSize: '0.92rem', marginBottom: '24px', lineHeight: 1.5 }}>
+            <p style={{ color: 'var(--ks-text-subtitle, #555555)', fontSize: '0.92rem', marginBottom: '16px', lineHeight: 1.5 }}>
               The application encountered an unexpected issue. Please reload the page to restore your session.
             </p>
+            {this.state.error && (
+              <div style={{
+                textAlign: 'left',
+                backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                borderRadius: '8px',
+                padding: '12px 14px',
+                marginBottom: '20px',
+                fontSize: '0.8rem',
+                color: '#DC2626',
+                fontFamily: 'monospace',
+                maxHeight: '160px',
+                overflowY: 'auto',
+                wordBreak: 'break-word',
+                whiteSpace: 'pre-wrap'
+              }}>
+                <strong>{this.state.error.name}: {this.state.error.message}</strong>
+                {this.state.error.stack && (
+                  <div style={{ marginTop: '6px', fontSize: '0.72rem', opacity: 0.85 }}>
+                    {this.state.error.stack}
+                  </div>
+                )}
+              </div>
+            )}
             <button
               type="button"
               onClick={() => window.location.reload()}

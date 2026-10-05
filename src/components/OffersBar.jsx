@@ -5,33 +5,34 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 export default function OffersBar({ offers = [] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // If no offers in database, hide bar completely without leaving empty gap
-  if (!offers || offers.length === 0) {
-    return null;
-  }
+  const validOffers = Array.isArray(offers) ? offers.filter((o) => o && o.text) : [];
+  const currentOffer = validOffers[currentIndex] || validOffers[0] || null;
 
-  const currentOffer = offers[currentIndex] || offers[0];
-
-  // Auto rotation if multiple offers
+  // Auto rotation if multiple offers - unconditionally called at top
   useEffect(() => {
-    if (offers.length <= 1) return;
+    if (validOffers.length <= 1 || !currentOffer) return;
 
     const duration = (currentOffer?.duration_seconds || 5) * 1000;
     const timer = setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % offers.length);
+      setCurrentIndex((prev) => (prev + 1) % validOffers.length);
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [currentIndex, offers, currentOffer]);
+  }, [currentIndex, validOffers.length, currentOffer?.duration_seconds]);
+
+  // If no offers in database, hide bar completely without leaving empty gap
+  if (validOffers.length === 0 || !currentOffer) {
+    return null;
+  }
 
   const handlePrev = (e) => {
     e.stopPropagation();
-    setCurrentIndex((prev) => (prev - 1 + offers.length) % offers.length);
+    setCurrentIndex((prev) => (prev - 1 + validOffers.length) % validOffers.length);
   };
 
   const handleNext = (e) => {
     e.stopPropagation();
-    setCurrentIndex((prev) => (prev + 1) % offers.length);
+    setCurrentIndex((prev) => (prev + 1) % validOffers.length);
   };
 
   return (

@@ -7,6 +7,19 @@ export default function HeroCarousel({ slides = [] }) {
   const videoRefs = useRef({});
 
   const validSlides = Array.isArray(slides) ? slides.filter((s) => s && (s.media_path || s.title)) : [];
+  const currentSlide = validSlides[currentIndex] || validSlides[0] || {};
+
+  // Auto rotation if multiple slides - hooks MUST always be called unconditionally at top of component
+  useEffect(() => {
+    if (validSlides.length <= 1) return;
+
+    const duration = Math.max(2, currentSlide?.duration_seconds || 6) * 1000;
+    const timer = setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % validSlides.length);
+    }, duration);
+
+    return () => clearTimeout(timer);
+  }, [currentIndex, validSlides.length, currentSlide?.duration_seconds]);
 
   // Default rich showcase when no slides are configured in the database
   if (validSlides.length === 0) {
@@ -39,20 +52,6 @@ export default function HeroCarousel({ slides = [] }) {
       </section>
     );
   }
-
-  const currentSlide = validSlides[currentIndex] || validSlides[0] || {};
-
-  // Auto rotation if multiple slides
-  useEffect(() => {
-    if (validSlides.length <= 1) return;
-
-    const duration = Math.max(2, currentSlide?.duration_seconds || 6) * 1000;
-    const timer = setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % validSlides.length);
-    }, duration);
-
-    return () => clearTimeout(timer);
-  }, [currentIndex, validSlides, currentSlide]);
 
   return (
     <section className="ks-hero-root" aria-label="Hero Showcase">
