@@ -9,6 +9,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 
 import HomePage from './pages/HomePage';
+import ProductsPage from './pages/ProductsPage';
 
 export default function App() {
   return (
@@ -16,8 +17,10 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Keeper Sports Home Page */}
+            {/* Keeper Sports Core Store Pages */}
             <Route path="/" element={<HomePage />} />
+            <Route path="/products" element={<ProductsPage />} />
+            <Route path="/shop" element={<ProductsPage />} />
             
             {/* Customer Authentication Routes */}
             <Route path="/login" element={<LoginPage />} />

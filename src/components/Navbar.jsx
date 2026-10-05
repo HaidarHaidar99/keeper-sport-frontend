@@ -127,11 +127,13 @@ export default function Navbar({ siteSettings = {}, categories = [], counts = {}
           <nav className="ks-navbar-desktop-nav" aria-label="Main Navigation">
             {desktopNavItems.map((item) => {
               const active = isActiveRoute(item.path);
+              const isCart = item.path === '/cart';
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`ks-nav-desktop-item ${active ? 'is-active' : ''}`}
+                  data-nav-cart={isCart ? 'true' : undefined}
+                  className={`ks-nav-desktop-item ${active ? 'is-active' : ''} ${isCart ? 'ks-nav-cart-btn' : ''}`}
                 >
                   <span className="ks-nav-desktop-label">
                     {item.label}
@@ -226,6 +228,7 @@ export default function Navbar({ siteSettings = {}, categories = [], counts = {}
               {/* Mobile Cart Button */}
               <Link
                 to="/cart"
+                data-nav-cart="true"
                 className="ks-nav-action-btn ks-nav-cart-btn"
                 aria-label="Shopping Cart"
               >
