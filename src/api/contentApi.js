@@ -3,6 +3,8 @@
  * Provides dynamic site settings, hero slides, offer bars, categories, and user counts.
  */
 
+import { getOrCreateGuestId, getGuestOrderTokens } from '../utils/guestIdentity';
+
 const getApiBase = () => {
   const envUrl = import.meta.env.VITE_API_URL;
   if (envUrl) {
@@ -15,8 +17,13 @@ const getApiBase = () => {
 const API_BASE = getApiBase();
 
 async function safeRequest(url, options = {}) {
+  const guestId = getOrCreateGuestId();
+  const guestTokens = getGuestOrderTokens();
+
   const headers = {
     'Content-Type': 'application/json',
+    'x-guest-identifier': guestId,
+    'x-guest-order-tokens': JSON.stringify(guestTokens),
     ...(options.headers || {})
   };
 
@@ -82,4 +89,3 @@ export const contentApi = {
     });
   }
 };
-

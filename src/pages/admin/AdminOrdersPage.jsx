@@ -344,6 +344,38 @@ export default function AdminOrdersPage() {
                   </span>
                 </div>
               </div>
+
+              {Array.isArray(viewingOrder.order_items) && viewingOrder.order_items.length > 0 && (
+                <div style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
+                  <h4 style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--ks-text-muted)', textTransform: 'uppercase', marginBottom: '12px' }}>
+                    Ordered Products ({viewingOrder.order_items.length})
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {viewingOrder.order_items.map((item) => (
+                      <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          {item.cover_image_path_snapshot ? (
+                            <img src={item.cover_image_path_snapshot} alt={item.product_name_snapshot} style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '4px' }} />
+                          ) : null}
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: '13px' }}>{item.product_name_snapshot}</div>
+                            <div style={{ fontSize: '11px', color: 'var(--ks-text-muted)' }}>
+                              Qty: {item.quantity} · ${Number(item.final_unit_price).toFixed(2)} each
+                              {item.size_value_snapshot && ` · Size: ${item.size_value_snapshot}`}
+                              {item.color_value_snapshot && ` · Color: ${item.color_value_snapshot}`}
+                              {item.printed_name && ` · Print: ${item.printed_name} #${item.printed_number}`}
+                              {item.badge && ` · Badge: ${item.badge}`}
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ fontWeight: 700, fontSize: '13px' }}>
+                          ${Number(item.line_total || item.final_unit_price * item.quantity).toFixed(2)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="ks-admin-modal-footer">

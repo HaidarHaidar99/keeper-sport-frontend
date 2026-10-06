@@ -16,15 +16,16 @@ export default function FavoritesPage() {
     let isMounted = true;
     Promise.all([
       productApi.getUserFavoriteIds(),
-      productApi.getProducts({ limit: 50 })
+      productApi.getProducts({ limit: 100 })
     ])
       .then(([favIdsRes, prodsRes]) => {
         if (!isMounted) return;
 
-        const ids = favIdsRes?.success && Array.isArray(favIdsRes.ids) ? favIdsRes.ids : [];
+        const rawIds = favIdsRes?.favoriteIds || favIdsRes?.ids || [];
+        const ids = Array.isArray(rawIds) ? rawIds : [];
         const allProds = prodsRes?.success && Array.isArray(prodsRes.products) ? prodsRes.products : [];
 
-        // Filter products that are in user's favorites
+        // Filter products that are in user's / guest's favorites
         const matched = allProds
           .filter((p) => ids.includes(p.id))
           .map((p) => ({ ...p, isFavorited: true }));

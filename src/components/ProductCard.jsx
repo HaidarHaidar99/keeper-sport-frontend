@@ -91,11 +91,6 @@ export default function ProductCard({
     e.stopPropagation();
     e.preventDefault();
 
-    if (!user) {
-      navigate(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
-      return;
-    }
-
     if (favLoading) return;
 
     const previousState = isFavorited;

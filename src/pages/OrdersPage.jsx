@@ -17,16 +17,14 @@ export default function OrdersPage() {
 
   useEffect(() => {
     let isMounted = true;
-
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+    setLoading(true);
 
     productApi.getUserOrders()
       .then((ordersRes) => {
         if (!isMounted) return;
-        if (ordersRes?.success) setOrders(ordersRes.orders || []);
+        if (ordersRes?.success && Array.isArray(ordersRes.orders)) {
+          setOrders(ordersRes.orders);
+        }
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -67,21 +65,7 @@ export default function OrdersPage() {
           <h1 className="ks-catalog-title">My Orders</h1>
         </header>
 
-        {!user ? (
-          <div className="ks-catalog-empty">
-            <Package size={48} style={{ opacity: 0.25, marginBottom: '16px' }} />
-            <h3>Sign in to view your orders</h3>
-            <p>Track your current shipments and past purchases.</p>
-            <button
-              type="button"
-              onClick={() => navigate('/login?redirect=/orders')}
-              className="ks-btn-primary"
-              style={{ display: 'inline-flex', marginTop: '16px' }}
-            >
-              <span>SIGN IN TO YOUR ACCOUNT</span>
-            </button>
-          </div>
-        ) : loading ? (
+        {loading ? (
           <div className="ks-catalog-loading" aria-live="polite">
             <Loader2 size={32} className="ks-spin-icon" style={{ color: 'var(--ks-accent-red)' }} />
             <p>Loading your orders...</p>
@@ -94,6 +78,14 @@ export default function OrdersPage() {
             <Link to="/products" className="ks-btn-primary" style={{ display: 'inline-flex', marginTop: '16px' }}>
               <span>BROWSE PRODUCTS</span>
             </Link>
+            {!user && (
+              <p style={{ marginTop: '20px', fontSize: '13px', color: 'var(--ks-text-muted)' }}>
+                Have an existing account?{' '}
+                <Link to="/login?redirect=/orders" style={{ color: 'var(--ks-accent-red)', textDecoration: 'underline' }}>
+                  Sign in
+                </Link>
+              </p>
+            )}
           </div>
         ) : (
           <div className="ks-orders-list">
@@ -129,6 +121,8 @@ export default function OrdersPage() {
                             Qty: {item.quantity} · ${Number(item.final_unit_price).toFixed(2)}
                             {item.size_value_snapshot && ` · Size: ${item.size_value_snapshot}`}
                             {item.color_value_snapshot && ` · Color: ${item.color_value_snapshot}`}
+                            {item.printed_name && ` · Print: ${item.printed_name} #${item.printed_number}`}
+                            {item.badge && ` · Badge: ${item.badge}`}
                           </span>
                         </div>
                       </div>

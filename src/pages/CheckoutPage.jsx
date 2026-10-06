@@ -4,6 +4,7 @@ import { ShieldCheck, Truck, CheckCircle2, AlertCircle, Loader2, ArrowLeft } fro
 import { useAuth } from '../context/AuthContext';
 import { useSite } from '../context/SiteContext';
 import { productApi } from '../api/productApi';
+import { saveGuestOrder, saveGuestOrderToken } from '../utils/guestIdentity';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -54,8 +55,13 @@ export default function CheckoutPage() {
         if (!isMounted) return;
         if (isDirect && orderSourceRes?.success && orderSourceRes.product) {
           setDirectProduct(orderSourceRes.product);
-        } else if (!isDirect && orderSourceRes?.success && orderSourceRes.cart) {
-          setCartItems(orderSourceRes.cart.items || []);
+        } else if (!isDirect && orderSourceRes?.success) {
+          const itemsList = Array.isArray(orderSourceRes.items)
+            ? orderSourceRes.items
+            : Array.isArray(orderSourceRes.cart?.items)
+            ? orderSourceRes.cart.items
+            : [];
+          setCartItems(itemsList);
         }
       })
       .finally(() => {
@@ -92,21 +98,23 @@ export default function CheckoutPage() {
   } else if (!isDirect && cartItems.length > 0) {
     checkoutItems = cartItems.map((item) => {
       const p = item.product || {};
+      const pId = item.productId || p.id;
+      const pName = item.productName || p.name || 'Product';
       const unitPrice = Number(item.unitPrice || p.base_price || 0);
       const lineTotal = unitPrice * item.quantity;
       subtotal += lineTotal;
       return {
-        productId: p.id,
-        variantId: item.selectedVariantId,
-        name: p.name,
+        productId: pId,
+        variantId: item.variantId || item.selectedVariantId || null,
+        name: pName,
         quantity: item.quantity,
         unitPrice,
-        size: item.selectedSize,
-        color: item.selectedColor,
-        printedName: item.printedName,
-        printedNumber: item.printedNumber,
-        badge: item.badge,
-        image: item.coverImage || p.primaryImage
+        size: item.selectedSize || item.variant?.size || null,
+        color: item.selectedColor || item.variant?.color || null,
+        printedName: item.printedName || null,
+        printedNumber: item.printedNumber || null,
+        badge: item.badge || null,
+        image: item.coverImage || p.primaryImage || null
       };
     });
   }
@@ -163,6 +171,11 @@ export default function CheckoutPage() {
 
       const res = await productApi.createOrder(payload);
       if (res && res.success && res.order) {
+        const token = res.order.guestAccessToken || res.guestAccessToken || null;
+        if (token) {
+          saveGuestOrderToken(token);
+          saveGuestOrder({ ...res.order, guestAccessToken: token });
+        }
         if (typeof refreshCounts === 'function') refreshCounts();
         setOrderComplete(res.order);
       } else {

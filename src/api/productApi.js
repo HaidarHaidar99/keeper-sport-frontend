@@ -1,5 +1,5 @@
 /**
- * Keeper Sports Product, Favorites, and Cart API Client
+ * Keeper Sports Product, Favorites, Cart, and Orders API Client
  * Interacts with real backend endpoints:
  * /api/products
  * /api/products/featured
@@ -8,7 +8,11 @@
  * /api/favorites/ids
  * /api/cart
  * /api/cart/add
+ * /api/cart/items/:itemId (PUT, DELETE)
+ * /api/orders
  */
+
+import { getOrCreateGuestId, getGuestOrderTokens } from '../utils/guestIdentity';
 
 const getApiBase = () => {
   const envUrl = import.meta.env.VITE_API_URL;
@@ -22,8 +26,13 @@ const getApiBase = () => {
 const API_BASE = getApiBase();
 
 async function safeRequest(url, options = {}) {
+  const guestId = getOrCreateGuestId();
+  const guestTokens = getGuestOrderTokens();
+
   const headers = {
     'Content-Type': 'application/json',
+    'x-guest-identifier': guestId,
+    'x-guest-order-tokens': JSON.stringify(guestTokens),
     ...(options.headers || {})
   };
 
@@ -94,7 +103,7 @@ export const productApi = {
   },
 
   /**
-   * Toggle product favorite (requires login)
+   * Toggle product favorite (guests & users)
    */
   async toggleFavorite(productId) {
     return safeRequest(`${API_BASE}/favorites/toggle`, {
@@ -104,14 +113,14 @@ export const productApi = {
   },
 
   /**
-   * Get user favorited product IDs
+   * Get user or guest favorited product IDs
    */
   async getUserFavoriteIds() {
     return safeRequest(`${API_BASE}/favorites/ids`);
   },
 
   /**
-   * Add product to cart
+   * Add product to cart (guests & users)
    */
   async addToCart({ productId, variantId = null, quantity = 1, printedName = null, printedNumber = null, badge = null }) {
     return safeRequest(`${API_BASE}/cart/add`, {
@@ -135,7 +144,26 @@ export const productApi = {
   },
 
   /**
-   * Fetch user orders
+   * Update quantity of an item in cart
+   */
+  async updateCartQuantity(itemId, quantity) {
+    return safeRequest(`${API_BASE}/cart/items/${itemId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ quantity })
+    });
+  },
+
+  /**
+   * Remove item from cart
+   */
+  async removeFromCart(itemId) {
+    return safeRequest(`${API_BASE}/cart/items/${itemId}`, {
+      method: 'DELETE'
+    });
+  },
+
+  /**
+   * Fetch user or guest orders
    */
   async getUserOrders() {
     return safeRequest(`${API_BASE}/orders`);
@@ -158,4 +186,3 @@ export const productApi = {
     return safeRequest(`${API_BASE}/orders/${orderId}`);
   }
 };
-

@@ -109,10 +109,6 @@ export default function ProductDetailsPage() {
 
   // Immediate optimistic Favorite toggle
   const handleFavoriteClick = async () => {
-    if (!user) {
-      navigate(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
-      return;
-    }
     if (!product) return;
 
     const prevState = isFavorited;
