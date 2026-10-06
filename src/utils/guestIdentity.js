@@ -83,3 +83,36 @@ export function saveGuestOrder(order) {
     console.warn('Could not persist guest order metadata:', err);
   }
 }
+
+const HIDDEN_ORDERS_KEY = 'ks_hidden_order_ids';
+
+/**
+ * Get array of order IDs hidden from customer-side history
+ */
+export function getHiddenOrderIds() {
+  try {
+    const raw = localStorage.getItem(HIDDEN_ORDERS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Hide an order from customer view without deleting database record
+ */
+export function hideOrderFromHistory(orderId) {
+  if (!orderId) return;
+  try {
+    const list = getHiddenOrderIds();
+    if (!list.includes(orderId)) {
+      list.push(orderId);
+      localStorage.setItem(HIDDEN_ORDERS_KEY, JSON.stringify(list));
+    }
+  } catch (err) {
+    console.warn('Could not hide order from history:', err);
+  }
+}
+

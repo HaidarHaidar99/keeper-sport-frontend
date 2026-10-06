@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, ArrowRight, Trash2, Plus, Minus, Loader2 } from 'lucide-react';
+import { ShoppingBag, ArrowRight, Trash2, Plus, Minus, Loader2, AlertTriangle, X } from 'lucide-react';
 import { productApi } from '../api/productApi';
 import { useSite } from '../context/SiteContext';
 import Navbar from '../components/Navbar';
@@ -12,6 +12,8 @@ export default function CartPage() {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updatingItemId, setUpdatingItemId] = useState(null);
+  const [showClearModal, setShowClearModal] = useState(false);
+  const [clearingCart, setClearingCart] = useState(false);
 
   const loadCart = () => {
     return productApi.getCart().then((cartRes) => {
@@ -42,15 +44,12 @@ export default function CartPage() {
     };
   }, []);
 
-  const handleUpdateQty = async (itemId, newQty) => {
+  const handleUpdateQty = async (itemId, currentQty, delta) => {
     if (updatingItemId) return;
-    setUpdatingItemId(itemId);
+    const newQty = currentQty + delta;
+    if (newQty < 1) return; // Min quantity is 1; use Delete button to remove
 
-    if (newQty <= 0) {
-      await handleRemoveItem(itemId);
-      setUpdatingItemId(null);
-      return;
-    }
+    setUpdatingItemId(itemId);
 
     // Optimistic update
     setCart((prev) => {
@@ -130,6 +129,30 @@ export default function CartPage() {
     }
   };
 
+  const handleClearCart = async () => {
+    if (clearingCart) return;
+    setClearingCart(true);
+
+    try {
+      const res = await productApi.clearCart();
+      if (res?.success) {
+        setCart({
+          items: [],
+          cartCount: 0,
+          subtotal: 0
+        });
+        if (typeof refreshCounts === 'function') refreshCounts();
+      } else {
+        await loadCart();
+      }
+    } catch {
+      await loadCart();
+    } finally {
+      setClearingCart(false);
+      setShowClearModal(false);
+    }
+  };
+
   const items = cart?.items || [];
   const deliveryFee = Number(siteSettings?.delivery_fee || 0);
 
@@ -171,6 +194,38 @@ export default function CartPage() {
           <div className="ks-cart-grid">
             {/* Items Column */}
             <div className="ks-cart-items-col">
+              {/* Header with Clear Cart */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '8px', borderBottom: '1px solid var(--ks-border-card)' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ks-text-muted)' }}>
+                  {items.length} {items.length === 1 ? 'item' : 'items'} in your cart
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowClearModal(true)}
+                  disabled={clearingCart}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--ks-text-muted)',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    transition: 'color 0.2s'
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--ks-error-red, #dc2626)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--ks-text-muted)')}
+                  title="Remove all products from cart"
+                >
+                  <Trash2 size={13} />
+                  <span>Clear Cart</span>
+                </button>
+              </div>
+
               {items.map((item) => {
                 const p = item.product || {};
                 const productName = item.productName || p.name || 'Product';
@@ -206,43 +261,120 @@ export default function CartPage() {
                         {item.badge && <span>Badge: {item.badge}</span>}
                       </div>
 
-                      {/* Quantity Controls */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '6px', background: 'rgba(255,255,255,0.03)' }}>
+                      {/* Visible, high-contrast Quantity Controls and Delete */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '10px' }}>
+                        <div
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            border: '1px solid var(--ks-border-card, #e5e7eb)',
+                            borderRadius: '8px',
+                            background: 'var(--ks-bg-card, #ffffff)',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                            overflow: 'hidden'
+                          }}
+                        >
                           <button
                             type="button"
-                            onClick={() => handleUpdateQty(item.id, item.quantity - 1)}
-                            disabled={isUpdating}
+                            onClick={() => handleUpdateQty(item.id, item.quantity, -1)}
+                            disabled={isUpdating || item.quantity <= 1}
                             aria-label="Decrease quantity"
-                            style={{ background: 'none', border: 'none', color: '#fff', padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                            title={item.quantity <= 1 ? "Minimum quantity is 1" : "Decrease quantity"}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: item.quantity <= 1 ? 'var(--ks-text-muted)' : 'var(--ks-text-title)',
+                              opacity: item.quantity <= 1 ? 0.4 : 1,
+                              padding: '8px 12px',
+                              cursor: item.quantity <= 1 ? 'not-allowed' : 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'background-color 0.15s'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (item.quantity > 1) e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.04)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
                           >
-                            <Minus size={13} />
+                            <Minus size={13} strokeWidth={2.5} />
                           </button>
-                          <span style={{ fontSize: '13px', fontWeight: 700, minWidth: '24px', textAlign: 'center', color: '#fff' }}>
+
+                          <span
+                            style={{
+                              fontSize: '14px',
+                              fontWeight: 700,
+                              minWidth: '28px',
+                              textAlign: 'center',
+                              color: 'var(--ks-text-title, #111317)',
+                              userSelect: 'none'
+                            }}
+                          >
                             {item.quantity}
                           </span>
+
                           <button
                             type="button"
-                            onClick={() => handleUpdateQty(item.id, item.quantity + 1)}
+                            onClick={() => handleUpdateQty(item.id, item.quantity, 1)}
                             disabled={isUpdating}
                             aria-label="Increase quantity"
-                            style={{ background: 'none', border: 'none', color: '#fff', padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                            title="Increase quantity"
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'var(--ks-text-title)',
+                              padding: '8px 12px',
+                              cursor: isUpdating ? 'not-allowed' : 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'background-color 0.15s'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.04)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
                           >
-                            <Plus size={13} />
+                            <Plus size={13} strokeWidth={2.5} />
                           </button>
                         </div>
 
+                        {/* Distinct Delete button */}
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(item.id)}
                           disabled={isUpdating}
-                          aria-label="Remove item"
-                          style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}
-                          onMouseEnter={(e) => (e.currentTarget.style.color = '#ef4444')}
-                          onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
+                          aria-label={`Remove ${productName} from cart`}
                           title="Remove item"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--ks-text-muted, #6B7280)',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            padding: '6px 8px',
+                            cursor: 'pointer',
+                            borderRadius: '6px',
+                            transition: 'color 0.2s, background-color 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = 'var(--ks-error-red, #dc2626)';
+                            e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.06)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = 'var(--ks-text-muted, #6B7280)';
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }}
                         >
-                          <Trash2 size={15} />
+                          <Trash2 size={14} />
+                          <span>Remove</span>
                         </button>
                       </div>
                     </div>
@@ -291,6 +423,95 @@ export default function CartPage() {
           </div>
         )}
       </main>
+
+      {/* Confirmation Modal for Clear Cart */}
+      {showClearModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="clear-cart-title"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(3px)',
+            padding: '16px'
+          }}
+          onClick={() => setShowClearModal(false)}
+        >
+          <div
+            style={{
+              background: 'var(--ks-bg-card, #ffffff)',
+              color: 'var(--ks-text-title, #111317)',
+              borderRadius: '14px',
+              padding: '24px',
+              maxWidth: '420px',
+              width: '100%',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.25)',
+              border: '1px solid var(--ks-border-card, #e5e7eb)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'rgba(220, 38, 38, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ks-error-red, #dc2626)', flexShrink: 0 }}>
+                <AlertTriangle size={20} />
+              </div>
+              <h3 id="clear-cart-title" style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>
+                Clear Entire Cart?
+              </h3>
+            </div>
+
+            <p style={{ fontSize: '14px', color: 'var(--ks-text-subtitle, #4b5563)', margin: '0 0 20px', lineHeight: 1.5 }}>
+              Are you sure you want to clear your cart? All {items.length} items will be removed from your order bag.
+            </p>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => setShowClearModal(false)}
+                disabled={clearingCart}
+                style={{
+                  background: 'none',
+                  border: '1px solid var(--ks-border-card, #d1d5db)',
+                  borderRadius: '8px',
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'var(--ks-text-title, #111317)',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleClearCart}
+                disabled={clearingCart}
+                style={{
+                  background: 'var(--ks-error-red, #dc2626)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '8px 18px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                {clearingCart ? <Loader2 size={14} className="ks-spin-icon" /> : <Trash2 size={14} />}
+                <span>Clear Cart</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer siteSettings={siteSettings} categories={categories} />
     </div>

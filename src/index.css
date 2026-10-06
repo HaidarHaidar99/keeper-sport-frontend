@@ -4267,6 +4267,25 @@ input:autofill {
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
+.ks-status-badge.is-accepted {
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563EB;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.ks-status-badge.is-preparing {
+  background: rgba(139, 92, 246, 0.1);
+  color: #7C3AED;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.ks-status-badge.is-on_delivery,
+.ks-status-badge.is-shipping {
+  background: rgba(14, 165, 233, 0.1);
+  color: #0284C7;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
 .ks-status-badge.is-delivered {
   background: rgba(16, 185, 129, 0.1);
   color: var(--ks-success-green);

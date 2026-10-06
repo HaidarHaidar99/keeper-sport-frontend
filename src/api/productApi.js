@@ -180,6 +180,33 @@ export const productApi = {
   },
 
   /**
+   * Clear entire cart (guests & users)
+   */
+  async clearCart() {
+    return safeRequest(`${API_BASE}/cart`, {
+      method: 'DELETE'
+    });
+  },
+
+  /**
+   * Clear all favorites (guests & users)
+   */
+  async clearFavorites() {
+    return safeRequest(`${API_BASE}/favorites`, {
+      method: 'DELETE'
+    });
+  },
+
+  /**
+   * Customer cancel order (strictly pending orders only)
+   */
+  async cancelOrder(orderId) {
+    return safeRequest(`${API_BASE}/orders/${orderId}/cancel`, {
+      method: 'PATCH'
+    });
+  },
+
+  /**
    * Get single order by id
    */
   async getOrder(orderId) {
