@@ -16,8 +16,7 @@ export default function AdminSettingsPage() {
     location_name: '',
     location_url: '',
     about_us: '',
-    delivery_fee: 0,
-    low_stock_threshold: 5
+    delivery_fee: 0
   });
 
   const [loading, setLoading] = useState(true);
@@ -85,11 +84,13 @@ export default function AdminSettingsPage() {
     try {
       const res = await adminApi.updateSettings({
         ...formData,
-        delivery_fee: parseFloat(formData.delivery_fee) || 0,
-        low_stock_threshold: parseInt(formData.low_stock_threshold, 10) || 5
+        delivery_fee: parseFloat(formData.delivery_fee) || 0
       });
 
       if (res && res.success) {
+        if (res.settings) {
+          setFormData((prev) => ({ ...prev, ...res.settings }));
+        }
         showToast('Store settings updated. Public website updated in real time.');
       } else {
         showToast(res.message || 'Failed to save settings.');
@@ -220,20 +221,6 @@ export default function AdminSettingsPage() {
 
           <div className="ks-admin-panel-body">
             <div className="ks-form-row">
-              <div className="ks-form-group">
-                <label className="ks-form-label">Low Stock Threshold (Units)</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={formData.low_stock_threshold || 5}
-                  onChange={(e) => setFormData({ ...formData, low_stock_threshold: e.target.value })}
-                  className="ks-admin-input"
-                  required
-                />
-                <span className="ks-form-hint">Products with quantity ≤ this number display red LOW STOCK alert</span>
-              </div>
-
               <div className="ks-form-group">
                 <label className="ks-form-label">Flat Delivery Fee ($ USD)</label>
                 <input

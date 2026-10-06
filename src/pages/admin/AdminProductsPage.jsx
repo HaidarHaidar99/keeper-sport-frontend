@@ -67,7 +67,6 @@ export default function AdminProductsPage() {
     base_price: '',
     old_price: '',
     stock_quantity: 10,
-    track_inventory: true,
     is_premium: false,
     is_active: true,
     is_featured: false,
@@ -365,7 +364,6 @@ export default function AdminProductsPage() {
           base_price: fullProd.base_price !== undefined ? fullProd.base_price : '',
           old_price: fullProd.old_price !== undefined && fullProd.old_price !== null ? fullProd.old_price : '',
           stock_quantity: fullProd.stock_quantity !== undefined ? fullProd.stock_quantity : 0,
-          track_inventory: fullProd.track_inventory !== undefined ? Boolean(fullProd.track_inventory) : true,
           is_premium: Boolean(fullProd.is_premium),
           is_active: Boolean(fullProd.is_active),
           is_featured: Boolean(fullProd.is_featured),
@@ -429,7 +427,6 @@ export default function AdminProductsPage() {
         base_price: '',
         old_price: '',
         stock_quantity: 10,
-        track_inventory: true,
         is_premium: false,
         is_active: true,
         is_featured: false,
@@ -480,8 +477,7 @@ export default function AdminProductsPage() {
         })),
         variants: variantsList.map((v, idx) => ({
           size_value: v.size_value || null,
-          color_value: v.color_value || null,
-          color_name: v.color_name || null,
+          color_value: v.color_value || v.color_name || null,
           sku: v.sku || null,
           price: v.price !== '' && v.price !== undefined ? parseFloat(v.price) : null,
           old_price: v.old_price !== '' && v.old_price !== undefined ? parseFloat(v.old_price) : null,
@@ -950,17 +946,7 @@ export default function AdminProductsPage() {
                           onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
                         />
                         <span className="ks-checkbox-custom" />
-                        <span>Featured Selection Rail</span>
-                      </label>
-
-                      <label className="ks-checkbox-wrap">
-                        <input
-                          type="checkbox"
-                          checked={formData.is_premium}
-                          onChange={(e) => setFormData({ ...formData, is_premium: e.target.checked })}
-                        />
-                        <span className="ks-checkbox-custom" />
-                        <span>Premium Elite Badge</span>
+                        <span>Featured Product</span>
                       </label>
 
                       <label className="ks-checkbox-wrap">
@@ -981,26 +967,6 @@ export default function AdminProductsPage() {
                         />
                         <span className="ks-checkbox-custom" />
                         <span>New Arrival Badge</span>
-                      </label>
-
-                      <label className="ks-checkbox-wrap">
-                        <input
-                          type="checkbox"
-                          checked={formData.printing_available}
-                          onChange={(e) => setFormData({ ...formData, printing_available: e.target.checked })}
-                        />
-                        <span className="ks-checkbox-custom" />
-                        <span>Custom Printing Available</span>
-                      </label>
-
-                      <label className="ks-checkbox-wrap">
-                        <input
-                          type="checkbox"
-                          checked={formData.badges_available}
-                          onChange={(e) => setFormData({ ...formData, badges_available: e.target.checked })}
-                        />
-                        <span className="ks-checkbox-custom" />
-                        <span>Tournament Badges Available</span>
                       </label>
                     </div>
                   </div>
@@ -1431,26 +1397,9 @@ export default function AdminProductsPage() {
                   <div className="ks-form-section">
                     <h4 className="ks-form-section-title">5. Inventory &amp; Status</h4>
                     <div className="ks-form-row">
-                      <div className="ks-form-group">
-                        <label className="ks-checkbox-wrap" style={{ fontWeight: 600, marginBottom: '6px' }}>
-                          <input
-                            type="checkbox"
-                            checked={formData.track_inventory}
-                            onChange={(e) => setFormData({ ...formData, track_inventory: e.target.checked })}
-                          />
-                          <span className="ks-checkbox-custom" />
-                          <span>Track Inventory for this Product</span>
-                        </label>
-                        <span className="ks-form-hint">
-                          {formData.track_inventory
-                            ? 'Stock quantities are actively counted and trigger Out of Stock badges.'
-                            : 'Unlimited inventory. Stock will not be enforced.'}
-                        </span>
-                      </div>
-
-                      {formData.track_inventory && variantsList.length === 0 && (
+                      {variantsList.length === 0 ? (
                         <div className="ks-form-group">
-                          <label className="ks-form-label">Total Stock Quantity *</label>
+                          <label className="ks-form-label">Available Stock Quantity *</label>
                           <input
                             type="number"
                             min="0"
@@ -1460,15 +1409,15 @@ export default function AdminProductsPage() {
                             className="ks-admin-input"
                             required
                           />
+                          <span className="ks-form-hint">Enter available inventory units. (0 = Out of Stock)</span>
                         </div>
-                      )}
-
-                      {formData.track_inventory && variantsList.length > 0 && (
+                      ) : (
                         <div className="ks-form-group">
                           <label className="ks-form-label">Total Calculated Stock</label>
                           <div className="ks-admin-input" style={{ backgroundColor: 'var(--ks-bg-card)', display: 'flex', alignItems: 'center' }}>
-                            {variantsList.reduce((acc, v) => acc + (parseInt(v.stock_quantity, 10) || 0), 0)} units (sum of variants)
+                            {variantsList.reduce((acc, v) => acc + (parseInt(v.stock_quantity, 10) || 0), 0)} units (calculated from variants)
                           </div>
+                          <span className="ks-form-hint">Stock is automatically calculated from your variant matrix above.</span>
                         </div>
                       )}
                     </div>

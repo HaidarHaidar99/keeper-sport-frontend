@@ -16,10 +16,14 @@ const API_BASE = `${getApiBase()}/admin`;
 
 async function adminRequest(url, options = {}) {
   const isFormData = options.body instanceof FormData;
+  const adminToken = localStorage.getItem('ks_admin_token');
+  const authHeaders = adminToken ? { Authorization: `Bearer ${adminToken}` } : {};
+
   const headers = isFormData
-    ? { ...(options.headers || {}) }
+    ? { ...authHeaders, ...(options.headers || {}) }
     : {
         'Content-Type': 'application/json',
+        ...authHeaders,
         ...(options.headers || {})
       };
 

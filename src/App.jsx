@@ -1,11 +1,23 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { AdminAuthProvider } from './context/AdminAuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import ErrorBoundary from './components/ErrorBoundary';
 
+// Public Storefront Pages
 import HomePage from './pages/HomePage';
 import ProductsPage from './pages/ProductsPage';
+import ProductDetailsPage from './pages/ProductDetailsPage';
+import CategoriesPage from './pages/CategoriesPage';
+import OffersPage from './pages/OffersPage';
+import ReviewsPage from './pages/ReviewsPage';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
+import CartPage from './pages/CartPage';
+import FavoritesPage from './pages/FavoritesPage';
+import OrdersPage from './pages/OrdersPage';
+import CheckoutPage from './pages/CheckoutPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Customer Authentication
@@ -34,49 +46,61 @@ export default function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <AuthProvider>
-          <BrowserRouter>
-            <Routes>
-              {/* Keeper Sports Core Store Pages */}
-              <Route path="/" element={<HomePage />} />
-              <Route path="/products" element={<ProductsPage />} />
-              <Route path="/shop" element={<ProductsPage />} />
-              
-              {/* Dedicated Admin Login */}
-              <Route path="/admin/login" element={<AdminLoginPage />} />
-              
-              {/* Protected Admin Panel Routes */}
-              <Route
-                path="/admin"
-                element={
-                  <AdminGuard>
-                    <AdminLayout />
-                  </AdminGuard>
-                }
-              >
-                <Route index element={<AdminDashboardPage />} />
-                <Route path="home" element={<AdminHomePage />} />
-                <Route path="hero" element={<AdminHomePage />} />
-                <Route path="products" element={<AdminProductsPage />} />
-                <Route path="categories" element={<AdminCategoriesPage />} />
-                <Route path="orders" element={<AdminOrdersPage />} />
-                <Route path="users" element={<AdminUsersPage />} />
-                <Route path="reviews" element={<AdminReviewsPage />} />
-                <Route path="notifications" element={<AdminNotificationsPage />} />
-                <Route path="settings" element={<AdminSettingsPage />} />
-              </Route>
-              
-              {/* Customer Authentication Routes */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignUpPage />} />
-              <Route path="/register" element={<SignUpPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/verify-email" element={<VerifyEmailPage />} />
-              
-              {/* 404 Not Found Page */}
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </BrowserRouter>
+          <AdminAuthProvider>
+            <BrowserRouter>
+              <Routes>
+                {/* Dedicated Public Storefront Routes */}
+                <Route path="/" element={<HomePage />} />
+                <Route path="/products" element={<ProductsPage />} />
+                <Route path="/products/:slugOrId" element={<ProductDetailsPage />} />
+                <Route path="/shop" element={<ProductsPage />} />
+                <Route path="/categories" element={<CategoriesPage />} />
+                <Route path="/offers" element={<OffersPage />} />
+                <Route path="/reviews" element={<ReviewsPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/cart" element={<CartPage />} />
+                <Route path="/favorites" element={<FavoritesPage />} />
+                <Route path="/orders" element={<OrdersPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
+                
+                {/* Dedicated Admin Login */}
+                <Route path="/admin/login" element={<AdminLoginPage />} />
+                
+                {/* Protected Admin Panel Routes */}
+                <Route
+                  path="/admin"
+                  element={
+                    <AdminGuard>
+                      <AdminLayout />
+                    </AdminGuard>
+                  }
+                >
+                  <Route index element={<AdminDashboardPage />} />
+                  <Route path="home" element={<AdminHomePage />} />
+                  <Route path="hero" element={<AdminHomePage />} />
+                  <Route path="products" element={<AdminProductsPage />} />
+                  <Route path="categories" element={<AdminCategoriesPage />} />
+                  <Route path="orders" element={<AdminOrdersPage />} />
+                  <Route path="users" element={<AdminUsersPage />} />
+                  <Route path="reviews" element={<AdminReviewsPage />} />
+                  <Route path="notifications" element={<AdminNotificationsPage />} />
+                  <Route path="settings" element={<AdminSettingsPage />} />
+                </Route>
+                
+                {/* Customer Authentication Routes */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignUpPage />} />
+                <Route path="/register" element={<SignUpPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/verify-email" element={<VerifyEmailPage />} />
+                
+                {/* 404 Not Found Page */}
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </BrowserRouter>
+          </AdminAuthProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>

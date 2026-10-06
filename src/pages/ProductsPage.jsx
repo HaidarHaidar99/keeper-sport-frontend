@@ -18,6 +18,7 @@ import OffersBar from '../components/OffersBar';
 import ProductCard from '../components/ProductCard';
 import FeaturedRail from '../components/FeaturedRail';
 import ProductFilterDrawer from '../components/ProductFilterDrawer';
+import Footer from '../components/Footer';
 
 export default function ProductsPage() {
   const { user } = useAuth();
@@ -529,6 +530,10 @@ export default function ProductsPage() {
         onResetFilters={handleResetFilters}
         onApply={() => fetchCatalogProducts(1, false)}
       />
+
+      {/* Comprehensive Store Footer */}
+      <Footer siteSettings={siteSettings} categories={categories} />
     </div>
   );
 }
+

@@ -72,58 +72,52 @@ export default function Navbar({ siteSettings = {}, categories = [], counts = {}
     <>
       <header className="ks-navbar-root">
         <div className="ks-navbar-container">
-          {/* Left: Dynamic Store Logo from Backend Settings or Neutral Placeholder */}
+          {/* Left: Prominent Keeper Sports Brand Logo */}
           <div className="ks-navbar-left">
-            <Link to="/" className="ks-navbar-brand-link" aria-label="Store Home">
+            <Link to="/" className="ks-navbar-brand-link" aria-label="Keeper Sports Home">
               {siteSettings?.logo_path ? (
                 <img
                   src={siteSettings.logo_path}
-                  alt={siteSettings?.site_name || 'Store Logo'}
+                  alt={siteSettings?.site_name || 'Keeper Sports'}
                   className="ks-navbar-logo-img"
                   onError={(e) => {
-                    // Hide broken image link and display minimal neutral placeholder
                     e.currentTarget.style.display = 'none';
-                    const fallback = e.currentTarget.parentElement?.querySelector('.ks-navbar-logo-placeholder');
+                    const fallback = e.currentTarget.parentElement?.querySelector('.ks-navbar-logo-fallback');
                     if (fallback) fallback.style.display = 'flex';
                   }}
                 />
               ) : null}
 
-              {/* Minimal neutral placeholder when no dynamic logo is configured yet */}
+              {/* Bold Athletic Keeper Sports Horizontal Brand Lockup */}
               <div
-                className="ks-navbar-logo-placeholder"
+                className="ks-navbar-logo-fallback"
                 style={{ display: siteSettings?.logo_path ? 'none' : 'flex' }}
-                aria-label="Store Logo"
-                title="Store Logo"
+                aria-label="Keeper Sports Logo"
               >
-                <svg
-                  className="ks-navbar-logo-mark"
-                  viewBox="0 0 40 40"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M20 4L34 11V21C34 29.5 28 35.5 20 38C12 35.5 6 29.5 6 21V11L20 4Z"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M20 13V27M13 20H27"
-                    stroke="currentColor"
-                    strokeWidth="1.75"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    opacity="0.6"
-                  />
-                </svg>
+                <div className="ks-logo-emblem">
+                  <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="ks-logo-shield-svg">
+                    <path
+                      d="M18 3L31 8V18C31 26.5 25.5 32 18 34C10.5 32 5 26.5 5 18V8L18 3Z"
+                      fill="#E10600"
+                    />
+                    <path
+                      d="M18 10V26M10 18H26"
+                      stroke="#FFFFFF"
+                      strokeWidth="2.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div className="ks-logo-text-block">
+                  <span className="ks-logo-primary">KEEPER SPORTS</span>
+                  <span className="ks-logo-secondary">AUTHENTIC FOOTBALL GEAR</span>
+                </div>
               </div>
             </Link>
           </div>
 
-          {/* Center: Desktop Horizontal Navigation Links (with red line IN the active word) */}
+          {/* Center: Desktop Horizontal Navigation Links (Clean active route without lines cutting through text) */}
           <nav className="ks-navbar-desktop-nav" aria-label="Main Navigation">
             {desktopNavItems.map((item) => {
               const active = isActiveRoute(item.path);
@@ -161,10 +155,11 @@ export default function Navbar({ siteSettings = {}, categories = [], counts = {}
                 {searchOpen ? <X size={19} strokeWidth={1.75} /> : <Search size={19} strokeWidth={1.75} />}
               </button>
 
-              {/* Favorites Icon Button */}
+              {/* Favorites Icon Button (target for heart animation) */}
               <Link
                 to="/favorites"
-                className="ks-nav-action-btn"
+                data-nav-favorites="true"
+                className="ks-nav-action-btn ks-nav-fav-btn"
                 aria-label="Favorites"
                 title="Favorites"
               >
@@ -173,6 +168,7 @@ export default function Navbar({ siteSettings = {}, categories = [], counts = {}
                   <span className="ks-nav-badge">{counts.favorites}</span>
                 )}
               </Link>
+
 
               {/* Notifications Icon Button */}
               <Link

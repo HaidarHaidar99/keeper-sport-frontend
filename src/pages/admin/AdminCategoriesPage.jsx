@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Tags, Plus, Edit2, Trash2, Check, X } from 'lucide-react';
+import { Tags, Plus, Edit2, Trash2, Check, X, Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import ConfirmModal from '../../components/admin/ConfirmModal';
 
@@ -14,6 +14,8 @@ export default function AdminCategoriesPage() {
   const [name, setName] = useState('');
   const [sortOrder, setSortOrder] = useState(0);
   const [isActive, setIsActive] = useState(true);
+  const [imagePath, setImagePath] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
 
   // Delete Confirm
@@ -52,13 +54,40 @@ export default function AdminCategoriesPage() {
       setName(cat.name || '');
       setSortOrder(cat.sortOrder ?? 0);
       setIsActive(Boolean(cat.isActive));
+      setImagePath(cat.imagePath || '');
     } else {
       setEditingCategory(null);
       setName('');
       setSortOrder(categories.length);
       setIsActive(true);
+      setImagePath('');
     }
     setModalOpen(true);
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const res = await adminApi.uploadMedia(file);
+      if (res && res.success && res.url) {
+        setImagePath(res.url);
+        showToast('Category image uploaded successfully.');
+      } else {
+        showToast(res.message || 'Image upload failed.');
+      }
+    } catch {
+      showToast('Network error uploading category image.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImagePath('');
+    showToast('Category image removed.');
   };
 
   const handleSaveCategory = async (e) => {
@@ -70,23 +99,22 @@ export default function AdminCategoriesPage() {
 
     setSaveLoading(true);
     try {
+      const payload = {
+        name: name.trim(),
+        sort_order: sortOrder,
+        is_active: isActive,
+        image_path: imagePath ? imagePath.trim() : null
+      };
+
       let res;
       if (editingCategory) {
-        res = await adminApi.updateCategory(editingCategory.id, {
-          name: name.trim(),
-          sort_order: sortOrder,
-          is_active: isActive
-        });
+        res = await adminApi.updateCategory(editingCategory.id, payload);
       } else {
-        res = await adminApi.createCategory({
-          name: name.trim(),
-          sort_order: sortOrder,
-          is_active: isActive
-        });
+        res = await adminApi.createCategory(payload);
       }
 
       if (res && res.success) {
-        showToast(res.message || 'Category saved.');
+        showToast(res.message || 'Category saved successfully.');
         setModalOpen(false);
         loadCategories();
       } else {
@@ -110,7 +138,7 @@ export default function AdminCategoriesPage() {
         showToast(`Category "${cat.name}" ${!cat.isActive ? 'activated' : 'deactivated'}.`);
       }
     } catch {
-      showToast('Error updating category.');
+      showToast('Error toggling category status.');
     }
   };
 
@@ -119,14 +147,14 @@ export default function AdminCategoriesPage() {
     try {
       const res = await adminApi.deleteCategory(deleteModal.id);
       if (res && res.success) {
-        showToast(res.message || 'Category deleted.');
+        showToast('Category deleted successfully.');
         setDeleteModal({ isOpen: false, id: null, name: '' });
         loadCategories();
       } else {
-        showToast(res.message || 'Could not delete category.');
+        showToast(res.message || 'Failed to delete category.');
       }
     } catch {
-      showToast('Network error during delete.');
+      showToast('Network error deleting category.');
     } finally {
       setDeleteLoading(false);
     }
@@ -134,7 +162,7 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="ks-admin-page-container">
-      {/* Toast Feedback */}
+      {/* Toast Notice */}
       {toastMessage && (
         <div className="ks-admin-toast" role="status">
           <span>{toastMessage}</span>
@@ -142,26 +170,27 @@ export default function AdminCategoriesPage() {
       )}
 
       {/* Page Header */}
-      <div className="ks-admin-header-row">
+      <div className="ks-admin-page-header">
         <div>
-          <span className="ks-admin-header-eyebrow">CATALOG TAXONOMY</span>
           <h1 className="ks-admin-page-title">Categories Management</h1>
+          <p className="ks-admin-page-subtitle">
+            Organize catalog hierarchy, manage category ordering, single cover visual, and storefront visibility.
+          </p>
         </div>
-
         <button
           type="button"
-          onClick={() => openModal(null)}
+          onClick={() => openModal()}
           className="ks-admin-btn-primary"
         >
-          <Plus size={15} />
+          <Plus size={16} />
           <span>New Category</span>
         </button>
       </div>
 
-      {/* OVERVIEW STAT CARDS */}
-      <div className="ks-admin-stats-grid">
+      {/* Top Metric Cards */}
+      <div className="ks-admin-stats-grid" style={{ marginBottom: '24px' }}>
         <div className="ks-admin-stat-card">
-          <div className="ks-stat-card-icon-wrap is-neutral">
+          <div className="ks-stat-card-icon-wrap is-red">
             <Tags size={20} />
           </div>
           <div className="ks-stat-card-content">
@@ -171,11 +200,11 @@ export default function AdminCategoriesPage() {
         </div>
 
         <div className="ks-admin-stat-card">
-          <div className="ks-stat-card-icon-wrap is-neutral">
+          <div className="ks-stat-card-icon-wrap is-active">
             <Check size={20} />
           </div>
           <div className="ks-stat-card-content">
-            <span className="ks-stat-card-label">ACTIVE IN STORE</span>
+            <span className="ks-stat-card-label">ACTIVE / VISIBLE</span>
             <div className="ks-stat-card-value">{loading ? '—' : stats.active}</div>
           </div>
         </div>
@@ -205,6 +234,7 @@ export default function AdminCategoriesPage() {
               <table className="ks-admin-table">
                 <thead>
                   <tr>
+                    <th style={{ width: '64px' }}>Image</th>
                     <th>Category Name</th>
                     <th>Slug</th>
                     <th>Assigned Products</th>
@@ -216,6 +246,31 @@ export default function AdminCategoriesPage() {
                 <tbody>
                   {categories.map((c) => (
                     <tr key={c.id}>
+                      <td>
+                        <div
+                          style={{
+                            width: '44px',
+                            height: '44px',
+                            borderRadius: '6px',
+                            overflow: 'hidden',
+                            backgroundColor: 'var(--ks-bg-card)',
+                            border: '1px solid var(--ks-border-color)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          {c.imagePath ? (
+                            <img
+                              src={c.imagePath}
+                              alt={c.name}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <ImageIcon size={18} style={{ opacity: 0.3 }} />
+                          )}
+                        </div>
+                      </td>
                       <td>
                         <div className="ks-table-strong">{c.name}</div>
                       </td>
@@ -286,6 +341,7 @@ export default function AdminCategoriesPage() {
 
             <form onSubmit={handleSaveCategory} className="ks-admin-form">
               <div className="ks-admin-modal-body">
+                {/* Category Name */}
                 <div className="ks-form-group">
                   <label className="ks-form-label">Category Name *</label>
                   <input
@@ -296,6 +352,100 @@ export default function AdminCategoriesPage() {
                     className="ks-admin-input"
                     required
                   />
+                </div>
+
+                {/* EXACTLY ONE CATEGORY IMAGE */}
+                <div className="ks-form-group" style={{ marginTop: '16px', marginBottom: '16px' }}>
+                  <label className="ks-form-label">
+                    Category Cover Image (Outer Public Card Visual)
+                  </label>
+                  <span className="ks-form-hint" style={{ display: 'block', marginBottom: '10px' }}>
+                    Single high-resolution visual displayed on the public outer category card.
+                  </span>
+
+                  {imagePath ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <div
+                        style={{
+                          width: '100px',
+                          height: '80px',
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          border: '1px solid var(--ks-border-color)',
+                          backgroundColor: 'var(--ks-bg-card)'
+                        }}
+                      >
+                        <img
+                          src={imagePath}
+                          alt="Category Preview"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <label
+                          className="ks-admin-btn-secondary"
+                          style={{ cursor: 'pointer', padding: '6px 14px', fontSize: '0.85rem' }}
+                        >
+                          <Upload size={14} />
+                          <span>Replace Image</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            style={{ display: 'none' }}
+                            disabled={uploadingImage}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          className="ks-admin-btn-secondary"
+                          style={{ color: 'var(--ks-error-red)', padding: '6px 14px', fontSize: '0.85rem' }}
+                        >
+                          Remove Image
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '24px 16px',
+                        border: '2px dashed var(--ks-border-color)',
+                        borderRadius: '8px',
+                        cursor: uploadingImage ? 'wait' : 'pointer',
+                        backgroundColor: 'var(--ks-bg-card)',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        style={{ display: 'none' }}
+                        disabled={uploadingImage}
+                      />
+                      {uploadingImage ? (
+                        <>
+                          <Loader2 size={24} className="ks-spinner-icon" style={{ marginBottom: '8px' }} />
+                          <span style={{ fontSize: '0.9rem', color: 'var(--ks-text-subtitle)' }}>
+                            Uploading Image to Storage...
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <ImageIcon size={26} style={{ marginBottom: '8px', opacity: 0.5 }} />
+                          <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Click to choose category image</span>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--ks-text-subtitle)', marginTop: '4px' }}>
+                            PNG, JPG, or WebP (Stored persistently in media bucket)
+                          </span>
+                        </>
+                      )}
+                    </label>
+                  )}
                 </div>
 
                 <div className="ks-form-row">
@@ -335,7 +485,7 @@ export default function AdminCategoriesPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={saveLoading}
+                  disabled={saveLoading || uploadingImage}
                   className="ks-admin-btn-primary"
                 >
                   {saveLoading ? 'Saving...' : editingCategory ? 'Update Category' : 'Create Category'}

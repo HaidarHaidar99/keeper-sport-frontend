@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { authApi } from '../api/authApi';
 import { AlertCircle, CheckCircle2, Loader2, Sun, Moon } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
   const { theme, toggleTheme } = useTheme();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect') || '/login';
+  const isFromAdmin = redirect.startsWith('/admin');
 
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -112,16 +115,16 @@ export default function ForgotPasswordPage() {
           </form>
         ) : (
           <div style={{ marginTop: '16px' }}>
-            <Link to="/login" className="ks-btn-primary" style={{ textDecoration: 'none' }}>
-              RETURN TO SIGN IN
+            <Link to={redirect} className="ks-btn-primary" style={{ textDecoration: 'none' }}>
+              {isFromAdmin ? 'RETURN TO ADMIN SIGN IN' : 'RETURN TO SIGN IN'}
             </Link>
           </div>
         )}
 
         <div className="ks-switch-text" style={{ marginTop: '24px', marginBottom: 0 }}>
           <span>Remember your password?</span>
-          <Link to="/login" className="ks-switch-link">
-            Sign In
+          <Link to={redirect} className="ks-switch-link">
+            {isFromAdmin ? 'Admin Sign In' : 'Sign In'}
           </Link>
         </div>
       </div>

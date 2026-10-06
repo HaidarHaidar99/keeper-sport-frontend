@@ -1,11 +1,12 @@
-import React, { useState, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useAdminAuth } from '../../context/AdminAuthContext';
 import { Shield, Lock, Mail, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function AdminLoginPage() {
-  const { login, logout } = useAuth();
+  const { adminUser, adminLogin } = useAdminAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -18,6 +19,14 @@ export default function AdminLoginPage() {
 
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
+
+  // If already authenticated with active admin privileges, navigate directly to dashboard
+  useEffect(() => {
+    if (adminUser && (adminUser.role === 'admin' || adminUser.role === 'super_admin')) {
+      const destination = location.state?.from?.pathname || '/admin';
+      navigate(destination, { replace: true });
+    }
+  }, [adminUser, navigate, location.state]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,21 +45,15 @@ export default function AdminLoginPage() {
     setError('');
 
     try {
-      const data = await login({
+      const data = await adminLogin({
         email: formData.email.trim(),
         password: formData.password
       });
 
       if (data && data.success && data.user) {
-        // Verify administrator role server-side
-        const role = data.user.role;
-        if (role === 'admin' || role === 'super_admin') {
-          navigate('/admin', { replace: true });
-        } else {
-          // Normal customer tried to log in through admin portal: terminate session immediately
-          await logout();
-          setError('Access Denied: This account does not possess administrator privileges.');
-        }
+        // Authenticated admin state committed
+        const destination = location.state?.from?.pathname || '/admin';
+        navigate(destination, { replace: true });
       } else {
         setError(data?.message || 'Invalid administrator credentials.');
       }
@@ -138,7 +141,7 @@ export default function AdminLoginPage() {
 
           {/* Forgot Password Link */}
           <div className="ks-forgot-row" style={{ marginBottom: '20px' }}>
-            <Link to="/forgot-password" className="ks-forgot-link">
+            <Link to="/forgot-password?redirect=/admin/login" className="ks-forgot-link">
               Forgot Password?
             </Link>
           </div>
@@ -160,14 +163,8 @@ export default function AdminLoginPage() {
             )}
           </button>
         </form>
-
-        {/* Return to Public Website */}
-        <div className="ks-admin-auth-footer">
-          <Link to="/" className="ks-admin-auth-back-link">
-            ← Return to Keeper Sports Storefront
-          </Link>
-        </div>
       </div>
     </div>
   );
 }
+

@@ -8,6 +8,8 @@ export default function ResetPasswordPage() {
   const { theme, toggleTheme } = useTheme();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') || '';
+  const redirect = searchParams.get('redirect') || '/login';
+  const isFromAdmin = redirect.startsWith('/admin');
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -140,8 +142,8 @@ export default function ResetPasswordPage() {
             <p style={{ fontSize: '0.85rem', color: 'var(--ks-text-subtitle)', marginBottom: '24px' }}>
               You can now sign in with your new password.
             </p>
-            <Link to="/login" className="ks-btn-primary" style={{ textDecoration: 'none' }}>
-              SIGN IN
+            <Link to={redirect} className="ks-btn-primary" style={{ textDecoration: 'none' }}>
+              {isFromAdmin ? 'SIGN IN TO ADMIN' : 'SIGN IN'}
             </Link>
           </div>
         ) : (
@@ -234,8 +236,8 @@ export default function ResetPasswordPage() {
             </button>
 
             <div className="ks-switch-text" style={{ marginTop: '22px', marginBottom: 0 }}>
-              <Link to="/login" className="ks-switch-link">
-                Back to Sign In
+              <Link to={redirect} className="ks-switch-link">
+                {isFromAdmin ? 'Back to Admin Sign In' : 'Back to Sign In'}
               </Link>
             </div>
           </form>

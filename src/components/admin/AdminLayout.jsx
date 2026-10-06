@@ -21,13 +21,13 @@ import {
   X,
   User as UserIcon
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAdminAuth } from '../../context/AdminAuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { adminApi } from '../../api/adminApi';
 import { contentApi } from '../../api/contentApi';
 
 export default function AdminLayout() {
-  const { user, logout } = useAuth();
+  const { adminUser: user, adminLogout } = useAdminAuth();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
@@ -79,8 +79,8 @@ export default function AdminLayout() {
   }, []);
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+    await adminLogout();
+    navigate('/admin/login', { replace: true });
   };
 
   // Compute user avatar initial

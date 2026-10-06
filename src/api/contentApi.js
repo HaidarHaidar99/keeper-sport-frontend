@@ -65,5 +65,21 @@ export const contentApi = {
 
   async getUserCounts() {
     return safeRequest(`${API_BASE}/user/counts`);
+  },
+
+  async getOffers() {
+    return safeRequest(`${API_BASE}/offers`);
+  },
+
+  async getReviews() {
+    return safeRequest(`${API_BASE}/reviews`);
+  },
+
+  async submitContact(formData) {
+    return safeRequest(`${API_BASE}/contact`, {
+      method: 'POST',
+      body: JSON.stringify(formData)
+    });
   }
 };
+

@@ -132,5 +132,30 @@ export const productApi = {
    */
   async getCart() {
     return safeRequest(`${API_BASE}/cart`);
+  },
+
+  /**
+   * Fetch user orders
+   */
+  async getUserOrders() {
+    return safeRequest(`${API_BASE}/orders`);
+  },
+
+  /**
+   * Create order
+   */
+  async createOrder(orderData) {
+    return safeRequest(`${API_BASE}/orders`, {
+      method: 'POST',
+      body: JSON.stringify(orderData)
+    });
+  },
+
+  /**
+   * Get single order by id
+   */
+  async getOrder(orderId) {
+    return safeRequest(`${API_BASE}/orders/${orderId}`);
   }
 };
+

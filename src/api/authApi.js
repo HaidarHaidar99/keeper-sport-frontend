@@ -59,6 +59,31 @@ export const authApi = {
     });
   },
 
+  async adminLogin({ email, password }) {
+    return safeRequest(`${API_BASE}/auth/admin/login`, {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+  },
+
+  async adminLogout() {
+    const adminToken = localStorage.getItem('ks_admin_token');
+    const headers = adminToken ? { Authorization: `Bearer ${adminToken}` } : {};
+    return safeRequest(`${API_BASE}/auth/admin/logout`, {
+      method: 'POST',
+      headers
+    });
+  },
+
+  async getAdminMe() {
+    const adminToken = localStorage.getItem('ks_admin_token');
+    const headers = adminToken ? { Authorization: `Bearer ${adminToken}` } : {};
+    return safeRequest(`${API_BASE}/auth/admin/me`, {
+      method: 'GET',
+      headers
+    });
+  },
+
   async googleAuth(credential) {
     return safeRequest(`${API_BASE}/auth/google`, {
       method: 'POST',

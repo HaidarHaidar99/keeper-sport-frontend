@@ -8,6 +8,7 @@ import Navbar from '../components/Navbar';
 import OffersBar from '../components/OffersBar';
 import HeroCarousel from '../components/HeroCarousel';
 import FeaturedRail from '../components/FeaturedRail';
+import Footer from '../components/Footer';
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -184,6 +185,10 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* 7. Comprehensive Store Footer */}
+      <Footer siteSettings={siteSettings} categories={categories} />
     </div>
   );
 }
+

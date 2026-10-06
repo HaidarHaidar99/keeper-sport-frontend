@@ -215,7 +215,7 @@ export default function SignUpPage() {
                 name="full_name"
                 type="text"
                 autoComplete="name"
-                placeholder="e.g. John Doe"
+                placeholder="Full Name"
                 className={`ks-input ${errors.full_name ? 'has-error' : ''}`}
                 value={formData.full_name}
                 onChange={handleChange}
@@ -237,8 +237,9 @@ export default function SignUpPage() {
                 name="email"
                 type="email"
                 autoComplete="email"
-                placeholder="your.email@example.com"
+                placeholder="Your email"
                 className={`ks-input ${errors.email ? 'has-error' : ''}`}
+
                 value={formData.email}
                 onChange={handleChange}
                 disabled={isSubmitting}
@@ -370,15 +371,8 @@ export default function SignUpPage() {
             <span>{googleLoading ? 'Connecting to Google...' : 'Continue with Google'}</span>
           </button>
         </div>
-
-        {/* Back to Home Link */}
-        <div style={{ marginTop: '20px', textAlign: 'center' }}>
-          <Link to="/" style={{ color: 'var(--ks-text-muted)', fontSize: '0.82rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <ArrowLeft size={14} />
-            <span>Back to Storefront</span>
-          </Link>
-        </div>
       </div>
     </div>
   );
 }
+
