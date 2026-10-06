@@ -11,6 +11,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useSite } from '../context/SiteContext';
 import { contentApi } from '../api/contentApi';
 import { productApi } from '../api/productApi';
 import Navbar from '../components/Navbar';
@@ -22,18 +23,11 @@ import Footer from '../components/Footer';
 
 export default function ProductsPage() {
   const { user } = useAuth();
+  const { siteSettings, categories, counts, refreshCounts: refreshUserCounts } = useSite();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Global Page Data
-  const [siteSettings, setSiteSettings] = useState(null);
   const [offerBars, setOfferBars] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [counts, setCounts] = useState({
-    favorites: 0,
-    orders: 0,
-    cart: 0,
-    notifications: 0
-  });
 
   // Featured Products Rail State
   const [featuredProducts, setFeaturedProducts] = useState([]);
@@ -61,39 +55,16 @@ export default function ProductsPage() {
   const [minPrice, setMinPrice] = useState(searchParams.get('min_price') || '');
   const [maxPrice, setMaxPrice] = useState(searchParams.get('max_price') || '');
 
-  // 1. Fetch Static Content & Settings on Mount
+  // 1. Fetch Offers on Mount
   useEffect(() => {
     let isMounted = true;
-
-    contentApi.getSiteSettings().then((res) => {
-      if (isMounted && res.success && res.settings) setSiteSettings(res.settings);
-    });
-
     contentApi.getOfferBars().then((res) => {
       if (isMounted && res.success && res.offers) setOfferBars(res.offers);
     });
-
-    contentApi.getCategories().then((res) => {
-      if (isMounted && res.success && res.categories) setCategories(res.categories);
-    });
-
     return () => {
       isMounted = false;
     };
   }, []);
-
-  // 2. Fetch User Dynamic Counts
-  const refreshUserCounts = useCallback(() => {
-    contentApi.getUserCounts().then((res) => {
-      if (res.success && res.counts) {
-        setCounts(res.counts);
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    refreshUserCounts();
-  }, [user, refreshUserCounts]);
 
   // 3. Fetch Featured Products Rail
   useEffect(() => {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSite } from '../context/SiteContext';
 import {
   X,
   ChevronDown,
@@ -16,10 +17,15 @@ import {
 export default function HamburgerMenu({
   isOpen,
   onClose,
-  siteSettings = {},
-  categories = [],
-  counts = {}
+  siteSettings: propSettings,
+  categories: propCategories,
+  counts: propCounts
 }) {
+  const siteCtx = useSite();
+  const siteSettings = (propSettings && Object.keys(propSettings).length > 0) ? propSettings : (siteCtx?.siteSettings || {});
+  const categories = (propCategories && propCategories.length > 0) ? propCategories : (siteCtx?.categories || []);
+  const counts = (propCounts && Object.keys(propCounts).length > 0) ? propCounts : (siteCtx?.counts || {});
+
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();

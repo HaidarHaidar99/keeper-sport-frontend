@@ -1,29 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Loader2 } from 'lucide-react';
+import { useSite } from '../context/SiteContext';
 import { productApi } from '../api/productApi';
-import { contentApi } from '../api/contentApi';
 import ProductCard from '../components/ProductCard';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function FavoritesPage() {
+  const { siteSettings, categories, refreshCounts } = useSite();
   const [favoriteProducts, setFavoriteProducts] = useState([]);
-  const [siteSettings, setSiteSettings] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [userCounts, setUserCounts] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
     Promise.all([
       productApi.getUserFavoriteIds(),
-      productApi.getProducts({ limit: 50 }),
-      contentApi.getSiteSettings(),
-      contentApi.getCategories(),
-      contentApi.getUserCounts()
+      productApi.getProducts({ limit: 50 })
     ])
-      .then(([favIdsRes, prodsRes, settingsRes, catsRes, countsRes]) => {
+      .then(([favIdsRes, prodsRes]) => {
         if (!isMounted) return;
 
         const ids = favIdsRes?.success && Array.isArray(favIdsRes.ids) ? favIdsRes.ids : [];
@@ -35,10 +30,6 @@ export default function FavoritesPage() {
           .map((p) => ({ ...p, isFavorited: true }));
 
         setFavoriteProducts(matched);
-
-        if (settingsRes?.success) setSiteSettings(settingsRes.settings);
-        if (catsRes?.success) setCategories(catsRes.categories || []);
-        if (countsRes?.success) setUserCounts(countsRes.counts || {});
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -52,16 +43,13 @@ export default function FavoritesPage() {
   const handleFavoriteToggled = (productId, isFav) => {
     if (!isFav) {
       setFavoriteProducts((prev) => prev.filter((p) => p.id !== productId));
-      setUserCounts((prev) => ({
-        ...prev,
-        favorites: Math.max(0, (prev.favorites || 1) - 1)
-      }));
+      if (typeof refreshCounts === 'function') refreshCounts();
     }
   };
 
   return (
     <div className="ks-page-canvas">
-      <Navbar siteSettings={siteSettings} categories={categories} counts={userCounts} />
+      <Navbar siteSettings={siteSettings} categories={categories} />
 
       <main className="ks-catalog-page-container">
         <header className="ks-catalog-header">

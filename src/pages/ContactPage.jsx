@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { useSite } from '../context/SiteContext';
 import { contentApi } from '../api/contentApi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function ContactPage() {
-  const [siteSettings, setSiteSettings] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [userCounts, setUserCounts] = useState({});
+  const { siteSettings, categories } = useSite();
 
   const [formData, setFormData] = useState({
     full_name: '',
@@ -20,24 +19,6 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverSuccess, setServerSuccess] = useState('');
   const [serverError, setServerError] = useState('');
-
-  useEffect(() => {
-    let isMounted = true;
-    Promise.all([
-      contentApi.getSiteSettings(),
-      contentApi.getCategories(),
-      contentApi.getUserCounts()
-    ]).then(([settingsRes, catsRes, countsRes]) => {
-      if (!isMounted) return;
-      if (settingsRes?.success) setSiteSettings(settingsRes.settings);
-      if (catsRes?.success) setCategories(catsRes.categories || []);
-      if (countsRes?.success) setUserCounts(countsRes.counts || {});
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   const validate = () => {
     const errs = {};
@@ -88,7 +69,7 @@ export default function ContactPage() {
 
   return (
     <div className="ks-page-canvas">
-      <Navbar siteSettings={siteSettings} categories={categories} counts={userCounts} />
+      <Navbar siteSettings={siteSettings} categories={categories} />
 
       <main className="ks-catalog-page-container">
         <header className="ks-catalog-header">

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { ShieldCheck, Truck, CheckCircle2, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useSite } from '../context/SiteContext';
 import { productApi } from '../api/productApi';
-import { contentApi } from '../api/contentApi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -11,6 +11,7 @@ export default function CheckoutPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { siteSettings, categories, deliveryFee, refreshCounts } = useSite();
 
   const isDirect = searchParams.get('direct') === 'true';
   const directProductId = searchParams.get('productId');
@@ -21,9 +22,6 @@ export default function CheckoutPage() {
   const directNumber = searchParams.get('number');
   const directBadge = searchParams.get('badge');
 
-  const [siteSettings, setSiteSettings] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [userCounts, setUserCounts] = useState({});
   const [directProduct, setDirectProduct] = useState(null);
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,25 +45,13 @@ export default function CheckoutPage() {
   useEffect(() => {
     let isMounted = true;
 
-    const promises = [
-      contentApi.getSiteSettings(),
-      contentApi.getCategories(),
-      contentApi.getUserCounts()
-    ];
+    const fetchOrderSource = isDirect && directProductId
+      ? productApi.getProduct(directProductId)
+      : productApi.getCart();
 
-    if (isDirect && directProductId) {
-      promises.push(productApi.getProduct(directProductId));
-    } else {
-      promises.push(productApi.getCart());
-    }
-
-    Promise.all(promises)
-      .then(([settingsRes, catsRes, countsRes, orderSourceRes]) => {
+    fetchOrderSource
+      .then((orderSourceRes) => {
         if (!isMounted) return;
-        if (settingsRes?.success) setSiteSettings(settingsRes.settings);
-        if (catsRes?.success) setCategories(catsRes.categories || []);
-        if (countsRes?.success) setUserCounts(countsRes.counts || {});
-
         if (isDirect && orderSourceRes?.success && orderSourceRes.product) {
           setDirectProduct(orderSourceRes.product);
         } else if (!isDirect && orderSourceRes?.success && orderSourceRes.cart) {
@@ -80,8 +66,6 @@ export default function CheckoutPage() {
       isMounted = false;
     };
   }, [isDirect, directProductId]);
-
-  const deliveryFee = Number(siteSettings?.delivery_fee || 0);
 
   // Calculate items summary
   let checkoutItems = [];
@@ -179,6 +163,7 @@ export default function CheckoutPage() {
 
       const res = await productApi.createOrder(payload);
       if (res && res.success && res.order) {
+        if (typeof refreshCounts === 'function') refreshCounts();
         setOrderComplete(res.order);
       } else {
         setServerError(res.message || 'Could not complete order. Please try again.');
@@ -193,7 +178,7 @@ export default function CheckoutPage() {
   if (orderComplete) {
     return (
       <div className="ks-page-canvas">
-        <Navbar siteSettings={siteSettings} categories={categories} counts={userCounts} />
+        <Navbar siteSettings={siteSettings} categories={categories} />
 
         <main className="ks-catalog-page-container">
           <div className="ks-order-success-card">
@@ -205,8 +190,16 @@ export default function CheckoutPage() {
 
             <div className="ks-order-success-details">
               <div>
-                <span>Order Total:</span>
-                <strong>${Number(orderComplete.total).toFixed(2)}</strong>
+                <span>Subtotal:</span>
+                <strong>${Number(orderComplete.subtotal != null ? orderComplete.subtotal : (orderComplete.total - (orderComplete.delivery_fee || 0))).toFixed(2)}</strong>
+              </div>
+              <div>
+                <span>Delivery:</span>
+                <strong>${Number(orderComplete.delivery_fee || 0).toFixed(2)}</strong>
+              </div>
+              <div>
+                <span>Grand Total:</span>
+                <strong style={{ color: 'var(--ks-accent-red)' }}>${Number(orderComplete.total).toFixed(2)}</strong>
               </div>
               <div>
                 <span>Payment:</span>
@@ -232,7 +225,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="ks-page-canvas">
-      <Navbar siteSettings={siteSettings} categories={categories} counts={userCounts} />
+      <Navbar siteSettings={siteSettings} categories={categories} />
 
       <main className="ks-catalog-page-container">
         <header className="ks-catalog-header">

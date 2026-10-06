@@ -1,31 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Flame, Percent, ArrowRight, Loader2 } from 'lucide-react';
+import { useSite } from '../context/SiteContext';
 import { contentApi } from '../api/contentApi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function OffersPage() {
+  const { siteSettings, categories } = useSite();
   const [offers, setOffers] = useState([]);
-  const [siteSettings, setSiteSettings] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [userCounts, setUserCounts] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
-    Promise.all([
-      contentApi.getOffers(),
-      contentApi.getSiteSettings(),
-      contentApi.getCategories(),
-      contentApi.getUserCounts()
-    ])
-      .then(([offersRes, settingsRes, catsRes, countsRes]) => {
+    contentApi.getOffers()
+      .then((offersRes) => {
         if (!isMounted) return;
         if (offersRes?.success) setOffers(offersRes.offers || []);
-        if (settingsRes?.success) setSiteSettings(settingsRes.settings);
-        if (catsRes?.success) setCategories(catsRes.categories || []);
-        if (countsRes?.success) setUserCounts(countsRes.counts || {});
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -38,7 +29,7 @@ export default function OffersPage() {
 
   return (
     <div className="ks-page-canvas">
-      <Navbar siteSettings={siteSettings} categories={categories} counts={userCounts} />
+      <Navbar siteSettings={siteSettings} categories={categories} />
 
       <main className="ks-catalog-page-container">
         {/* Header */}

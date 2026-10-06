@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Tags, Plus, Edit2, Trash2, Check, X, Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
+import { useSite } from '../../context/SiteContext';
 import ConfirmModal from '../../components/admin/ConfirmModal';
 
 export default function AdminCategoriesPage() {
+  const { refreshCategories } = useSite();
   const [categories, setCategories] = useState([]);
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0 });
   const [loading, setLoading] = useState(true);
@@ -117,6 +119,7 @@ export default function AdminCategoriesPage() {
         showToast(res.message || 'Category saved successfully.');
         setModalOpen(false);
         loadCategories();
+        refreshCategories();
       } else {
         showToast(res.message || 'Failed to save category.');
       }
@@ -135,6 +138,7 @@ export default function AdminCategoriesPage() {
           prev.map((c) => (c.id === cat.id ? { ...c, isActive: !c.isActive } : c))
         );
         loadCategories();
+        refreshCategories();
         showToast(`Category "${cat.name}" ${!cat.isActive ? 'activated' : 'deactivated'}.`);
       }
     } catch {
@@ -150,6 +154,7 @@ export default function AdminCategoriesPage() {
         showToast('Category deleted successfully.');
         setDeleteModal({ isOpen: false, id: null, name: '' });
         loadCategories();
+        refreshCategories();
       } else {
         showToast(res.message || 'Failed to delete category.');
       }

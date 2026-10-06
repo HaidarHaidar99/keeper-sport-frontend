@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
 import { Settings, Upload, Save, Loader2, Image as ImageIcon } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
+import { useSite } from '../../context/SiteContext';
 
 export default function AdminSettingsPage() {
+  const { refreshSettings } = useSite();
   const [formData, setFormData] = useState({
     site_name: 'Keeper Sports',
     logo_path: '',
@@ -54,6 +55,7 @@ export default function AdminSettingsPage() {
         // Immediately persist logo to site_settings so it is never lost on refresh
         const saveRes = await adminApi.updateSettings({ logo_path: res.url });
         if (saveRes?.success) {
+          refreshSettings();
           showToast('Logo uploaded and saved! Storefront updated in real time.');
         } else {
           showToast('Logo uploaded to storage. Click "Save Settings" to persist.');
@@ -72,6 +74,7 @@ export default function AdminSettingsPage() {
     setFormData((prev) => ({ ...prev, logo_path: '' }));
     try {
       await adminApi.updateSettings({ logo_path: null });
+      refreshSettings();
       showToast('Store logo removed. Neutral brand mark will be used.');
     } catch {
       showToast('Error removing store logo.');
@@ -91,6 +94,7 @@ export default function AdminSettingsPage() {
         if (res.settings) {
           setFormData((prev) => ({ ...prev, ...res.settings }));
         }
+        refreshSettings();
         showToast('Store settings updated. Public website updated in real time.');
       } else {
         showToast(res.message || 'Failed to save settings.');

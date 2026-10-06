@@ -15,8 +15,8 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useSite } from '../context/SiteContext';
 import { productApi } from '../api/productApi';
-import { contentApi } from '../api/contentApi';
 import { launchFootballToCart } from '../utils/cartAnimation';
 import { launchHeartToFavorites } from '../utils/favoriteAnimation';
 import Navbar from '../components/Navbar';
@@ -26,12 +26,10 @@ export default function ProductDetailsPage() {
   const { slugOrId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { siteSettings, categories, refreshCounts } = useSite();
   const heartBtnRef = useRef(null);
 
   const [product, setProduct] = useState(null);
-  const [siteSettings, setSiteSettings] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [userCounts, setUserCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -61,14 +59,9 @@ export default function ProductDetailsPage() {
     setLoading(true);
     setError(null);
 
-    // Fetch product details and layout data
-    Promise.all([
-      productApi.getProduct(slugOrId),
-      contentApi.getSiteSettings(),
-      contentApi.getCategories(),
-      contentApi.getUserCounts()
-    ])
-      .then(([prodRes, settingsRes, catsRes, countsRes]) => {
+    // Fetch product details
+    productApi.getProduct(slugOrId)
+      .then((prodRes) => {
         if (!isMounted) return;
 
         if (prodRes && prodRes.success && prodRes.product) {
@@ -87,10 +80,6 @@ export default function ProductDetailsPage() {
         } else {
           setError(prodRes?.message || 'Product not found.');
         }
-
-        if (settingsRes?.success) setSiteSettings(settingsRes.settings);
-        if (catsRes?.success) setCategories(catsRes.categories || []);
-        if (countsRes?.success) setUserCounts(countsRes.counts || {});
       })
       .catch((err) => {
         if (isMounted) setError(err.message || 'Failed to load product.');
@@ -140,7 +129,7 @@ export default function ProductDetailsPage() {
       const res = await productApi.toggleFavorite(product.id);
       if (res && res.success) {
         setIsFavorited(res.isFavorited);
-        setUserCounts((prev) => ({ ...prev, favorites: res.favoritesCount }));
+        if (typeof refreshCounts === 'function') refreshCounts();
       } else {
         setIsFavorited(prevState);
         setActionError(res.message || 'Could not update favorites.');
@@ -190,7 +179,7 @@ export default function ProductDetailsPage() {
 
         // Micro-animation: Football travels from button to Cart icon in Navbar
         launchFootballToCart(btnEl, () => {
-          setUserCounts((prev) => ({ ...prev, cart: res.cartCount }));
+          if (typeof refreshCounts === 'function') refreshCounts();
         });
       } else {
         setActionError(res.message || 'Failed to add to cart.');

@@ -1,31 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, MessageSquare, ShieldCheck, Loader2 } from 'lucide-react';
+import { useSite } from '../context/SiteContext';
 import { contentApi } from '../api/contentApi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function ReviewsPage() {
+  const { siteSettings, categories } = useSite();
   const [reviews, setReviews] = useState([]);
-  const [siteSettings, setSiteSettings] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [userCounts, setUserCounts] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
-    Promise.all([
-      contentApi.getReviews(),
-      contentApi.getSiteSettings(),
-      contentApi.getCategories(),
-      contentApi.getUserCounts()
-    ])
-      .then(([revRes, settingsRes, catsRes, countsRes]) => {
+    contentApi.getReviews()
+      .then((revRes) => {
         if (!isMounted) return;
         if (revRes?.success) setReviews(revRes.reviews || []);
-        if (settingsRes?.success) setSiteSettings(settingsRes.settings);
-        if (catsRes?.success) setCategories(catsRes.categories || []);
-        if (countsRes?.success) setUserCounts(countsRes.counts || {});
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -38,7 +29,7 @@ export default function ReviewsPage() {
 
   return (
     <div className="ks-page-canvas">
-      <Navbar siteSettings={siteSettings} categories={categories} counts={userCounts} />
+      <Navbar siteSettings={siteSettings} categories={categories} />
 
       <main className="ks-catalog-page-container">
         {/* Header */}

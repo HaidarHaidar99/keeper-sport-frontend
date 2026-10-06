@@ -23,16 +23,16 @@ import {
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useSite } from '../../context/SiteContext';
 import { adminApi } from '../../api/adminApi';
-import { contentApi } from '../../api/contentApi';
 
 export default function AdminLayout() {
   const { adminUser: user, adminLogout } = useAdminAuth();
   const { theme, toggleTheme } = useTheme();
+  const { siteSettings } = useSite();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [siteSettings, setSiteSettings] = useState(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -46,15 +46,9 @@ export default function AdminLayout() {
     setAccountDropdownOpen(false);
   }, [location.pathname]);
 
-  // Fetch Site Settings and Unread Notifications on Mount
+  // Fetch Unread Notifications on Mount
   useEffect(() => {
     let isMounted = true;
-
-    contentApi.getSiteSettings().then((res) => {
-      if (isMounted && res.success && res.settings) {
-        setSiteSettings(res.settings);
-      }
-    });
 
     adminApi.getNotifications().then((res) => {
       if (isMounted && res.success && res.stats) {

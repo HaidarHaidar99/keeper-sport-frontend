@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, Truck, RotateCcw, Headphones, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useSite } from '../context/SiteContext';
 import { contentApi } from '../api/contentApi';
 import { productApi } from '../api/productApi';
 import Navbar from '../components/Navbar';
@@ -12,53 +13,32 @@ import Footer from '../components/Footer';
 
 export default function HomePage() {
   const { user } = useAuth();
+  const { siteSettings, categories, counts, refreshCounts } = useSite();
 
-  const [siteSettings, setSiteSettings] = useState(null);
   const [heroSlides, setHeroSlides] = useState([]);
   const [offerBars, setOfferBars] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [featuredLoading, setFeaturedLoading] = useState(true);
-  const [counts, setCounts] = useState({
-    favorites: 0,
-    orders: 0,
-    cart: 0,
-    notifications: 0
-  });
 
-  // Fetch Public Content on Mount
+  // Fetch Public Content on Mount (Only Hero, Offers, and Featured)
   useEffect(() => {
     let isMounted = true;
 
-    // 1. Site Settings
-    contentApi.getSiteSettings().then((res) => {
-      if (isMounted && res && res.success && res.settings) {
-        setSiteSettings(res.settings);
-      }
-    });
-
-    // 2. Hero Slides
+    // 1. Hero Slides
     contentApi.getHeroSlides().then((res) => {
       if (isMounted && res && res.success && res.slides) {
         setHeroSlides(res.slides);
       }
     });
 
-    // 3. Offer Bars
+    // 2. Offer Bars
     contentApi.getOfferBars().then((res) => {
       if (isMounted && res && res.success && res.offers) {
         setOfferBars(res.offers);
       }
     });
 
-    // 4. Categories
-    contentApi.getCategories().then((res) => {
-      if (isMounted && res && res.success && res.categories) {
-        setCategories(res.categories);
-      }
-    });
-
-    // 5. Featured Products
+    // 3. Featured Products
     productApi.getFeaturedProducts(8).then((res) => {
       if (isMounted) {
         if (res && res.success && Array.isArray(res.products)) {
@@ -72,27 +52,6 @@ export default function HomePage() {
       isMounted = false;
     };
   }, []);
-
-  // Fetch / Refresh User Counts when authentication state updates
-  useEffect(() => {
-    let isMounted = true;
-    contentApi.getUserCounts().then((res) => {
-      if (isMounted && res && res.success && res.counts) {
-        setCounts(res.counts);
-      }
-    });
-    return () => {
-      isMounted = false;
-    };
-  }, [user]);
-
-  const refreshCounts = () => {
-    contentApi.getUserCounts().then((res) => {
-      if (res && res.success && res.counts) {
-        setCounts(res.counts);
-      }
-    });
-  };
 
   return (
     <div className="ks-home-root">

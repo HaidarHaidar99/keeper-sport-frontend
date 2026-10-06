@@ -2,34 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag, ArrowRight, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
 import { productApi } from '../api/productApi';
-import { contentApi } from '../api/contentApi';
+import { useSite } from '../context/SiteContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function CartPage() {
   const navigate = useNavigate();
+  const { siteSettings, categories, refreshCounts } = useSite();
   const [cart, setCart] = useState(null);
-  const [siteSettings, setSiteSettings] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [userCounts, setUserCounts] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
-    Promise.all([
-      productApi.getCart(),
-      contentApi.getSiteSettings(),
-      contentApi.getCategories(),
-      contentApi.getUserCounts()
-    ])
-      .then(([cartRes, settingsRes, catsRes, countsRes]) => {
+    productApi.getCart()
+      .then((cartRes) => {
         if (!isMounted) return;
         if (cartRes?.success && cartRes.cart) {
           setCart(cartRes.cart);
         }
-        if (settingsRes?.success) setSiteSettings(settingsRes.settings);
-        if (catsRes?.success) setCategories(catsRes.categories || []);
-        if (countsRes?.success) setUserCounts(countsRes.counts || {});
       })
       .finally(() => {
         if (isMounted) setLoading(false);

@@ -11,9 +11,15 @@ import {
   LogIn
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useSite } from '../context/SiteContext';
 import HamburgerMenu from './HamburgerMenu';
 
-export default function Navbar({ siteSettings = {}, categories = [], counts = {} }) {
+export default function Navbar({ siteSettings: propSettings, categories: propCategories, counts: propCounts }) {
+  const siteCtx = useSite();
+  const siteSettings = (propSettings && Object.keys(propSettings).length > 0) ? propSettings : (siteCtx?.siteSettings || {});
+  const categories = (propCategories && propCategories.length > 0) ? propCategories : (siteCtx?.categories || []);
+  const counts = (propCounts && Object.keys(propCounts).length > 0) ? propCounts : (siteCtx?.counts || {});
+
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();

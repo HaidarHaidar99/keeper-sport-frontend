@@ -1,8 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, ShieldCheck } from 'lucide-react';
+import { useSite } from '../context/SiteContext';
 
-export default function Footer({ siteSettings = {}, categories = [] }) {
+export default function Footer({ siteSettings: propSettings, categories: propCategories }) {
+  const siteCtx = useSite();
+  const siteSettings = (propSettings && Object.keys(propSettings).length > 0) ? propSettings : (siteCtx?.siteSettings || {});
+  const categories = (propCategories && propCategories.length > 0) ? propCategories : (siteCtx?.categories || []);
   const currentYear = new Date().getFullYear();
 
   return (

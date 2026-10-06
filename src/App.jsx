@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { SiteProvider } from './context/SiteContext';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Public Storefront Pages
@@ -47,7 +48,8 @@ export default function App() {
       <ThemeProvider>
         <AuthProvider>
           <AdminAuthProvider>
-            <BrowserRouter>
+            <SiteProvider>
+              <BrowserRouter>
               <Routes>
                 {/* Dedicated Public Storefront Routes */}
                 <Route path="/" element={<HomePage />} />
@@ -100,7 +102,8 @@ export default function App() {
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </BrowserRouter>
-          </AdminAuthProvider>
+          </SiteProvider>
+        </AdminAuthProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>

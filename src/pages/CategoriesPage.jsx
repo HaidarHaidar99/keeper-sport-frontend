@@ -1,41 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Tag, ArrowRight, Loader2 } from 'lucide-react';
-import { contentApi } from '../api/contentApi';
+import { useSite } from '../context/SiteContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState([]);
-  const [siteSettings, setSiteSettings] = useState(null);
-  const [userCounts, setUserCounts] = useState({});
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-    Promise.all([
-      contentApi.getCategories(),
-      contentApi.getSiteSettings(),
-      contentApi.getUserCounts()
-    ])
-      .then(([catsRes, settingsRes, countsRes]) => {
-        if (!isMounted) return;
-        if (catsRes?.success) setCategories(catsRes.categories || []);
-        if (settingsRes?.success) setSiteSettings(settingsRes.settings);
-        if (countsRes?.success) setUserCounts(countsRes.counts || {});
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const { categories, siteSettings, isInitialized } = useSite();
+  const loading = !isInitialized && categories.length === 0;
 
   return (
     <div className="ks-page-canvas">
-      <Navbar siteSettings={siteSettings} categories={categories} counts={userCounts} />
+      <Navbar siteSettings={siteSettings} categories={categories} />
 
       <main className="ks-catalog-page-container">
         {/* Header */}

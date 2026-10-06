@@ -2,19 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Package, Clock, CheckCircle2, XCircle, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useSite } from '../context/SiteContext';
 import { productApi } from '../api/productApi';
-import { contentApi } from '../api/contentApi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function OrdersPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { siteSettings, categories } = useSite();
 
   const [orders, setOrders] = useState([]);
-  const [siteSettings, setSiteSettings] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [userCounts, setUserCounts] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,18 +23,10 @@ export default function OrdersPage() {
       return;
     }
 
-    Promise.all([
-      productApi.getUserOrders(),
-      contentApi.getSiteSettings(),
-      contentApi.getCategories(),
-      contentApi.getUserCounts()
-    ])
-      .then(([ordersRes, settingsRes, catsRes, countsRes]) => {
+    productApi.getUserOrders()
+      .then((ordersRes) => {
         if (!isMounted) return;
         if (ordersRes?.success) setOrders(ordersRes.orders || []);
-        if (settingsRes?.success) setSiteSettings(settingsRes.settings);
-        if (catsRes?.success) setCategories(catsRes.categories || []);
-        if (countsRes?.success) setUserCounts(countsRes.counts || {});
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -66,7 +56,7 @@ export default function OrdersPage() {
 
   return (
     <div className="ks-page-canvas">
-      <Navbar siteSettings={siteSettings} categories={categories} counts={userCounts} />
+      <Navbar siteSettings={siteSettings} categories={categories} />
 
       <main className="ks-catalog-page-container">
         <header className="ks-catalog-header">
@@ -145,9 +135,14 @@ export default function OrdersPage() {
                     ))}
                   </div>
 
-                  <div className="ks-order-footer">
-                    <span className="ks-order-total-label">Total Amount:</span>
-                    <span className="ks-order-total-val">${Number(order.total).toFixed(2)}</span>
+                  <div className="ks-order-footer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                    <div style={{ fontSize: '13px', color: 'var(--ks-text-muted)' }}>
+                      Subtotal: ${Number(order.subtotal != null ? order.subtotal : (order.total - (order.delivery_fee || 0))).toFixed(2)} · Delivery: ${Number(order.delivery_fee || 0).toFixed(2)}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className="ks-order-total-label">Total Amount:</span>
+                      <span className="ks-order-total-val">${Number(order.total).toFixed(2)}</span>
+                    </div>
                   </div>
                 </div>
               );
