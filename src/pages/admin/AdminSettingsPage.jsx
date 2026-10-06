@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { Settings, Upload, Save, Loader2, Image as ImageIcon } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { useSite } from '../../context/SiteContext';

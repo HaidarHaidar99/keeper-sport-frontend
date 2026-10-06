@@ -81,7 +81,9 @@ export default function FavoritesPage() {
                 key={prod.id}
                 product={prod}
                 onFavoriteToggled={handleFavoriteToggled}
-                onCartUpdated={(cnt) => setUserCounts((prev) => ({ ...prev, cart: cnt }))}
+                onCartUpdated={() => {
+                  if (typeof refreshCounts === 'function') refreshCounts();
+                }}
               />
             ))}
           </div>

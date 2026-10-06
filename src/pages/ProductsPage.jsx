@@ -184,25 +184,21 @@ export default function ProductsPage() {
   };
 
   // Callback when a product is added to cart
-  const handleCartUpdated = (newCartCount) => {
-    setCounts((prev) => ({
-      ...prev,
-      cart: newCartCount !== undefined ? newCartCount : prev.cart + 1
-    }));
-    refreshUserCounts();
+  const handleCartUpdated = () => {
+    if (typeof refreshUserCounts === 'function') {
+      refreshUserCounts();
+    }
   };
 
   // Callback when a product favorite is toggled
-  const handleFavoriteToggled = (productId, isFav, newFavCount) => {
+  const handleFavoriteToggled = (productId, isFav) => {
     setProducts((prev) =>
       prev.map((p) => (p.id === productId ? { ...p, isFavorited: isFav } : p))
     );
     setFeaturedProducts((prev) =>
       prev.map((p) => (p.id === productId ? { ...p, isFavorited: isFav } : p))
     );
-    if (newFavCount !== undefined) {
-      setCounts((prev) => ({ ...prev, favorites: newFavCount }));
-    } else {
+    if (typeof refreshUserCounts === 'function') {
       refreshUserCounts();
     }
   };

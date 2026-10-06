@@ -210,7 +210,7 @@ export default function ProductDetailsPage() {
   if (loading) {
     return (
       <div className="ks-page-canvas">
-        <Navbar siteSettings={siteSettings} categories={categories} counts={userCounts} />
+        <Navbar siteSettings={siteSettings} categories={categories} />
         <main className="ks-details-loading-wrap" aria-live="polite">
           <div className="ks-loading-spinner" />
           <p className="ks-loading-text">Loading product details...</p>
@@ -223,7 +223,7 @@ export default function ProductDetailsPage() {
   if (error || !product) {
     return (
       <div className="ks-page-canvas">
-        <Navbar siteSettings={siteSettings} categories={categories} counts={userCounts} />
+        <Navbar siteSettings={siteSettings} categories={categories} />
         <main className="ks-details-error-wrap">
           <div className="ks-details-error-card">
             <AlertCircle size={44} style={{ color: 'var(--ks-accent-red)', margin: '0 auto 16px' }} />
@@ -284,7 +284,7 @@ export default function ProductDetailsPage() {
 
   return (
     <div className="ks-page-canvas">
-      <Navbar siteSettings={siteSettings} categories={categories} counts={userCounts} />
+      <Navbar siteSettings={siteSettings} categories={categories} />
 
       <main className="ks-details-container">
         {/* Breadcrumb row */}
