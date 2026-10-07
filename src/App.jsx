@@ -40,6 +40,7 @@ import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminReviewsPage from './pages/admin/AdminReviewsPage';
 import AdminNotificationsPage from './pages/admin/AdminNotificationsPage';
+import AdminFormsPage from './pages/admin/AdminFormsPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 
 export default function App() {
@@ -86,6 +87,7 @@ export default function App() {
                   <Route path="orders" element={<AdminOrdersPage />} />
                   <Route path="users" element={<AdminUsersPage />} />
                   <Route path="reviews" element={<AdminReviewsPage />} />
+                  <Route path="forms" element={<AdminFormsPage />} />
                   <Route path="notifications" element={<AdminNotificationsPage />} />
                   <Route path="settings" element={<AdminSettingsPage />} />
                 </Route>

@@ -10,6 +10,7 @@ import {
   Users,
   Star,
   Bell,
+  MessageSquare,
   Settings,
   Sun,
   Moon,
@@ -34,6 +35,7 @@ export default function AdminLayout() {
   const navigate = useNavigate();
 
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [unreadForms, setUnreadForms] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
@@ -46,7 +48,7 @@ export default function AdminLayout() {
     setAccountDropdownOpen(false);
   }, [location.pathname]);
 
-  // Fetch Unread Notifications on Mount
+  // Fetch Unread Notifications and Forms on Mount
   useEffect(() => {
     let isMounted = true;
 
@@ -56,10 +58,16 @@ export default function AdminLayout() {
       }
     });
 
+    adminApi.getForms({ limit: 1 }).then((res) => {
+      if (isMounted && res.success && res.stats) {
+        setUnreadForms(res.stats.unread || 0);
+      }
+    });
+
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [location.pathname]);
 
   // Close account dropdown when clicking outside
   useEffect(() => {
@@ -97,6 +105,12 @@ export default function AdminLayout() {
     { label: 'Orders', path: '/admin/orders', icon: ShoppingBag },
     { label: 'Users', path: '/admin/users', icon: Users },
     { label: 'Reviews', path: '/admin/reviews', icon: Star },
+    {
+      label: 'Forms',
+      path: '/admin/forms',
+      icon: MessageSquare,
+      badge: unreadForms > 0 ? unreadForms : null
+    },
     {
       label: 'Notifications',
       path: '/admin/notifications',

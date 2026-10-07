@@ -69,14 +69,7 @@ export default function ProductDetailsPage() {
           setProduct(p);
           setIsFavorited(Boolean(p.isFavorited));
 
-          // Auto-select initial size/color if variants exist
-          if (p.variants && p.variants.length > 0) {
-            const availableSizes = Array.from(new Set(p.variants.map((v) => v.size_value).filter(Boolean)));
-            if (availableSizes.length > 0) setSelectedSize(availableSizes[0]);
-
-            const availableColors = Array.from(new Set(p.variants.map((v) => v.color_value).filter(Boolean)));
-            if (availableColors.length > 0) setSelectedColor(availableColors[0]);
-          }
+          // Do not auto-select: customer must explicitly choose size/color if options exist
         } else {
           setError(prodRes?.message || 'Product not found.');
         }
@@ -144,25 +137,69 @@ export default function ProductDetailsPage() {
     if (product.stock?.isOutOfStock || product.stock_quantity === 0) return;
     if (cartLoading) return;
 
-    setCartLoading(true);
     setActionError(null);
     const btnEl = e.currentTarget;
 
+    const availSizes = Array.from(new Set((product.variants || []).map((v) => v.size_value).filter(Boolean)));
+    const availColors = Array.from(new Set((product.variants || []).map((v) => v.color_value).filter(Boolean)));
+
+    // Required Size Selection check: if sizes exist, customer MUST select one
+    if (availSizes.length > 0 && !selectedSize) {
+      setActionError('Please select a size.');
+      setTimeout(() => setActionError(null), 4000);
+      return;
+    }
+
+    // Required Color Selection check: if colors exist, customer MUST select one
+    if (availColors.length > 0 && !selectedColor) {
+      setActionError('Please select a color.');
+      setTimeout(() => setActionError(null), 4000);
+      return;
+    }
+
     // Find matched variant id if variants exist
-    let matchedVariantId = null;
+    let matchedVariant = null;
     if (product.variants && product.variants.length > 0) {
-      const match = product.variants.find((v) => {
-        const sizeMatch = !selectedSize || v.size_value === selectedSize;
-        const colorMatch = !selectedColor || v.color_value === selectedColor;
+      matchedVariant = product.variants.find((v) => {
+        const sizeMatch = !availSizes.length || v.size_value === selectedSize;
+        const colorMatch = !availColors.length || v.color_value === selectedColor;
         return sizeMatch && colorMatch;
       });
-      matchedVariantId = match?.id || null;
     }
+
+    // Stock checks on variant or product
+    if (matchedVariant) {
+      if (matchedVariant.stock_quantity <= 0) {
+        setActionError('Selected option is out of stock.');
+        setTimeout(() => setActionError(null), 4000);
+        return;
+      }
+      if (quantity > matchedVariant.stock_quantity) {
+        setActionError(`Only ${matchedVariant.stock_quantity} items available in stock for this option.`);
+        setTimeout(() => setActionError(null), 4000);
+        return;
+      }
+    } else if (product.stock_quantity != null) {
+      if (product.stock_quantity <= 0) {
+        setActionError('This product is out of stock.');
+        setTimeout(() => setActionError(null), 4000);
+        return;
+      }
+      if (quantity > product.stock_quantity) {
+        setActionError(`Only ${product.stock_quantity} items available in stock.`);
+        setTimeout(() => setActionError(null), 4000);
+        return;
+      }
+    }
+
+    setCartLoading(true);
 
     try {
       const res = await productApi.addToCart({
         productId: product.id,
-        variantId: matchedVariantId,
+        variantId: matchedVariant?.id || null,
+        size: selectedSize || null,
+        color: selectedColor || null,
         quantity: quantity,
         printedName: printedName.trim() || null,
         printedNumber: printedNumber.trim() || null,
@@ -179,11 +216,11 @@ export default function ProductDetailsPage() {
         });
       } else {
         setActionError(res.message || 'Failed to add to cart.');
-        setTimeout(() => setActionError(null), 3500);
+        setTimeout(() => setActionError(null), 4000);
       }
     } catch {
       setActionError('Network error adding to cart.');
-      setTimeout(() => setActionError(null), 3500);
+      setTimeout(() => setActionError(null), 4000);
     } finally {
       setCartLoading(false);
     }
@@ -193,6 +230,20 @@ export default function ProductDetailsPage() {
   const handleOrderNow = () => {
     if (!product) return;
     if (product.stock?.isOutOfStock || product.stock_quantity === 0) return;
+
+    const availSizes = Array.from(new Set((product.variants || []).map((v) => v.size_value).filter(Boolean)));
+    const availColors = Array.from(new Set((product.variants || []).map((v) => v.color_value).filter(Boolean)));
+
+    if (availSizes.length > 0 && !selectedSize) {
+      setActionError('Please select a size.');
+      setTimeout(() => setActionError(null), 4000);
+      return;
+    }
+    if (availColors.length > 0 && !selectedColor) {
+      setActionError('Please select a color.');
+      setTimeout(() => setActionError(null), 4000);
+      return;
+    }
 
     let url = `/checkout?direct=true&productId=${encodeURIComponent(product.id)}&qty=${quantity}`;
     if (selectedSize) url += `&size=${encodeURIComponent(selectedSize)}`;

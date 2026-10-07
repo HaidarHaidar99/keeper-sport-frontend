@@ -580,7 +580,60 @@ export default function AdminOrdersPage() {
               )}
             </div>
 
-            <div className="ks-admin-modal-footer">
+            <div className="ks-admin-modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                {viewingOrder.status === 'pending' && (
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleStatusChange(viewingOrder.id, 'accepted');
+                        setViewingOrder(null);
+                      }}
+                      style={{
+                        padding: '6px 14px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        borderRadius: '6px',
+                        border: 'none',
+                        background: '#16a34a',
+                        color: '#fff',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <Check size={13} />
+                      <span>Accept Order</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const targetOrd = viewingOrder;
+                        setViewingOrder(null);
+                        openRejectModal(targetOrd);
+                      }}
+                      style={{
+                        padding: '6px 14px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        borderRadius: '6px',
+                        border: '1px solid rgba(220, 38, 38, 0.5)',
+                        background: 'rgba(220, 38, 38, 0.1)',
+                        color: '#dc2626',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <Ban size={13} />
+                      <span>Reject Order</span>
+                    </button>
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => setViewingOrder(null)}
@@ -597,6 +650,7 @@ export default function AdminOrdersPage() {
       {rejectingOrder && (
         <div
           className="ks-admin-modal-backdrop"
+          style={{ zIndex: 1000000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={() => {
             if (!isSubmittingReject) setRejectingOrder(null);
           }}
@@ -606,11 +660,19 @@ export default function AdminOrdersPage() {
           <div
             className="ks-admin-modal-box"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '440px' }}
+            style={{
+              maxWidth: '480px',
+              width: '90%',
+              background: 'var(--ks-bg-card, #161922)',
+              border: '1px solid var(--ks-border-card, #2D3343)',
+              borderRadius: '10px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)'
+            }}
           >
-            <div className="ks-admin-modal-header">
-              <h3 className="ks-admin-modal-title" style={{ color: 'var(--ks-error-red, #dc2626)' }}>
-                Reject Order #{rejectingOrder.order_number}
+            <div className="ks-admin-modal-header" style={{ padding: '16px 20px', borderBottom: '1px solid var(--ks-border-card, #2D3343)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 className="ks-admin-modal-title" style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Ban size={18} />
+                <span>Reject Order #{rejectingOrder.order_number}</span>
               </h3>
               <button
                 type="button"
@@ -618,70 +680,78 @@ export default function AdminOrdersPage() {
                 disabled={isSubmittingReject}
                 className="ks-admin-modal-close-btn"
                 aria-label="Close"
+                style={{ background: 'none', border: 'none', color: 'var(--ks-text-muted, #9CA3AF)', cursor: 'pointer', padding: '4px' }}
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="ks-admin-modal-body">
-              <p style={{ fontSize: '13px', color: 'var(--ks-text-subtitle)', marginBottom: '16px' }}>
-                Please provide the reason why this order is being rejected. The customer will see this message in their order tracking.
+            <div className="ks-admin-modal-body" style={{ padding: '20px' }}>
+              <p style={{ fontSize: '13px', color: 'var(--ks-text-muted, #9CA3AF)', marginTop: 0, marginBottom: '16px', lineHeight: 1.5 }}>
+                Please provide the reason why this order is being rejected. This reason will be stored with the order and displayed to the customer in their order tracking.
               </p>
 
               {rejectError && (
-                <div style={{ background: 'rgba(220, 38, 38, 0.1)', color: 'var(--ks-error-red)', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', marginBottom: '14px' }}>
+                <div style={{ background: 'rgba(220, 38, 38, 0.12)', border: '1px solid rgba(220, 38, 38, 0.3)', color: '#dc2626', padding: '10px 14px', borderRadius: '6px', fontSize: '13px', marginBottom: '16px', fontWeight: 600 }}>
                   {rejectError}
                 </div>
               )}
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ks-text-label)' }}>
-                  Rejection Reason <span style={{ color: 'var(--ks-accent-red)' }}>*</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label htmlFor="rejection-reason-input" style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ks-text-title, #F3F4F6)' }}>
+                  Rejection Reason <span style={{ color: '#dc2626' }}>*</span>
                 </label>
                 <textarea
+                  id="rejection-reason-input"
                   value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="e.g. Out of stock, Address outside delivery area, Unreachable phone number..."
+                  onChange={(e) => {
+                    setRejectionReason(e.target.value);
+                    if (rejectError) setRejectError(null);
+                  }}
+                  placeholder="e.g. Selected product size is out of stock, Outside delivery area, Customer requested cancellation..."
                   rows={4}
                   style={{
                     width: '100%',
-                    padding: '10px 12px',
+                    padding: '12px',
                     borderRadius: '8px',
-                    border: '1px solid var(--ks-border-input)',
-                    background: 'var(--ks-bg-input)',
-                    color: 'var(--ks-text-input)',
+                    border: '1px solid var(--ks-border-input, #374151)',
+                    background: 'var(--ks-bg-input, #0E1015)',
+                    color: 'var(--ks-text-input, #F3F4F6)',
                     fontSize: '13px',
                     fontFamily: 'inherit',
-                    resize: 'vertical'
+                    lineHeight: 1.5,
+                    resize: 'vertical',
+                    boxSizing: 'border-box'
                   }}
                   autoFocus
                 />
               </div>
             </div>
 
-            <div className="ks-admin-modal-footer">
+            <div className="ks-admin-modal-footer" style={{ padding: '16px 20px', borderTop: '1px solid var(--ks-border-card, #2D3343)', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               <button
                 type="button"
                 onClick={() => setRejectingOrder(null)}
                 disabled={isSubmittingReject}
                 className="ks-admin-btn-secondary"
+                style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid var(--ks-border-card, #374151)', background: 'transparent', color: 'var(--ks-text-title, #F3F4F6)', cursor: 'pointer', fontSize: '13px' }}
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmReject}
-                disabled={isSubmittingReject || !rejectionReason.trim()}
+                disabled={isSubmittingReject}
                 style={{
-                  background: 'var(--ks-error-red, #dc2626)',
+                  background: '#dc2626',
                   color: '#ffffff',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   padding: '8px 18px',
                   fontSize: '13px',
                   fontWeight: 600,
-                  cursor: isSubmittingReject || !rejectionReason.trim() ? 'not-allowed' : 'pointer',
-                  opacity: isSubmittingReject || !rejectionReason.trim() ? 0.6 : 1,
+                  cursor: isSubmittingReject ? 'not-allowed' : 'pointer',
+                  opacity: isSubmittingReject ? 0.7 : 1,
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '6px'

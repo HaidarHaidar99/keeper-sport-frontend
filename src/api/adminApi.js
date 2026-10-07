@@ -280,5 +280,29 @@ export const adminApi = {
     return adminRequest(`${API_BASE}/notifications/mark-all-read`, {
       method: 'POST'
     });
+  },
+
+  // 11. Contact Forms Management
+  async getForms(params = {}) {
+    const qs = new URLSearchParams();
+    if (params.page) qs.append('page', params.page);
+    if (params.limit) qs.append('limit', params.limit);
+    if (params.search) qs.append('search', params.search);
+    if (params.status) qs.append('status', params.status);
+
+    const query = qs.toString();
+    return adminRequest(`${API_BASE}/forms${query ? `?${query}` : ''}`);
+  },
+
+  async markFormRead(id) {
+    return adminRequest(`${API_BASE}/forms/${id}/read`, {
+      method: 'PATCH'
+    });
+  },
+
+  async deleteForm(id) {
+    return adminRequest(`${API_BASE}/forms/${id}`, {
+      method: 'DELETE'
+    });
   }
 };
