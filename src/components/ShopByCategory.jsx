@@ -1,0 +1,160 @@
+import React, { useState, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Search, ChevronLeft, ChevronRight, ArrowRight, Shield } from 'lucide-react';
+
+export default function ShopByCategory({ categories = [] }) {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const railRef = useRef(null);
+
+  const validCategories = Array.isArray(categories)
+    ? categories.filter((c) => c && c.is_active !== false)
+    : [];
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const scrollRail = (direction) => {
+    if (railRef.current) {
+      const scrollAmount = direction === 'left' ? -340 : 340;
+      railRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  if (validCategories.length === 0) {
+    return null;
+  }
+
+  // Mobile: maximum 4 categories initially
+  const mobileCategories = validCategories.slice(0, 4);
+
+  return (
+    <section className="ks-category-section" aria-label="Shop By Category">
+      <div className="ks-category-container">
+        {/* Section Header */}
+        <div className="ks-category-header">
+          <div className="ks-category-title-group">
+            <span className="ks-section-eyebrow">EXPLORE DIVISIONS</span>
+            <h2 className="ks-section-title">SHOP BY CATEGORY</h2>
+          </div>
+
+          {/* Desktop Arrow Controls */}
+          <div className="ks-category-nav-controls">
+            <button
+              type="button"
+              onClick={() => scrollRail('left')}
+              className="ks-category-nav-btn"
+              aria-label="Previous categories"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollRail('right')}
+              className="ks-category-nav-btn"
+              aria-label="Next categories"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* Integrated Category & Product Search Bar */}
+        <div className="ks-category-search-bar-wrap">
+          <form onSubmit={handleSearchSubmit} className="ks-category-search-form">
+            <Search size={18} className="ks-category-search-icon" aria-hidden="true" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search gear, categories, or club kits..."
+              className="ks-category-search-input"
+              aria-label="Search products and categories"
+            />
+            <button type="submit" className="ks-category-search-submit-btn">
+              <span>Search</span>
+            </button>
+          </form>
+        </div>
+
+        {/* Desktop View: Horizontally Arranged Category Rail */}
+        <div className="ks-category-desktop-rail-wrap">
+          <div className="ks-category-desktop-rail" ref={railRef}>
+            {validCategories.map((cat) => (
+              <Link
+                key={cat.id || cat.slug}
+                to={`/products?category=${encodeURIComponent(cat.slug || cat.id)}`}
+                className="ks-category-rail-card"
+              >
+                <div className="ks-category-card-media-wrap">
+                  {cat.image_path ? (
+                    <img
+                      src={cat.image_path}
+                      alt={cat.name}
+                      className="ks-category-card-img"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="ks-category-card-fallback-canvas">
+                      <Shield size={32} className="ks-category-card-fallback-icon" />
+                    </div>
+                  )}
+                  <div className="ks-category-card-overlay" />
+                </div>
+                <div className="ks-category-card-info">
+                  <h3 className="ks-category-card-name">{cat.name}</h3>
+                  <span className="ks-category-card-cta">
+                    <span>Shop Now</span>
+                    <ArrowRight size={14} />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile View: Compact 2-Column Grid (Max 4 items) */}
+        <div className="ks-category-mobile-grid">
+          {mobileCategories.map((cat) => (
+            <Link
+              key={cat.id || cat.slug}
+              to={`/products?category=${encodeURIComponent(cat.slug || cat.id)}`}
+              className="ks-category-mobile-card"
+            >
+              <div className="ks-category-card-media-wrap">
+                {cat.image_path ? (
+                  <img
+                    src={cat.image_path}
+                    alt={cat.name}
+                    className="ks-category-card-img"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="ks-category-card-fallback-canvas">
+                    <Shield size={26} className="ks-category-card-fallback-icon" />
+                  </div>
+                )}
+                <div className="ks-category-card-overlay" />
+              </div>
+              <div className="ks-category-card-info">
+                <h3 className="ks-category-card-name">{cat.name}</h3>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* View All Categories Button */}
+        <div className="ks-category-footer">
+          <Link to="/categories" className="ks-category-view-all-btn">
+            <span>View All Categories</span>
+            <ArrowRight size={16} />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}

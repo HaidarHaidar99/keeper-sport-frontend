@@ -1,45 +1,44 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useSite } from '../context/SiteContext';
+import { useTheme } from '../context/ThemeContext';
 import {
   X,
-  ChevronDown,
-  ChevronRight,
-  User,
-  LogOut,
   ShoppingBag,
   Heart,
   Package,
+  Sun,
+  Moon,
+  User,
+  LogOut,
+  MapPin,
+  Phone,
+  ArrowRight,
   ShieldCheck
 } from 'lucide-react';
 
 export default function HamburgerMenu({
   isOpen,
   onClose,
-  siteSettings: propSettings,
-  categories: propCategories,
-  counts: propCounts
+  siteSettings,
+  categories = [],
+  counts = {}
 }) {
-  const siteCtx = useSite();
-  const siteSettings = (propSettings && Object.keys(propSettings).length > 0) ? propSettings : (siteCtx?.siteSettings || {});
-  const categories = (propCategories && propCategories.length > 0) ? propCategories : (siteCtx?.categories || []);
-  const counts = (propCounts && Object.keys(propCounts).length > 0) ? propCounts : (siteCtx?.counts || {});
-
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
-
-  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const curtainRef = useRef(null);
 
+  // Close smoothly
   const handleClose = () => {
     if (isClosing) return;
     setIsClosing(true);
     setTimeout(() => {
       setIsClosing(false);
       onClose();
-    }, 250);
+    }, 380);
   };
 
   // Close on route change
@@ -56,11 +55,13 @@ export default function HamburgerMenu({
         handleClose();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
 
-  // Lock body scroll when mobile drawer is open
+  // Lock background body scroll while curtain is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -88,177 +89,182 @@ export default function HamburgerMenu({
     return location.pathname.startsWith(path);
   };
 
-  const navItems = [
-    { label: 'HOME', path: '/' },
-    { label: 'PRODUCTS', path: '/products' },
-    { label: 'CATEGORIES', path: '/categories', hasSubmenu: true },
-    { label: 'OFFERS', path: '/offers' },
-    { label: 'MY ORDERS', path: '/orders', icon: Package },
-    { label: 'CART', path: '/cart', count: counts.cart, icon: ShoppingBag },
-    { label: 'FAVORITES', path: '/favorites', count: counts.favorites, icon: Heart },
-    { label: 'REVIEWS', path: '/reviews' },
-    { label: 'ABOUT US', path: '/about' },
-    { label: 'CONTACT US', path: '/contact' }
+  // Navigation Links strictly in their normal order
+  const navLinks = [
+    { num: '01', label: 'HOME', path: '/' },
+    { num: '02', label: 'PRODUCTS', path: '/products' },
+    { num: '03', label: 'CATEGORIES', path: '/categories' },
+    { num: '04', label: 'OFFERS', path: '/offers' },
+    { num: '05', label: 'MY ORDERS', path: '/orders', count: counts.orders },
+    { num: '06', label: 'CART', path: '/cart', count: counts.cart },
+    { num: '07', label: 'FAVORITES', path: '/favorites', count: counts.favorites },
+    { num: '08', label: 'REVIEWS', path: '/reviews' },
+    { num: '09', label: 'ABOUT US', path: '/about' },
+    { num: '10', label: 'CONTACT US', path: '/contact' }
   ];
 
   return (
     <div
-      className={`ks-mobile-drawer-root ${isClosing ? 'is-closing' : 'is-open'}`}
+      ref={curtainRef}
+      className={`ks-curtain-root ${isClosing ? 'is-closing' : 'is-open'}`}
       role="dialog"
       aria-modal="true"
       aria-label="Navigation Menu"
     >
-      {/* Dimmed Backdrop */}
-      <div className="ks-mobile-drawer-backdrop" onClick={handleClose} />
-
-      {/* Drawer Panel Sliding in from the RIGHT */}
-      <div className="ks-mobile-drawer-panel">
-        {/* Drawer Header */}
-        <div className="ks-mobile-drawer-header">
-          <div className="ks-mobile-drawer-brand">
+      <div className="ks-curtain-container">
+        {/* Top Header Bar */}
+        <div className="ks-curtain-topbar">
+          <div className="ks-curtain-brand">
             {siteSettings?.logo_path ? (
               <img
                 src={siteSettings.logo_path}
                 alt={siteSettings?.site_name || 'Keeper Sports'}
-                className="ks-mobile-drawer-logo"
+                className="ks-curtain-logo"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
-                  const fb = e.currentTarget.parentElement?.querySelector('.ks-mobile-drawer-logo-fallback');
+                  const fb = e.currentTarget.parentElement?.querySelector('.ks-curtain-logo-fallback');
                   if (fb) fb.style.display = 'flex';
                 }}
               />
             ) : null}
             <div
-              className="ks-mobile-drawer-logo-fallback"
+              className="ks-curtain-logo-fallback"
               style={{ display: siteSettings?.logo_path ? 'none' : 'flex' }}
             >
-              <ShieldCheck size={24} style={{ color: 'var(--ks-accent-red)' }} />
-              <span className="ks-mobile-drawer-title">{siteSettings?.site_name || 'KEEPER SPORTS'}</span>
+              <span className="ks-curtain-logo-text">KEEPER SPORTS</span>
             </div>
           </div>
 
-          <button
-            type="button"
-            className="ks-mobile-drawer-close"
-            onClick={handleClose}
-            aria-label="Close menu"
-          >
-            <X size={22} />
-          </button>
+          <div className="ks-curtain-top-actions">
+            {/* Theme Toggle in Curtain */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="ks-curtain-theme-btn"
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              title="Toggle theme"
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+
+            {/* Close Button */}
+            <button
+              type="button"
+              className="ks-curtain-close-btn"
+              onClick={handleClose}
+              aria-label="Close navigation curtain"
+            >
+              <X size={24} />
+            </button>
+          </div>
         </div>
 
-        {/* Drawer Scrollable Content */}
-        <div className="ks-mobile-drawer-body">
-          <nav className="ks-mobile-drawer-nav" aria-label="Mobile Navigation">
-            {navItems.map((item) => {
+        {/* Main Curtain Content */}
+        <div className="ks-curtain-body">
+          {/* Left Column: Sequential Staggered Navigation Links */}
+          <nav className="ks-curtain-nav" aria-label="Curtain Navigation">
+            {navLinks.map((item, idx) => {
               const active = isItemActive(item.path);
-
-              if (item.hasSubmenu) {
-                return (
-                  <div key={item.label} className={`ks-mobile-nav-group ${active ? 'is-active' : ''}`}>
-                    <div className="ks-mobile-nav-item-wrap">
-                      <Link
-                        to={item.path}
-                        className={`ks-mobile-drawer-link ${active ? 'is-active' : ''}`}
-                        onClick={handleClose}
-                      >
-                        {active && <span className="ks-mobile-route-red-bar" aria-hidden="true" />}
-                        <span className="ks-mobile-drawer-link-text">{item.label}</span>
-                      </Link>
-
-                      {categories && categories.length > 0 && (
-                        <button
-                          type="button"
-                          className="ks-mobile-subnav-toggle"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCategoriesOpen(!categoriesOpen);
-                          }}
-                          aria-label={categoriesOpen ? 'Collapse categories' : 'Expand categories'}
-                          aria-expanded={categoriesOpen}
-                        >
-                          {categoriesOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Subcategories */}
-                    {categoriesOpen && categories && categories.length > 0 && (
-                      <div className="ks-mobile-subcategories-drawer">
-                        {categories.map((cat) => (
-                          <Link
-                            key={cat.id || cat.slug}
-                            to={`/products?category=${encodeURIComponent(cat.slug || cat.id)}`}
-                            className="ks-mobile-subcat-link"
-                            onClick={handleClose}
-                          >
-                            <span>{cat.name}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-
               return (
-                <div key={item.path} className="ks-mobile-nav-item-wrap">
-                  <Link
-                    to={item.path}
-                    className={`ks-mobile-drawer-link ${active ? 'is-active' : ''}`}
-                    onClick={handleClose}
-                  >
-                    {active && <span className="ks-mobile-route-red-bar" aria-hidden="true" />}
-                    <span className="ks-mobile-drawer-link-text">{item.label}</span>
-                    {item.count > 0 && (
-                      <span className="ks-mobile-link-badge">{item.count}</span>
-                    )}
-                  </Link>
-                </div>
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`ks-curtain-nav-link ${active ? 'is-active' : ''}`}
+                  style={{ animationDelay: `${idx * 0.04 + 0.08}s` }}
+                  onClick={handleClose}
+                >
+                  <span className="ks-curtain-link-num">{item.num}</span>
+                  <span className="ks-curtain-link-label">{item.label}</span>
+                  {active && <span className="ks-curtain-active-dot" aria-label="Current page" />}
+                  {item.count > 0 && (
+                    <span className="ks-curtain-count-pill">{item.count}</span>
+                  )}
+                  <ArrowRight size={18} className="ks-curtain-arrow-hint" />
+                </Link>
               );
             })}
           </nav>
-        </div>
 
-        {/* Drawer Bottom Auth Section */}
-        <div className="ks-mobile-drawer-footer">
-          {user ? (
-            <div className="ks-mobile-auth-logged-in">
-              <div className="ks-mobile-user-info">
-                <div className="ks-mobile-user-avatar">
-                  {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
-                </div>
-                <div className="ks-mobile-user-details">
-                  <div className="ks-mobile-user-name">{user.full_name || 'My Account'}</div>
-                  <div className="ks-mobile-user-email">{user.email}</div>
+          {/* Right Column: Categories Showcase & Store Contact */}
+          <div className="ks-curtain-sidebar">
+            {/* Quick Categories Section */}
+            {categories && categories.length > 0 && (
+              <div className="ks-curtain-sidebar-section">
+                <span className="ks-curtain-sidebar-title">FEATURED CATEGORIES</span>
+                <div className="ks-curtain-categories-grid">
+                  {categories.slice(0, 6).map((cat) => (
+                    <Link
+                      key={cat.id || cat.slug}
+                      to={`/products?category=${encodeURIComponent(cat.slug || cat.id)}`}
+                      className="ks-curtain-cat-chip"
+                      onClick={handleClose}
+                    >
+                      <span>{cat.name}</span>
+                    </Link>
+                  ))}
                 </div>
               </div>
+            )}
 
-              {(user.role === 'admin' || user.role === 'super_admin') && (
-                <Link to="/admin" className="ks-mobile-admin-btn" onClick={handleClose}>
-                  <span>Access Admin Portal</span>
-                </Link>
+            {/* Customer Account Strip */}
+            <div className="ks-curtain-sidebar-section ks-curtain-auth-section">
+              <span className="ks-curtain-sidebar-title">ACCOUNT</span>
+              {user ? (
+                <div className="ks-curtain-user-card">
+                  <div className="ks-curtain-user-info">
+                    <User size={18} className="ks-curtain-user-icon" />
+                    <span className="ks-curtain-user-name">{user.full_name || user.email}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="ks-curtain-logout-btn"
+                  >
+                    <LogOut size={15} />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="ks-curtain-auth-actions">
+                  <Link
+                    to="/login"
+                    className="ks-curtain-auth-btn-primary"
+                    onClick={handleClose}
+                  >
+                    SIGN IN
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="ks-curtain-auth-btn-secondary"
+                    onClick={handleClose}
+                  >
+                    REGISTER
+                  </Link>
+                </div>
               )}
+            </div>
 
-              <button
-                type="button"
-                className="ks-mobile-logout-btn"
-                onClick={handleLogout}
-              >
-                <LogOut size={16} />
-                <span>Sign Out</span>
-              </button>
-            </div>
-          ) : (
-            <div className="ks-mobile-auth-actions">
-              <Link to="/login" className="ks-mobile-btn-signin" onClick={handleClose}>
-                <span>SIGN IN</span>
-              </Link>
-              <Link to="/signup" className="ks-mobile-btn-signup" onClick={handleClose}>
-                <span>CREATE ACCOUNT</span>
-              </Link>
-            </div>
-          )}
+            {/* Store Contact & Location Details */}
+            {(siteSettings?.phone_number || siteSettings?.whatsapp_number || siteSettings?.location_name) && (
+              <div className="ks-curtain-sidebar-section ks-curtain-contact-section">
+                <span className="ks-curtain-sidebar-title">DIRECT INQUIRIES</span>
+                <div className="ks-curtain-contact-items">
+                  {siteSettings?.location_name && (
+                    <div className="ks-curtain-contact-line">
+                      <MapPin size={15} />
+                      <span>{siteSettings.location_name}</span>
+                    </div>
+                  )}
+                  {siteSettings?.phone_number && (
+                    <div className="ks-curtain-contact-line">
+                      <Phone size={15} />
+                      <a href={`tel:${siteSettings.phone_number}`}>{siteSettings.phone_number}</a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
