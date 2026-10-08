@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Users, Search, ShieldCheck, CheckCircle2, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
-import { useAuth } from '../../context/AuthContext';
+import { useAdminAuth } from '../../context/AdminAuthContext';
 
 export default function AdminUsersPage() {
-  const { user: currentUser } = useAuth();
+  const { adminUser: currentUser } = useAdminAuth();
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState({ total: 0, verified: 0, unverified: 0, admins: 0 });
   const [totalCount, setTotalCount] = useState(0);

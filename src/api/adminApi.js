@@ -35,25 +35,50 @@ async function adminRequest(url, options = {}) {
     });
 
     const text = await res.text();
-    let data;
+    let data = null;
     try {
       data = JSON.parse(text);
     } catch {
+      // Non-JSON response (e.g. Vercel 413 HTML or 504 gateway timeout)
+      if (res.status === 413) {
+        return { success: false, status: 413, message: 'Upload size too large. Please choose an image under 4MB.' };
+      }
+      if (res.status === 401) {
+        return { success: false, status: 401, message: 'Your admin session has expired. Please sign in again.' };
+      }
+      if (res.status === 504) {
+        return { success: false, status: 504, message: 'Server request timed out. Please try again.' };
+      }
+      if (!res.ok) {
+        return { success: false, status: res.status, message: `Server error (HTTP ${res.status}). Please try again.` };
+      }
       return { success: false, message: 'Invalid response format from server.' };
     }
 
     if (!res.ok) {
+      if (res.status === 401) {
+        return { success: false, status: 401, message: 'Your admin session has expired. Please sign in again.' };
+      }
+      if (res.status === 413) {
+        return { success: false, status: 413, message: 'Upload size too large. Please choose an image under 4MB.' };
+      }
       return {
         success: false,
         status: res.status,
-        message: data.message || `HTTP ${res.status}`
+        message: data.message || `Server error (HTTP ${res.status})`
       };
     }
 
     return data;
   } catch (err) {
     console.warn(`Admin API request to ${url} failed:`, err.message);
-    return { success: false, error: err.message, message: 'Network connection failed.' };
+    const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+    const msg = isOffline
+      ? 'No internet connection detected. Please check your network.'
+      : (err.message && !err.message.includes('fetch')
+          ? `Request failed: ${err.message}`
+          : 'Could not reach server. Please check your connection and try again.');
+    return { success: false, error: err.message, message: msg };
   }
 }
 

@@ -18,6 +18,7 @@ import ContactPage from './pages/ContactPage';
 import CartPage from './pages/CartPage';
 import FavoritesPage from './pages/FavoritesPage';
 import OrdersPage from './pages/OrdersPage';
+import NotificationsPage from './pages/NotificationsPage';
 import CheckoutPage from './pages/CheckoutPage';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -65,6 +66,7 @@ export default function App() {
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/favorites" element={<FavoritesPage />} />
                 <Route path="/orders" element={<OrdersPage />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 
                 {/* Dedicated Admin Login */}

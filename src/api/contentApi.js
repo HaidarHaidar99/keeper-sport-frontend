@@ -87,5 +87,21 @@ export const contentApi = {
       method: 'POST',
       body: JSON.stringify(formData)
     });
+  },
+
+  async getNotifications() {
+    return safeRequest(`${API_BASE}/notifications`);
+  },
+
+  async markNotificationRead(id) {
+    return safeRequest(`${API_BASE}/notifications/${id}/read`, {
+      method: 'PATCH'
+    });
+  },
+
+  async markAllNotificationsRead() {
+    return safeRequest(`${API_BASE}/notifications/mark-all-read`, {
+      method: 'POST'
+    });
   }
 };

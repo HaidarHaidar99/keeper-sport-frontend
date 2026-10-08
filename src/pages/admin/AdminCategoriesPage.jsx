@@ -4,6 +4,60 @@ import { adminApi } from '../../api/adminApi';
 import { useSite } from '../../context/SiteContext';
 import ConfirmModal from '../../components/admin/ConfirmModal';
 
+// Helper to compress large camera/phone images (> 1.5MB) before upload to avoid Vercel 4.5MB payload limit
+async function compressImageIfNeeded(file) {
+  if (!file || !file.type || !file.type.startsWith('image/')) return file;
+  if (file.type === 'image/svg+xml' || file.type === 'image/gif') return file;
+  if (file.size <= 1.5 * 1024 * 1024) return file; // Already reasonably sized
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const maxDim = 1600;
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const mimeType = file.type === 'image/png' ? 'image/jpeg' : file.type;
+      canvas.toBlob(
+        (blob) => {
+          if (!blob || blob.size >= file.size) {
+            resolve(file);
+          } else {
+            const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
+              type: mimeType,
+              lastModified: Date.now()
+            });
+            resolve(compressedFile);
+          }
+        },
+        mimeType,
+        0.85
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+    img.src = url;
+  });
+}
+
 export default function AdminCategoriesPage() {
   const { refreshCategories } = useSite();
   const [categories, setCategories] = useState([]);
@@ -28,7 +82,7 @@ export default function AdminCategoriesPage() {
   const [toastMessage, setToastMessage] = useState(null);
   const showToast = (msg) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
+    setTimeout(() => setToastMessage(null), 4000);
   };
 
   const loadCategories = async () => {
@@ -73,15 +127,16 @@ export default function AdminCategoriesPage() {
 
     setUploadingImage(true);
     try {
-      const res = await adminApi.uploadMedia(file);
+      const processedFile = await compressImageIfNeeded(file);
+      const res = await adminApi.uploadMedia(processedFile);
       if (res && res.success && res.url) {
         setImagePath(res.url);
         showToast('Category image uploaded successfully.');
       } else {
-        showToast(res.message || 'Image upload failed.');
+        showToast(res?.message || 'Image upload failed. Please try again.');
       }
-    } catch {
-      showToast('Network error uploading category image.');
+    } catch (err) {
+      showToast(err?.message || 'Image upload failed. Please try again.');
     } finally {
       setUploadingImage(false);
     }
@@ -121,10 +176,10 @@ export default function AdminCategoriesPage() {
         loadCategories();
         refreshCategories();
       } else {
-        showToast(res.message || 'Failed to save category.');
+        showToast(res?.message || 'Failed to save category. Please try again.');
       }
-    } catch {
-      showToast('Network error saving category.');
+    } catch (err) {
+      showToast(err?.message || 'Failed to save category. Please try again.');
     } finally {
       setSaveLoading(false);
     }
