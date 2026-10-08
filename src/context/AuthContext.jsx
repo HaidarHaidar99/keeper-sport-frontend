@@ -8,17 +8,35 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const hasCustomerSession = localStorage.getItem('ks_customer_logged_in');
+    if (!hasCustomerSession) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     authApi.getMe()
       .then((data) => {
-        if (data.success && data.user) setUser(data.user);
+        if (data.success && data.user) {
+          setUser(data.user);
+        } else {
+          localStorage.removeItem('ks_customer_logged_in');
+          setUser(null);
+        }
       })
-      .catch(() => setUser(null))
+      .catch(() => {
+        localStorage.removeItem('ks_customer_logged_in');
+        setUser(null);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const login = async (credentials) => {
     const data = await authApi.login(credentials);
-    if (data.user) setUser(data.user);
+    if (data.user) {
+      localStorage.setItem('ks_customer_logged_in', '1');
+      setUser(data.user);
+    }
     return data;
   };
 
@@ -28,13 +46,20 @@ export function AuthProvider({ children }) {
 
   const googleLogin = async (credential) => {
     const data = await authApi.googleAuth(credential);
-    if (data.user) setUser(data.user);
+    if (data.user) {
+      localStorage.setItem('ks_customer_logged_in', '1');
+      setUser(data.user);
+    }
     return data;
   };
 
   const logout = async () => {
-    await authApi.logout();
-    setUser(null);
+    try {
+      await authApi.logout();
+    } finally {
+      localStorage.removeItem('ks_customer_logged_in');
+      setUser(null);
+    }
   };
 
   return (

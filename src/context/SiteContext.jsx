@@ -83,6 +83,29 @@ export function SiteProvider({ children }) {
     }
   }, []);
 
+  // In-memory zero-latency count updates from mutation responses
+  const updateCartCount = useCallback((newCartCount) => {
+    if (typeof newCartCount !== 'number') return;
+    setCounts((prev) => {
+      const updated = { ...prev, cart: newCartCount };
+      try {
+        sessionStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  }, []);
+
+  const updateFavoritesCount = useCallback((newFavCount) => {
+    if (typeof newFavCount !== 'number') return;
+    setCounts((prev) => {
+      const updated = { ...prev, favorites: newFavCount };
+      try {
+        sessionStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  }, []);
+
   // Initial fetch on mount - run in parallel once
   useEffect(() => {
     let isMounted = true;
@@ -132,6 +155,8 @@ export function SiteProvider({ children }) {
     refreshSettings,
     refreshCategories,
     refreshCounts,
+    updateCartCount,
+    updateFavoritesCount,
     deliveryFee: Number(siteSettings?.delivery_fee || 0),
     printingPrice: Number(siteSettings?.printing_price || 0),
     badgePrice: Number(siteSettings?.badge_price || 0)

@@ -66,6 +66,9 @@ async function safeRequest(url, options = {}) {
   }
 }
 
+let featuredCache = { data: null, timestamp: 0, limit: 0 };
+const FEATURED_CACHE_TTL = 30 * 1000;
+
 export const productApi = {
   /**
    * Query catalog products with filters, search, sort, pagination
@@ -89,10 +92,18 @@ export const productApi = {
   },
 
   /**
-   * Query dynamic featured rail products
+   * Query dynamic featured rail products (cached 30s)
    */
   async getFeaturedProducts(limit = 10) {
-    return safeRequest(`${API_BASE}/products/featured?limit=${limit}`);
+    const now = Date.now();
+    if (featuredCache.data && featuredCache.limit === limit && now - featuredCache.timestamp < FEATURED_CACHE_TTL) {
+      return featuredCache.data;
+    }
+    const res = await safeRequest(`${API_BASE}/products/featured?limit=${limit}`);
+    if (res && res.success) {
+      featuredCache = { data: res, timestamp: now, limit };
+    }
+    return res;
   },
 
   /**

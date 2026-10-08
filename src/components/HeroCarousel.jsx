@@ -94,44 +94,44 @@ export default function HeroCarousel({ slides = [] }) {
           currentSlide?.subtitle ||
           (currentSlide?.primary_button_text && currentSlide?.primary_button_route) ||
           (currentSlide?.secondary_button_text && currentSlide?.secondary_button_route)) && (
-          <div className="ks-hero-content-group">
-            {currentSlide.title && (
-              <h1 className="ks-hero-title">
-                {currentSlide.title}
-              </h1>
-            )}
+            <div className="ks-hero-content-group">
+              {currentSlide.title && (
+                <h1 className="ks-hero-title">
+                  {currentSlide.title}
+                </h1>
+              )}
 
-            {currentSlide.subtitle && (
-              <p className="ks-hero-subtitle">
-                {currentSlide.subtitle}
-              </p>
-            )}
+              {currentSlide.subtitle && (
+                <p className="ks-hero-subtitle">
+                  {currentSlide.subtitle}
+                </p>
+              )}
 
-            {/* Action Buttons */}
-            {((currentSlide.primary_button_text && currentSlide.primary_button_route) ||
-              (currentSlide.secondary_button_text && currentSlide.secondary_button_route)) && (
-              <div className="ks-hero-actions">
-                {currentSlide.primary_button_text && currentSlide.primary_button_route && (
-                  <Link
-                    to={currentSlide.primary_button_route}
-                    className="ks-hero-btn-primary"
-                  >
-                    {currentSlide.primary_button_text}
-                  </Link>
+              {/* Action Buttons */}
+              {((currentSlide.primary_button_text && currentSlide.primary_button_route) ||
+                (currentSlide.secondary_button_text && currentSlide.secondary_button_route)) && (
+                  <div className="ks-hero-actions">
+                    {currentSlide.primary_button_text && currentSlide.primary_button_route && (
+                      <Link
+                        to={currentSlide.primary_button_route}
+                        className="ks-hero-btn-primary"
+                      >
+                        {currentSlide.primary_button_text}
+                      </Link>
+                    )}
+
+                    {currentSlide.secondary_button_text && currentSlide.secondary_button_route && (
+                      <Link
+                        to={currentSlide.secondary_button_route}
+                        className="ks-hero-btn-secondary"
+                      >
+                        {currentSlide.secondary_button_text}
+                      </Link>
+                    )}
+                  </div>
                 )}
-
-                {currentSlide.secondary_button_text && currentSlide.secondary_button_route && (
-                  <Link
-                    to={currentSlide.secondary_button_route}
-                    className="ks-hero-btn-secondary"
-                  >
-                    {currentSlide.secondary_button_text}
-                  </Link>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+            </div>
+          )}
 
         {/* Carousel Slide Indicators */}
         {validSlides.length > 1 && (

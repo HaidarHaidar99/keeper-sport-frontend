@@ -13,12 +13,50 @@ import Footer from '../components/Footer';
 
 export default function HomePage() {
   const { user } = useAuth();
-  const { siteSettings, categories, counts, refreshCounts } = useSite();
+  const { siteSettings, categories, counts, refreshCounts, updateCartCount, updateFavoritesCount } = useSite();
 
-  const [heroSlides, setHeroSlides] = useState([]);
-  const [offerBars, setOfferBars] = useState([]);
-  const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [featuredLoading, setFeaturedLoading] = useState(true);
+  const [heroSlides, setHeroSlides] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('ks_cached_hero_slides');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [heroLoading, setHeroLoading] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('ks_cached_hero_slides');
+      return cached && JSON.parse(cached).length > 0 ? false : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const [offerBars, setOfferBars] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('ks_cached_offer_bars');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [featuredProducts, setFeaturedProducts] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('ks_cached_featured_products');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [featuredLoading, setFeaturedLoading] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('ks_cached_featured_products');
+      return cached && JSON.parse(cached).length > 0 ? false : true;
+    } catch {
+      return true;
+    }
+  });
 
   // Fetch Public Content on Mount (Only Hero, Offers, and Featured)
   useEffect(() => {
@@ -26,15 +64,26 @@ export default function HomePage() {
 
     // 1. Hero Slides
     contentApi.getHeroSlides().then((res) => {
-      if (isMounted && res && res.success && res.slides) {
-        setHeroSlides(res.slides);
+      if (isMounted) {
+        if (res && res.success && res.slides) {
+          setHeroSlides(res.slides);
+          try {
+            sessionStorage.setItem('ks_cached_hero_slides', JSON.stringify(res.slides));
+          } catch {}
+        }
+        setHeroLoading(false);
       }
     });
 
     // 2. Offer Bars
     contentApi.getOfferBars().then((res) => {
-      if (isMounted && res && res.success && res.offers) {
-        setOfferBars(res.offers);
+      if (isMounted) {
+        if (res && res.success && res.offers) {
+          setOfferBars(res.offers);
+          try {
+            sessionStorage.setItem('ks_cached_offer_bars', JSON.stringify(res.offers));
+          } catch {}
+        }
       }
     });
 
@@ -43,6 +92,9 @@ export default function HomePage() {
       if (isMounted) {
         if (res && res.success && Array.isArray(res.products)) {
           setFeaturedProducts(res.products);
+          try {
+            sessionStorage.setItem('ks_cached_featured_products', JSON.stringify(res.products));
+          } catch {}
         }
         setFeaturedLoading(false);
       }
@@ -52,6 +104,23 @@ export default function HomePage() {
       isMounted = false;
     };
   }, []);
+
+  // Optimized count updates without triggering extra network requests
+  const handleCartUpdated = (newCount) => {
+    if (typeof newCount === 'number' && updateCartCount) {
+      updateCartCount(newCount);
+    } else {
+      refreshCounts();
+    }
+  };
+
+  const handleFavoriteToggled = (_productId, _isFav, newCount) => {
+    if (typeof newCount === 'number' && updateFavoritesCount) {
+      updateFavoritesCount(newCount);
+    } else {
+      refreshCounts();
+    }
+  };
 
   return (
     <div className="ks-home-root">
@@ -66,14 +135,14 @@ export default function HomePage() {
       <OffersBar offers={offerBars} />
 
       {/* 3. Hero Carousel */}
-      <HeroCarousel slides={heroSlides} />
+      <HeroCarousel slides={heroSlides} loading={heroLoading} />
 
       {/* 4. Featured Selection Rail */}
       <FeaturedRail
         products={featuredProducts}
         loading={featuredLoading}
-        onCartUpdated={refreshCounts}
-        onFavoriteToggled={refreshCounts}
+        onCartUpdated={handleCartUpdated}
+        onFavoriteToggled={handleFavoriteToggled}
       />
 
       {/* 5. Categories Showcase Quick Access */}
