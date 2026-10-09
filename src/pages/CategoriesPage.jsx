@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Tag, ArrowRight, Loader2 } from 'lucide-react';
+import { Tag, ArrowRight, Loader2, Shield } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -41,37 +41,54 @@ export default function CategoriesPage() {
             </Link>
           </div>
         ) : (
-          <div className="ks-categories-grid">
+          <div
+            className="ks-categories-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gap: '20px',
+              padding: '16px 0'
+            }}
+          >
             {categories.map((cat, idx) => {
               const imageSrc = cat.image_path || cat.imagePath || null;
               return (
                 <Link
                   key={cat.id || cat.slug}
                   to={`/products?category=${encodeURIComponent(cat.slug || cat.id)}`}
-                  className="ks-category-card"
-                  style={{ animationDelay: `${idx * 0.06}s` }}
+                  className="ks-category-rail-card"
+                  style={{
+                    borderRadius: '24px',
+                    overflow: 'hidden',
+                    position: 'relative',
+                    aspectRatio: '4 / 3',
+                    minHeight: '240px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'flex-end',
+                    textDecoration: 'none',
+                    animationDelay: `${idx * 0.05}s`
+                  }}
                 >
-                  <div className="ks-category-card-media">
-                    {imageSrc ? (
-                      <img
-                        src={imageSrc}
-                        alt={cat.name}
-                        className="ks-category-card-img"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="ks-category-card-fallback">
-                        <Tag size={36} style={{ opacity: 0.3 }} />
-                      </div>
-                    )}
-                  </div>
-                  <div className="ks-category-card-body">
-                    <span className="ks-category-card-tag">CATEGORY</span>
-                    <h2 className="ks-category-card-title">{cat.name}</h2>
-                    <div className="ks-category-card-action">
-                      <span>EXPLORE PRODUCTS</span>
-                      <ArrowRight size={16} />
+                  {imageSrc ? (
+                    <img
+                      src={imageSrc}
+                      alt={cat.name}
+                      className="ks-category-card-bg-img"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="ks-category-card-fallback-canvas">
+                      <Shield size={36} style={{ color: '#E10600' }} />
                     </div>
+                  )}
+                  <div className="ks-category-card-scrim" />
+                  <div className="ks-category-card-content-bottom">
+                    <h3 className="ks-category-card-name">{cat.name}</h3>
+                    <span className="ks-category-card-cta">
+                      <span>Explore</span>
+                      <ArrowRight size={14} />
+                    </span>
                   </div>
                 </Link>
               );

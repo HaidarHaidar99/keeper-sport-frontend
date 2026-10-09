@@ -29,7 +29,7 @@ export default function ShopByCategory({ categories = [] }) {
     return null;
   }
 
-  // Mobile: maximum 4 categories initially
+  // Mobile: maximum 4 categories initially in equal grid
   const mobileCategories = validCategories.slice(0, 4);
 
   return (
@@ -63,7 +63,7 @@ export default function ShopByCategory({ categories = [] }) {
           </div>
         </div>
 
-        {/* Clean Rectangular Search Bar with Generous Breathing Room */}
+        {/* Clean Rectangular Search Bar with Generous Breathing Room & 24px Radius */}
         <div className="ks-category-search-bar-wrap">
           <form onSubmit={handleSearchSubmit} className="ks-category-search-form">
             <Search size={18} className="ks-category-search-icon" aria-hidden="true" />
@@ -71,7 +71,7 @@ export default function ShopByCategory({ categories = [] }) {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search gear, categories, or club kits..."
+              placeholder="Search gear, boots, club kits..."
               className="ks-category-search-input"
               aria-label="Search products and categories"
             />
@@ -81,7 +81,7 @@ export default function ShopByCategory({ categories = [] }) {
           </form>
         </div>
 
-        {/* Desktop View: Horizontal Carousel Rail */}
+        {/* Desktop View: Horizontal Carousel Rail with Full Background Image */}
         <div className="ks-category-desktop-rail-wrap">
           <div className="ks-category-desktop-rail" ref={railRef}>
             {validCategories.map((cat) => (
@@ -90,25 +90,23 @@ export default function ShopByCategory({ categories = [] }) {
                 to={`/products?category=${encodeURIComponent(cat.slug || cat.id)}`}
                 className="ks-category-rail-card"
               >
-                <div className="ks-category-card-media-wrap">
-                  {cat.image_path ? (
-                    <img
-                      src={cat.image_path}
-                      alt={cat.name}
-                      className="ks-category-card-img"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="ks-category-card-fallback-canvas">
-                      <Shield size={32} className="ks-category-card-fallback-icon" />
-                    </div>
-                  )}
-                  <div className="ks-category-card-overlay" />
-                </div>
-                <div className="ks-category-card-info">
+                {cat.image_path ? (
+                  <img
+                    src={cat.image_path}
+                    alt={cat.name}
+                    className="ks-category-card-bg-img"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="ks-category-card-fallback-canvas">
+                    <Shield size={36} style={{ color: '#E10600' }} />
+                  </div>
+                )}
+                <div className="ks-category-card-scrim" />
+                <div className="ks-category-card-content-bottom">
                   <h3 className="ks-category-card-name">{cat.name}</h3>
                   <span className="ks-category-card-cta">
-                    <span>Shop Now</span>
+                    <span>Explore</span>
                     <ArrowRight size={14} />
                   </span>
                 </div>
@@ -117,7 +115,7 @@ export default function ShopByCategory({ categories = [] }) {
           </div>
         </div>
 
-        {/* Mobile View: Two-Column Grid (Max 4 items initially) */}
+        {/* Mobile View: Contained Two-Column Grid with Equal Card Dimensions and Full Background Image */}
         <div className="ks-category-mobile-grid">
           {mobileCategories.map((cat) => (
             <Link
@@ -125,33 +123,30 @@ export default function ShopByCategory({ categories = [] }) {
               to={`/products?category=${encodeURIComponent(cat.slug || cat.id)}`}
               className="ks-category-mobile-card"
             >
-              <div className="ks-category-card-media-wrap">
-                {cat.image_path ? (
-                  <img
-                    src={cat.image_path}
-                    alt={cat.name}
-                    className="ks-category-card-img"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="ks-category-card-fallback-canvas">
-                    <Shield size={24} className="ks-category-card-fallback-icon" />
-                  </div>
-                )}
-                <div className="ks-category-card-overlay" />
-              </div>
-              <div className="ks-category-card-info">
+              {cat.image_path ? (
+                <img
+                  src={cat.image_path}
+                  alt={cat.name}
+                  className="ks-category-card-bg-img"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="ks-category-card-fallback-canvas">
+                  <Shield size={28} style={{ color: '#E10600' }} />
+                </div>
+              )}
+              <div className="ks-category-card-scrim" />
+              <div className="ks-category-card-content-bottom">
                 <h3 className="ks-category-card-name">{cat.name}</h3>
                 <span className="ks-category-card-cta">
-                  <span>Shop</span>
-                  <ArrowRight size={12} />
+                  <ArrowRight size={14} />
                 </span>
               </div>
             </Link>
           ))}
         </div>
 
-        {/* View All Categories Button — Aligned to the RIGHT */}
+        {/* Right-Aligned View All Categories Action */}
         <div className="ks-category-footer-right">
           <Link to="/categories" className="ks-category-view-all-btn">
             <span>View All Categories</span>

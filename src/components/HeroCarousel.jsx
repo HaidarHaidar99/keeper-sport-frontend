@@ -110,8 +110,8 @@ export default function HeroCarousel({ slides = [], loading = false }) {
             </p>
           )}
 
-          {/* Hero CTAs: Side by Side when space permits, square corners */}
-          <div className="ks-hero-actions">
+          {/* Hero CTAs: Strictly Side by Side, Never Stacking */}
+          <div className="ks-hero-actions" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'nowrap' }}>
             <Link to={primaryRoute} className="ks-hero-btn-primary">
               <span>{primaryLabel}</span>
             </Link>

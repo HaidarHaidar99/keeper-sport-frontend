@@ -1,21 +1,41 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { Search, Heart, ShoppingBag, User } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
+import { useAuth } from '../context/AuthContext';
 import HamburgerMenu from './HamburgerMenu';
 
 export default function Navbar({ siteSettings: propSettings, categories: propCategories, counts: propCounts }) {
   const siteCtx = useSite();
+  const { user } = useAuth();
+  const location = useLocation();
+
   const siteSettings = (propSettings && Object.keys(propSettings).length > 0) ? propSettings : (siteCtx?.siteSettings || {});
   const categories = (propCategories && propCategories.length > 0) ? propCategories : (siteCtx?.categories || []);
   const counts = (propCounts && Object.keys(propCounts).length > 0) ? propCounts : (siteCtx?.counts || {});
 
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const navLinks = [
+    { label: 'Home', path: '/' },
+    { label: 'Products', path: '/products' },
+    { label: 'Categories', path: '/categories' },
+    { label: 'Offers', path: '/offers' },
+    { label: 'Reviews', path: '/reviews' },
+    { label: 'About Us', path: '/about' },
+    { label: 'Contact', path: '/contact' }
+  ];
+
+  const isLinkActive = (path) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
+
   return (
     <>
       <header className="ks-navbar-root" role="banner">
         <div className="ks-navbar-container">
-          {/* Left: Actual Keeper Sports Logo maintaining correct aspect ratio */}
+          {/* Left: Prominent Keeper Sports Logo */}
           <div className="ks-navbar-left">
             <Link to="/" className="ks-navbar-brand-link" aria-label="Keeper Sports Home">
               {siteSettings?.logo_path ? (
@@ -31,7 +51,7 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
                 />
               ) : null}
 
-              {/* Bold Athletic Brand Lockup Fallback */}
+              {/* Bold Brand Lockup Fallback */}
               <div
                 className="ks-navbar-logo-fallback"
                 style={{ display: siteSettings?.logo_path ? 'none' : 'flex' }}
@@ -60,8 +80,69 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
             </Link>
           </div>
 
-          {/* Right: Custom 2-Line Hamburger Control (top line ~28px, bottom line ~14px half length) */}
+          {/* Desktop Center: Normal Top Navbar Links */}
+          <nav className="ks-navbar-desktop-nav" aria-label="Desktop Navigation">
+            {navLinks.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`ks-navbar-desktop-link ${isLinkActive(item.path) ? 'is-active' : ''}`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Right: Circular Beauty Actions (No Transparent Square) */}
           <div className="ks-navbar-right">
+            {/* Search (Desktop only) */}
+            <Link
+              to="/products"
+              className="ks-navbar-circle-btn ks-desktop-only-btn"
+              aria-label="Search catalog"
+              title="Search catalog"
+            >
+              <Search size={18} />
+            </Link>
+
+            {/* Favorites (Desktop only) */}
+            <Link
+              to="/favorites"
+              className="ks-navbar-circle-btn ks-desktop-only-btn"
+              aria-label="View favorites"
+              title="Favorites"
+            >
+              <Heart size={18} />
+              {counts.favorites > 0 && (
+                <span className="ks-navbar-badge-pill">{counts.favorites}</span>
+              )}
+            </Link>
+
+            {/* Cart Icon (Always visible on desktop and mobile) */}
+            <Link
+              to="/cart"
+              className="ks-navbar-circle-btn ks-nav-cart-btn"
+              data-nav-cart="true"
+              aria-label="Shopping Cart"
+              title="Cart"
+            >
+              <ShoppingBag size={18} />
+              {counts.cart > 0 && (
+                <span className="ks-navbar-badge-pill">{counts.cart}</span>
+              )}
+            </Link>
+
+            {/* Profile Icon (Desktop only) */}
+            <Link
+              to={user ? '/profile' : '/login'}
+              className="ks-navbar-circle-btn ks-desktop-only-btn"
+              aria-label={user ? 'My Profile' : 'Sign In'}
+              title={user ? 'My Profile' : 'Sign In'}
+            >
+              <User size={18} />
+            </Link>
+
+            {/* Mobile Hamburger Trigger (Visible on mobile only) */}
             <button
               type="button"
               className="ks-hamburger-trigger"
@@ -78,7 +159,7 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
         </div>
       </header>
 
-      {/* Full-Viewport Navigation Curtain */}
+      {/* Full-Viewport Navigation Curtain for Mobile */}
       <HamburgerMenu
         isOpen={menuOpen}
         onClose={() => setMenuOpen(false)}

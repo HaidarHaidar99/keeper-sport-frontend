@@ -120,6 +120,25 @@ export default function HomePage() {
     };
   }, []);
 
+  // Smooth scroll animations on sections
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-in-view');
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    const revealElements = document.querySelectorAll('.ks-scroll-reveal');
+    revealElements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [featuredProducts, categories]);
+
   // Optimized Count Updaters (In-memory, Zero-Latency)
   const handleCartUpdated = (newCount) => {
     if (typeof newCount === 'number' && updateCartCount) {
@@ -156,25 +175,35 @@ export default function HomePage() {
         {/* 2. Animated After-Hero Story (Admin-managed media & scroll-reveal text) */}
         <CinematicSection />
 
-        {/* 3. Shop by Category (Uniform square cards, horizontal rail on desktop, 2-column mobile grid, right-aligned View All) */}
-        <ShopByCategory categories={categories} />
+        {/* 3. Shop by Category (Full background image, 24px radius, contained mobile grid) */}
+        <div className="ks-scroll-reveal">
+          <ShopByCategory categories={categories} />
+        </div>
 
-        {/* 4. Products Preview (2-card desktop carousel + swipe support, rectangular View All) */}
-        <ProductsPreview
-          products={featuredProducts}
-          loading={featuredLoading}
-          onCartUpdated={handleCartUpdated}
-          onFavoriteToggled={handleFavoriteToggled}
-        />
+        {/* 4. Products Preview (BUY NOW + smaller '+' button, no description, 24px radius) */}
+        <div className="ks-scroll-reveal">
+          <ProductsPreview
+            products={featuredProducts}
+            loading={featuredLoading}
+            onCartUpdated={handleCartUpdated}
+            onFavoriteToggled={handleFavoriteToggled}
+          />
+        </div>
 
         {/* 5. Offers, only if active offers exist */}
-        <OffersSection offers={activeOffers} />
+        <div className="ks-scroll-reveal">
+          <OffersSection offers={activeOffers} />
+        </div>
 
-        {/* 6. Location / Google Maps (Admin-managed card, Open in Google Maps action) */}
-        <LocationSection siteSettings={siteSettings} />
+        {/* 6. Location / Google Maps (Luxury dark card, Open in Google Maps) */}
+        <div className="ks-scroll-reveal">
+          <LocationSection siteSettings={siteSettings} />
+        </div>
 
-        {/* 7. Animated Social Media Section (Monochrome/red square cards for enabled Admin platforms) */}
-        <SocialMediaSection siteSettings={siteSettings} />
+        {/* 7. Animated Social Media Section */}
+        <div className="ks-scroll-reveal">
+          <SocialMediaSection siteSettings={siteSettings} />
+        </div>
       </main>
 
       {/* 8. Compact Footer */}

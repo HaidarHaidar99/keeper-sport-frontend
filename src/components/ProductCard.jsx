@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Star, Check, AlertCircle } from 'lucide-react';
+import { Heart, Star, Plus, Check, AlertCircle } from 'lucide-react';
 import { productApi } from '../api/productApi';
+import { launchFootballToCart } from '../utils/cartAnimation';
 
 export default function ProductCard({
   product = {},
@@ -10,6 +11,7 @@ export default function ProductCard({
 }) {
   const navigate = useNavigate();
   const heartBtnRef = useRef(null);
+  const plusBtnRef = useRef(null);
 
   // Optimistic favorite state
   const [isFavorited, setIsFavorited] = useState(Boolean(product?.isFavorited));
@@ -55,9 +57,6 @@ export default function ProductCard({
   if (product.is_new_arrival) {
     realBadges.push({ type: 'new', label: 'NEW ARRIVAL' });
   }
-  if (product.is_featured) {
-    realBadges.push({ type: 'featured', label: 'FEATURED' });
-  }
 
   // Card click navigates to details unless clicking a button or link
   const handleCardClick = (e) => {
@@ -67,7 +66,7 @@ export default function ProductCard({
     navigate(productUrl);
   };
 
-  // Immediate optimistic Favorite toggle with rollback
+  // Immediate optimistic Favorite toggle with pulse animation & rollback
   const handleFavoriteClick = async (e) => {
     e.stopPropagation();
     e.preventDefault();
@@ -77,12 +76,10 @@ export default function ProductCard({
     const previousState = isFavorited;
     const nextState = !previousState;
 
-    // 1. Immediate optimistic UI update
     setIsFavorited(nextState);
     setFavAnimating(true);
-    setTimeout(() => setFavAnimating(false), 350);
+    setTimeout(() => setFavAnimating(false), 400);
 
-    // Optimistically notify parent count updater
     if (onFavoriteToggled) {
       onFavoriteToggled(product.id, nextState);
     }
@@ -97,14 +94,12 @@ export default function ProductCard({
           onFavoriteToggled(product.id, res.isFavorited, res.favoritesCount);
         }
       } else {
-        // Rollback on rejection
         setIsFavorited(previousState);
         if (onFavoriteToggled) onFavoriteToggled(product.id, previousState);
         setErrorMessage(res?.message || 'Could not update favorites.');
         setTimeout(() => setErrorMessage(null), 3000);
       }
     } catch {
-      // Rollback on network error
       setIsFavorited(previousState);
       if (onFavoriteToggled) onFavoriteToggled(product.id, previousState);
       setErrorMessage('Network error updating favorites.');
@@ -114,17 +109,20 @@ export default function ProductCard({
     }
   };
 
-  // Add to Cart without choosing size (creates cart item with deferred variant)
+  // Add to Cart via '+' button with flying football flight animation
   const handleAddToCart = async (e) => {
     e.stopPropagation();
     e.preventDefault();
 
     if (isOutOfStock || cartLoading) return;
 
+    // Trigger soccer ball flying animation to the Navbar cart
+    if (plusBtnRef.current) {
+      launchFootballToCart(plusBtnRef.current);
+    }
+
     setCartLoading(true);
     setErrorMessage(null);
-
-    // Immediate visual response
     setCartSuccess(true);
 
     try {
@@ -137,7 +135,7 @@ export default function ProductCard({
         if (onCartUpdated) {
           onCartUpdated(res.cartCount);
         }
-        setTimeout(() => setCartSuccess(false), 2000);
+        setTimeout(() => setCartSuccess(false), 1800);
       } else {
         setCartSuccess(false);
         setErrorMessage(res?.message || 'Failed to add to cart.');
@@ -187,7 +185,7 @@ export default function ProductCard({
       onClick={handleCardClick}
       data-product-id={product.id}
     >
-      {/* Rectangular Image Area */}
+      {/* Product Image Area with 20px/24px rounded corners */}
       <div className="ks-card-media-wrap">
         <a
           href={productUrl}
@@ -212,7 +210,7 @@ export default function ProductCard({
             />
           ) : null}
 
-          {/* Clean Neutral Brand Fallback */}
+          {/* Clean Brand Fallback */}
           <div
             className="ks-card-img-fallback"
             style={{ display: primaryImgSrc ? 'none' : 'flex' }}
@@ -225,15 +223,19 @@ export default function ProductCard({
           </div>
         </a>
 
-        {/* Top-Left Overlays: Category & Price arranged so they never collide */}
+        {/* Top-Left: Category Name Badge */}
         <div className="ks-card-top-left-badges">
           {categoryName && (
             <span className="ks-card-category-tag">{categoryName}</span>
           )}
-          <span className="ks-card-price-tag">${currentPrice.toFixed(2)}</span>
+          {realBadges.length > 0 && (
+            <span className={`ks-badge ks-badge-${realBadges[0].type}`}>
+              {realBadges[0].label}
+            </span>
+          )}
         </div>
 
-        {/* Top-Right: Favorite Heart Button */}
+        {/* Top-Right: Circular Favorite Heart Button with Pulse Animation */}
         <button
           ref={heartBtnRef}
           type="button"
@@ -250,19 +252,26 @@ export default function ProductCard({
             strokeWidth={2}
           />
         </button>
-
-        {/* Real Status Badge (Sale, Stock status, New, etc.) */}
-        {realBadges.length > 0 && (
-          <div className="ks-card-badge-row">
-            <span className={`ks-badge ks-badge-${realBadges[0].type}`}>
-              {realBadges[0].label}
-            </span>
-          </div>
-        )}
       </div>
 
-      {/* Product Content Information Below Image */}
+      {/* Product Content Below Image (No description, clean price, rating top-right) */}
       <div className="ks-card-body">
+        {/* Rating row at top of content if available */}
+        <div className="ks-card-top-info-row">
+          {hasRealRating ? (
+            <div className="ks-card-rating">
+              <Star size={12} fill="#E10600" stroke="#E10600" />
+              <span>{Number(ratingAverage).toFixed(1)}</span>
+              <span>({ratingCount})</span>
+            </div>
+          ) : (
+            <div className="ks-card-rating">
+              <Star size={12} stroke="#737373" fill="none" />
+              <span style={{ fontSize: '0.7rem', color: '#737373' }}>Official Gear</span>
+            </div>
+          )}
+        </div>
+
         {/* Product Name */}
         <h3 className="ks-card-title">
           <a
@@ -278,7 +287,7 @@ export default function ProductCard({
           </a>
         </h3>
 
-        {/* Pricing Row: Real Price + Original Price if Genuine Discount */}
+        {/* Pricing Row: Real Price + Original Price */}
         <div className="ks-card-pricing-row">
           <span className="ks-card-price-main">
             ${currentPrice.toFixed(2)}
@@ -290,28 +299,7 @@ export default function ProductCard({
           )}
         </div>
 
-        {/* Short Product Description */}
-        <p className="ks-card-description">
-          {product.description || 'Authentic matchday gear engineered for performance.'}
-        </p>
-
-        {/* Rating Row: Real Stars and Real Count Only */}
-        <div className="ks-card-rating-row">
-          {hasRealRating ? (
-            <div className="ks-card-rating">
-              <Star size={13} className="ks-star-icon" fill="#E10600" stroke="#E10600" />
-              <span className="ks-rating-val">{Number(ratingAverage).toFixed(1)}</span>
-              <span className="ks-rating-cnt">({ratingCount})</span>
-            </div>
-          ) : (
-            <div className="ks-card-rating ks-rating-empty">
-              <Star size={13} className="ks-star-icon-empty" stroke="currentColor" fill="none" />
-              <span className="ks-rating-empty-label">Authentic Gear</span>
-            </div>
-          )}
-        </div>
-
-        {/* Inline Error Notice */}
+        {/* Inline Error Notice if needed */}
         {errorMessage && (
           <div className="ks-card-inline-error" role="alert">
             <AlertCircle size={12} />
@@ -319,28 +307,9 @@ export default function ProductCard({
           </div>
         )}
 
-        {/* Bottom Actions: Two Buttons Side by Side with Equal Height */}
-        <div className="ks-card-actions-grid">
-          {/* ADD TO CART: Transparent background, red text, refined red outline, square corners */}
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            disabled={isOutOfStock || cartLoading}
-            className={`ks-card-btn-cart ${cartSuccess ? 'is-success' : ''}`}
-            aria-label={`Add ${product.name} to cart`}
-            title="Add to Cart"
-          >
-            {cartSuccess ? (
-              <>
-                <Check size={14} strokeWidth={2.5} />
-                <span>ADDED</span>
-              </>
-            ) : (
-              <span>ADD TO CART</span>
-            )}
-          </button>
-
-          {/* BUY NOW: Solid red background, white text, square corners */}
+        {/* Bottom Actions Row: BUY NOW Button + Smaller '+' Button for Add to Cart */}
+        <div className="ks-card-actions-row">
+          {/* BUY NOW Button */}
           <button
             type="button"
             onClick={handleBuyNow}
@@ -350,6 +319,23 @@ export default function ProductCard({
             title="Buy Now"
           >
             <span>BUY NOW</span>
+          </button>
+
+          {/* Smaller '+' Button with Ball Animation */}
+          <button
+            ref={plusBtnRef}
+            type="button"
+            onClick={handleAddToCart}
+            disabled={isOutOfStock || cartLoading}
+            className={`ks-card-btn-plus ${cartSuccess ? 'is-success' : ''}`}
+            aria-label={`Add ${product.name} to cart`}
+            title="Add to Cart"
+          >
+            {cartSuccess ? (
+              <Check size={18} strokeWidth={3} />
+            ) : (
+              <Plus size={20} strokeWidth={2.5} />
+            )}
           </button>
         </div>
       </div>
