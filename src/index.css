@@ -9117,3 +9117,140 @@ a:focus-visible {
 .ks-product-card-skeleton {
   display: none !important;
 }
+
+/* 20. NAV ICON BEAUTY BAR WIDER & FULL DISTRIBUTION (NOT OUTSIDE BAR) */
+.ks-curtain-beauty-card {
+  width: 100% !important;
+  max-width: 480px !important;
+  padding: 12px 16px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  border-radius: 24px !important;
+}
+
+.ks-curtain-beauty-icon-btn {
+  flex: 1 !important;
+  max-width: 44px !important;
+  min-width: 36px !important;
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 50% !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+@media (max-width: 600px) {
+  .ks-curtain-body-top-left {
+    padding: 28px 16px 44px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .ks-curtain-beauty-card {
+    padding: 10px 12px !important;
+    gap: 6px !important;
+  }
+  .ks-curtain-beauty-icon-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 32px !important;
+  }
+}
+
+/* 21. FAVORITE BUTTON BACKGROUND REMAINS DARK/TRANSLUCENT (NEVER SOLID RED) */
+.ks-card-fav-btn {
+  background-color: rgba(0, 0, 0, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-radius: 50% !important;
+}
+
+.ks-card-fav-btn:hover,
+.ks-card-fav-btn:active,
+.ks-card-fav-btn.is-active {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  color: #FFFFFF !important;
+}
+
+.ks-card-fav-btn.is-active .ks-fav-icon,
+.ks-fav-icon-active {
+  fill: #E10600 !important;
+  stroke: #E10600 !important;
+  color: #E10600 !important;
+}
+
+/* 22. CATEGORY SEARCH BAR AND RED SEARCH BUTTON FIT PERFECTLY */
+.ks-category-search-bar-wrap .ks-category-search-form {
+  padding: 0 6px 0 16px !important;
+  border-radius: 24px !important;
+  width: 100% !important;
+  max-width: 520px !important;
+  box-sizing: border-box !important;
+  height: 48px !important;
+  overflow: hidden !important;
+}
+
+.ks-category-search-submit-btn {
+  padding: 6px 14px !important;
+  height: 34px !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
+  border-radius: 20px !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+}
+
+/* 23. CART PAGE CONTAINED WITHIN SCREEN */
+.ks-catalog-page-container {
+  padding: 0 16px !important;
+  box-sizing: border-box !important;
+  max-width: 1360px !important;
+  width: 100% !important;
+}
+
+.ks-cart-grid,
+.ks-checkout-grid {
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.ks-cart-items-col,
+.ks-cart-summary-col,
+.ks-cart-summary-card {
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.ks-cart-item-row {
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  border-radius: 20px !important;
+  padding: 14px 16px !important;
+}
+
+@media (max-width: 640px) {
+  .ks-cart-item-row {
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+    padding: 12px !important;
+  }
+  .ks-cart-item-details {
+    width: calc(100% - 86px) !important;
+    min-width: 0 !important;
+  }
+  .ks-cart-item-pricing {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    margin-top: 6px !important;
+  }
+}

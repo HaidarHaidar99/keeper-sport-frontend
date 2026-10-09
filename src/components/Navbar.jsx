@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Search, Heart, ShoppingBag, User } from 'lucide-react';
-import { useSite } from '../context/SiteContext';
+import { useSite, DEFAULT_LOGO_URL } from '../context/SiteContext';
 import { useAuth } from '../context/AuthContext';
 import HamburgerMenu from './HamburgerMenu';
 
@@ -13,6 +13,7 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
   const siteSettings = (propSettings && Object.keys(propSettings).length > 0) ? propSettings : (siteCtx?.siteSettings || {});
   const categories = (propCategories && propCategories.length > 0) ? propCategories : (siteCtx?.categories || []);
   const counts = (propCounts && Object.keys(propCounts).length > 0) ? propCounts : (siteCtx?.counts || {});
+  const logoSrc = siteSettings?.logo_path || DEFAULT_LOGO_URL;
 
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -38,23 +39,24 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
           {/* Left: Prominent & Bigger Keeper Sports Logo */}
           <div className="ks-navbar-left">
             <Link to="/" className="ks-navbar-brand-link" aria-label="Keeper Sports Home">
-              {siteSettings?.logo_path ? (
-                <img
-                  src={siteSettings.logo_path}
-                  alt={siteSettings?.site_name || 'Keeper Sports'}
-                  className="ks-navbar-logo-img ks-navbar-logo-large"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const fallback = e.currentTarget.parentElement?.querySelector('.ks-navbar-logo-fallback');
-                    if (fallback) fallback.style.display = 'flex';
-                  }}
-                />
-              ) : null}
+              <img
+                src={logoSrc}
+                alt={siteSettings?.site_name || 'Keeper Sports'}
+                className="ks-navbar-logo-img ks-navbar-logo-large"
+                loading="eager"
+                fetchPriority="high"
+                decoding="sync"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.parentElement?.querySelector('.ks-navbar-logo-fallback');
+                  if (fallback) fallback.style.display = 'flex';
+                }}
+              />
 
-              {/* Bold Brand Lockup Fallback */}
+              {/* Bold Brand Lockup Fallback (Shown ONLY on image error) */}
               <div
                 className="ks-navbar-logo-fallback"
-                style={{ display: siteSettings?.logo_path ? 'none' : 'flex' }}
+                style={{ display: 'none' }}
                 aria-label="Keeper Sports Logo"
               >
                 <div className="ks-logo-emblem">

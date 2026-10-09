@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { DEFAULT_LOGO_URL } from '../context/SiteContext';
 
 export default function HamburgerMenu({
   isOpen,
@@ -102,17 +103,20 @@ export default function HamburgerMenu({
         {/* Top Header inside Curtain */}
         <div className="ks-curtain-top-bar">
           <div className="ks-curtain-brand">
-            {siteSettings?.logo_path ? (
-              <img
-                src={siteSettings.logo_path}
-                alt={siteSettings?.site_name || 'Keeper Sports'}
-                className="ks-curtain-logo-img"
-              />
-            ) : (
-              <span className="ks-curtain-logo-text">
-                {siteSettings?.site_name || 'KEEPER SPORTS'}
-              </span>
-            )}
+            <img
+              src={siteSettings?.logo_path || DEFAULT_LOGO_URL}
+              alt={siteSettings?.site_name || 'Keeper Sports'}
+              className="ks-curtain-logo-img"
+              loading="eager"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const fb = e.currentTarget.parentElement?.querySelector('.ks-curtain-logo-text');
+                if (fb) fb.style.display = 'block';
+              }}
+            />
+            <span className="ks-curtain-logo-text" style={{ display: 'none' }}>
+              {siteSettings?.site_name || 'KEEPER SPORTS'}
+            </span>
           </div>
 
           {/* Sleek Creative Circular Close Button */}

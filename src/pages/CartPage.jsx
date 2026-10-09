@@ -273,7 +273,7 @@ export default function CartPage() {
                         <Link to={`/products/${productSlug}`}>{productName}</Link>
                       </h3>
                       <div className="ks-cart-item-meta">
-                        {sizeVal && <span>Size: {sizeVal}</span>}
+                        {sizeVal && !sizeVal.toLowerCase().includes('standard') && <span>Size: {sizeVal}</span>}
                         {colorVal && <span>Color: {colorVal}</span>}
                         {item.printedName && <span>Print: {item.printedName} #{item.printedNumber}</span>}
                         {item.badge && <span>Badge: {item.badge}</span>}
@@ -288,17 +288,21 @@ export default function CartPage() {
                           </div>
                           <div className="ks-cart-variant-options-list">
                             {Array.isArray(item.availableVariants) && item.availableVariants.length > 0 ? (
-                              item.availableVariants.map((v) => (
-                                <button
-                                  key={v.id}
-                                  type="button"
-                                  onClick={() => handleSelectVariant(item.id, v.id)}
-                                  disabled={isUpdating}
-                                  className="ks-cart-variant-option-btn"
-                                >
-                                  {v.size || v.name || 'Standard'} {v.color ? `— ${v.color}` : ''}
-                                </button>
-                              ))
+                              item.availableVariants.map((v) => {
+                                const cleanLabel = (v.size || v.name || '').replace(/standard/gi, '').trim() || v.color || 'One Size';
+                                const cleanColor = v.color && v.size && !v.size.toLowerCase().includes('standard') ? `— ${v.color}` : '';
+                                return (
+                                  <button
+                                    key={v.id}
+                                    type="button"
+                                    onClick={() => handleSelectVariant(item.id, v.id)}
+                                    disabled={isUpdating}
+                                    className="ks-cart-variant-option-btn"
+                                  >
+                                    {cleanLabel} {cleanColor}
+                                  </button>
+                                );
+                              })
                             ) : (
                               <span className="ks-text-muted" style={{ fontSize: '12px' }}>
                                 No variants found.

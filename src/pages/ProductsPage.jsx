@@ -388,30 +388,14 @@ export default function ProductsPage() {
           onFavoriteToggled={handleFavoriteToggled}
         />
 
-        {/* TRANSITION: VIEW ALL PRODUCTS DIVIDER */}
-        <section className="ks-catalog-transition-section" aria-label="Catalog Transition">
-          <div className="ks-catalog-divider-line" />
-          <div className="ks-catalog-divider-badge">
-            <h2 className="ks-catalog-divider-title">ALL PRODUCTS</h2>
-          </div>
-          <div className="ks-catalog-divider-line" />
-        </section>
-
-        {/* SECTION B: ALL PRODUCTS CATALOG */}
+        {/* SECTION B: CATALOG PRODUCTS */}
         {/* Mobile: EXACTLY 2 COLUMNS vertically continuing. Tablet/Desktop: 2-5 columns */}
-        <section className="ks-catalog-grid-section" aria-label="All Products Catalog">
-          {/* Loading State Skeleton */}
+        <section className="ks-catalog-grid-section" aria-label="Catalog Products">
+          {/* Loading State: Clean subtle spinner, NO skeleton cards */}
           {loading ? (
-            <div className="ks-catalog-grid">
-              {Array.from({ length: 8 }).map((_, idx) => (
-                <div key={idx} className="ks-product-card-skeleton" aria-hidden="true">
-                  <div className="ks-skeleton-img" />
-                  <div className="ks-skeleton-line short" />
-                  <div className="ks-skeleton-line title" />
-                  <div className="ks-skeleton-line price" />
-                  <div className="ks-skeleton-actions" />
-                </div>
-              ))}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0', gap: '10px', color: '#E10600', width: '100%', minHeight: '180px' }}>
+              <Loader2 size={24} className="ks-spin-icon" />
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#A3A3A3' }}>Loading products...</span>
             </div>
           ) : apiError ? (
             /* Error State with Retry */

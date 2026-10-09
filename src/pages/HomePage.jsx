@@ -47,10 +47,10 @@ export default function HomePage() {
     }
   });
 
-  // 3. Featured Products
+  // 3. Featured Products (Instant 0ms initial render from localStorage)
   const [featuredProducts, setFeaturedProducts] = useState(() => {
     try {
-      const cached = sessionStorage.getItem('ks_cached_featured_products');
+      const cached = localStorage.getItem('ks_cached_featured_products') || sessionStorage.getItem('ks_cached_featured_products');
       return cached ? JSON.parse(cached) : [];
     } catch {
       return [];
@@ -58,7 +58,7 @@ export default function HomePage() {
   });
   const [featuredLoading, setFeaturedLoading] = useState(() => {
     try {
-      const cached = sessionStorage.getItem('ks_cached_featured_products');
+      const cached = localStorage.getItem('ks_cached_featured_products') || sessionStorage.getItem('ks_cached_featured_products');
       return cached && JSON.parse(cached).length > 0 ? false : true;
     } catch {
       return true;

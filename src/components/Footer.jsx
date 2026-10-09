@@ -14,12 +14,13 @@ import {
   YouTubeIcon,
   WhatsAppIcon
 } from './SocialIcons';
-import { useSite } from '../context/SiteContext';
+import { useSite, DEFAULT_LOGO_URL } from '../context/SiteContext';
 
 export default function Footer({ siteSettings: propSettings }) {
   const siteCtx = useSite();
   const siteSettings = (propSettings && Object.keys(propSettings).length > 0) ? propSettings : (siteCtx?.siteSettings || {});
   const currentYear = new Date().getFullYear();
+  const logoSrc = siteSettings?.logo_path || DEFAULT_LOGO_URL;
 
   const cleanWhatsApp = siteSettings?.whatsapp_number
     ? siteSettings.whatsapp_number.replace(/[^0-9]/g, '')
@@ -36,11 +37,11 @@ export default function Footer({ siteSettings: propSettings }) {
     { key: 'x', url: rawSocial.x?.url || siteSettings?.x_url, label: 'X', icon: TwitterXIcon }
   ].filter((s) => Boolean(s.url));
 
-  // Authoritative real data from Admin Panel
+  // Authoritative real data from Admin Panel with real Tyre store location
   const phoneNumber = siteSettings?.phone_number || siteSettings?.location?.phone_number || '+961 70 973 086';
   const emailAddress = siteSettings?.email || 'support@keepersportlb.com';
-  const locationCity = siteSettings?.location?.store_name || 'Beirut';
-  const locationAddress = siteSettings?.location?.full_address || siteSettings?.location_address || siteSettings?.location_name || 'Beirut, Lebanon';
+  const locationCity = 'Tyre';
+  const locationAddress = 'Hanaway Main Street, Tyre, South Lebanon';
 
   return (
     <footer className="ks-footer-root" role="contentinfo">
@@ -49,22 +50,22 @@ export default function Footer({ siteSettings: propSettings }) {
           {/* Column 1: Bigger Keeper Sports Logo + Description + Circular Social Icons */}
           <div className="ks-footer-brand-col">
             <Link to="/" className="ks-footer-brand-link" aria-label="Keeper Sports Home">
-              {siteSettings?.logo_path ? (
-                <img
-                  src={siteSettings.logo_path}
-                  alt={siteSettings?.site_name || 'Keeper Sports'}
-                  className="ks-footer-logo-img ks-footer-logo-larger"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const fb = e.currentTarget.parentElement?.querySelector('.ks-footer-logo-fallback');
-                    if (fb) fb.style.display = 'flex';
-                  }}
-                />
-              ) : null}
+              <img
+                src={logoSrc}
+                alt={siteSettings?.site_name || 'Keeper Sports'}
+                className="ks-footer-logo-img ks-footer-logo-larger"
+                loading="lazy"
+                decoding="async"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const fb = e.currentTarget.parentElement?.querySelector('.ks-footer-logo-fallback');
+                  if (fb) fb.style.display = 'flex';
+                }}
+              />
 
               <div
                 className="ks-footer-logo-fallback"
-                style={{ display: siteSettings?.logo_path ? 'none' : 'flex' }}
+                style={{ display: 'none' }}
               >
                 <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.6rem', fontWeight: 900, color: '#FFFFFF' }}>
                   {siteSettings?.site_name || 'KEEPER SPORTS'}

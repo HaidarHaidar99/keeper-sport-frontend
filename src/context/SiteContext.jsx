@@ -7,20 +7,45 @@ const SETTINGS_STORAGE_KEY = 'ks_cached_site_settings';
 const CATEGORIES_STORAGE_KEY = 'ks_cached_categories';
 const COUNTS_STORAGE_KEY = 'ks_cached_user_counts';
 
+export const DEFAULT_LOGO_URL = 'https://efdrzxtxqpwvhnyjpcqk.supabase.co/storage/v1/object/public/keeper-media/uploads/1791285583629_cc9704f6c79a.jpg';
+
+export const DEFAULT_SITE_SETTINGS = {
+  site_name: 'Keeper Sports',
+  logo_path: DEFAULT_LOGO_URL,
+  phone_number: '+961 70 973 086',
+  email: 'support@keepersportlb.com',
+  whatsapp_number: '+961 70 973 086',
+  instagram_url: 'https://instagram.com/keepersportlb',
+  tiktok_url: 'https://tiktok.com/@keepersportlb',
+  location_name: 'Keeper Sports',
+  location_address: 'Hanaway Main Street, Tyre, South Lebanon',
+  location_url: 'https://maps.app.goo.gl/mffodPxBbR573zzk8',
+  location: {
+    is_active: true,
+    location_name: 'Keeper Sports',
+    address: 'Hanaway Main Street, Tyre, South Lebanon',
+    store_name: 'Tyre',
+    full_address: 'Hanaway Main Street, Tyre, South Lebanon',
+    location_url: 'https://maps.app.goo.gl/mffodPxBbR573zzk8',
+    phone_number: '+961 70 973 086',
+    whatsapp_number: '+961 70 973 086'
+  }
+};
+
 export function SiteProvider({ children }) {
-  // Read initial cache if available for instant zero-latency render
+  // Read initial cache if available for instant zero-latency render, fallback to default settings
   const [siteSettings, setSiteSettings] = useState(() => {
     try {
-      const cached = sessionStorage.getItem(SETTINGS_STORAGE_KEY);
-      return cached ? JSON.parse(cached) : null;
+      const cached = localStorage.getItem(SETTINGS_STORAGE_KEY) || sessionStorage.getItem(SETTINGS_STORAGE_KEY);
+      return cached ? JSON.parse(cached) : DEFAULT_SITE_SETTINGS;
     } catch {
-      return null;
+      return DEFAULT_SITE_SETTINGS;
     }
   });
 
   const [categories, setCategories] = useState(() => {
     try {
-      const cached = sessionStorage.getItem(CATEGORIES_STORAGE_KEY);
+      const cached = localStorage.getItem(CATEGORIES_STORAGE_KEY) || sessionStorage.getItem(CATEGORIES_STORAGE_KEY);
       return cached ? JSON.parse(cached) : [];
     } catch {
       return [];
@@ -29,7 +54,7 @@ export function SiteProvider({ children }) {
 
   const [counts, setCounts] = useState(() => {
     try {
-      const cached = sessionStorage.getItem(COUNTS_STORAGE_KEY);
+      const cached = localStorage.getItem(COUNTS_STORAGE_KEY) || sessionStorage.getItem(COUNTS_STORAGE_KEY);
       return cached ? JSON.parse(cached) : { cart: 0, favorites: 0, orders: 0, notifications: 0 };
     } catch {
       return { cart: 0, favorites: 0, orders: 0, notifications: 0 };
@@ -43,9 +68,12 @@ export function SiteProvider({ children }) {
     try {
       const res = await contentApi.getSiteSettings();
       if (res?.success && res.settings) {
-        setSiteSettings(res.settings);
+        const merged = { ...DEFAULT_SITE_SETTINGS, ...res.settings };
+        if (!merged.logo_path) merged.logo_path = DEFAULT_LOGO_URL;
+        setSiteSettings(merged);
         try {
-          sessionStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(res.settings));
+          localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
+          sessionStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
         } catch {}
       }
     } catch (err) {
@@ -60,6 +88,7 @@ export function SiteProvider({ children }) {
       if (res?.success && Array.isArray(res.categories)) {
         setCategories(res.categories);
         try {
+          localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(res.categories));
           sessionStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(res.categories));
         } catch {}
       }
@@ -117,20 +146,25 @@ export function SiteProvider({ children }) {
       .then(([settingsRes, catsRes, countsRes]) => {
         if (!isMounted) return;
         if (settingsRes?.success && settingsRes.settings) {
-          setSiteSettings(settingsRes.settings);
+          const merged = { ...DEFAULT_SITE_SETTINGS, ...settingsRes.settings };
+          if (!merged.logo_path) merged.logo_path = DEFAULT_LOGO_URL;
+          setSiteSettings(merged);
           try {
-            sessionStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settingsRes.settings));
+            localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
+            sessionStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
           } catch {}
         }
         if (catsRes?.success && Array.isArray(catsRes.categories)) {
           setCategories(catsRes.categories);
           try {
+            localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(catsRes.categories));
             sessionStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(catsRes.categories));
           } catch {}
         }
         if (countsRes?.success && countsRes.counts) {
           setCounts(countsRes.counts);
           try {
+            localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(countsRes.counts));
             sessionStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(countsRes.counts));
           } catch {}
         }

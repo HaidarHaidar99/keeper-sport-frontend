@@ -183,9 +183,13 @@ export default function ProductCard({
       className={`ks-product-card ${isOutOfStock ? 'is-out-of-stock' : ''}`}
       onClick={handleCardClick}
       data-product-id={product.id}
+      style={{ padding: 0, overflow: 'hidden', borderRadius: '24px' }}
     >
       {/* Product Image Area: covers full upper area without spaces */}
-      <div className="ks-card-media-wrap ks-card-media-fullbleed">
+      <div
+        className="ks-card-media-wrap ks-card-media-fullbleed"
+        style={{ width: '100%', margin: 0, padding: 0, aspectRatio: '1 / 1', overflow: 'hidden', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', position: 'relative' }}
+      >
         <a
           href={productUrl}
           onClick={(e) => {
@@ -194,6 +198,7 @@ export default function ProductCard({
           }}
           className="ks-card-img-link"
           aria-label={`View details for ${product.name}`}
+          style={{ display: 'block', width: '100%', height: '100%', margin: 0, padding: 0 }}
         >
           {primaryImgSrc ? (
             <img
@@ -201,6 +206,8 @@ export default function ProductCard({
               alt={product.name || 'Keeper Sports Product'}
               className="ks-card-img"
               loading="lazy"
+              decoding="async"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', margin: 0, padding: 0 }}
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 const fb = e.currentTarget.parentElement?.querySelector('.ks-card-img-fallback');
@@ -229,7 +236,7 @@ export default function ProductCard({
           </div>
         )}
 
-        {/* Favorite Heart Button: Top Left */}
+        {/* Favorite Heart Button: Top Left (Background stays dark, only heart icon is red) */}
         <button
           ref={heartBtnRef}
           type="button"
@@ -237,6 +244,7 @@ export default function ProductCard({
           className={`ks-card-fav-btn ks-card-fav-left ${isFavorited ? 'is-active' : ''} ${favAnimating ? 'is-animating' : ''}`}
           aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
           title={isFavorited ? 'Favorited' : 'Add to Favorites'}
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', border: '1px solid rgba(255, 255, 255, 0.25)', borderRadius: '50%' }}
         >
           <Heart
             size={18}

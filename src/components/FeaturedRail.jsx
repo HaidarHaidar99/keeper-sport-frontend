@@ -57,16 +57,9 @@ export default function FeaturedRail({
       <div className="ks-featured-rail-track-wrap">
         <div className="ks-featured-rail-track" ref={scrollRef}>
           {loading ? (
-            // Minimal Loading Skeletons
-            Array.from({ length: 4 }).map((_, idx) => (
-              <div key={idx} className="ks-product-card-skeleton" aria-hidden="true">
-                <div className="ks-skeleton-img" />
-                <div className="ks-skeleton-line short" />
-                <div className="ks-skeleton-line title" />
-                <div className="ks-skeleton-line price" />
-                <div className="ks-skeleton-actions" />
-              </div>
-            ))
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 0', gap: '10px', color: '#E10600', width: '100%' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#A3A3A3' }}>Loading featured gear...</span>
+            </div>
           ) : (
             products.map((prod) => (
               <div key={prod.id} className="ks-featured-rail-item">

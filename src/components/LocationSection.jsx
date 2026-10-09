@@ -4,9 +4,9 @@ import { MapPin, ExternalLink } from 'lucide-react';
 export default function LocationSection({ siteSettings = {} }) {
   const loc = siteSettings?.location || {};
   const isVisible = loc.is_visible !== undefined ? loc.is_visible : (siteSettings?.location_is_visible !== false);
-  const locationName = loc.store_name || siteSettings?.location_name || 'Keeper Sports Store';
-  const address = loc.full_address || siteSettings?.full_address || siteSettings?.location_address || siteSettings?.location_name || 'Beirut, Lebanon';
-  const mapsUrl = loc.google_maps_url || siteSettings?.location_url || null;
+  const locationName = loc.store_name || siteSettings?.location_name || 'Keeper Sports';
+  const address = 'Hanaway Main Street, Tyre, South Lebanon';
+  const mapsUrl = loc.google_maps_url || siteSettings?.location_url || 'https://maps.app.goo.gl/mffodPxBbR573zzk8';
 
   if (!isVisible && !address && !mapsUrl) {
     return null;

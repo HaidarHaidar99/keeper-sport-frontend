@@ -67,11 +67,13 @@ async function safeRequest(url, options = {}) {
 }
 
 let featuredCache = { data: null, timestamp: 0, limit: 0 };
-const FEATURED_CACHE_TTL = 30 * 1000;
+const FEATURED_CACHE_TTL = 60 * 1000;
+const productsMemoryCache = new Map();
+const PRODUCTS_CACHE_TTL = 45 * 1000;
 
 export const productApi = {
   /**
-   * Query catalog products with filters, search, sort, pagination
+   * Query catalog products with filters, search, sort, pagination (cached 45s)
    */
   async getProducts(params = {}) {
     const query = new URLSearchParams();
@@ -87,23 +89,55 @@ export const productApi = {
     if (params.max_price) query.append('max_price', params.max_price);
 
     const qs = query.toString();
+    const cacheKey = qs || 'default';
+    const now = Date.now();
+
+    const cachedEntry = productsMemoryCache.get(cacheKey);
+    if (cachedEntry && now - cachedEntry.timestamp < PRODUCTS_CACHE_TTL) {
+      return cachedEntry.data;
+    }
+
     const url = `${API_BASE}/products${qs ? `?${qs}` : ''}`;
-    return safeRequest(url);
+    const res = await safeRequest(url);
+
+    if (res && res.success) {
+      productsMemoryCache.set(cacheKey, { data: res, timestamp: now });
+    }
+
+    return res;
   },
 
   /**
-   * Query dynamic featured rail products (cached 30s)
+   * Query dynamic featured rail products (cached in memory and localStorage for instant 0ms load)
    */
   async getFeaturedProducts(limit = 10) {
     const now = Date.now();
     if (featuredCache.data && featuredCache.limit === limit && now - featuredCache.timestamp < FEATURED_CACHE_TTL) {
       return featuredCache.data;
     }
-    const res = await safeRequest(`${API_BASE}/products/featured?limit=${limit}`);
-    if (res && res.success) {
-      featuredCache = { data: res, timestamp: now, limit };
+
+    // Check localStorage cache if memory cache is empty
+    if (!featuredCache.data && typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('ks_cached_featured_products');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            featuredCache = { data: { success: true, products: parsed }, timestamp: now, limit };
+          }
+        }
+      } catch {}
     }
-    return res;
+
+    const res = await safeRequest(`${API_BASE}/products/featured?limit=${limit}`);
+    if (res && res.success && Array.isArray(res.products)) {
+      featuredCache = { data: res, timestamp: now, limit };
+      try {
+        localStorage.setItem('ks_cached_featured_products', JSON.stringify(res.products));
+        sessionStorage.setItem('ks_cached_featured_products', JSON.stringify(res.products));
+      } catch {}
+    }
+    return res.success ? res : (featuredCache.data || res);
   },
 
   /**

@@ -87,10 +87,6 @@ export default function ShopByCategory({ categories = [] }) {
               <div className="ks-category-card-scrim" />
               <div className="ks-category-card-content-bottom">
                 <h3 className="ks-category-card-name">{cat.name}</h3>
-                <span className="ks-category-card-cta">
-                  <span>Explore</span>
-                  <ArrowRight size={14} />
-                </span>
               </div>
             </Link>
           ))}
