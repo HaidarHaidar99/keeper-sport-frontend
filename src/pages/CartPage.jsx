@@ -116,10 +116,63 @@ export default function CartPage() {
   const handleSelectVariant = async (itemId, variantId) => {
     if (updatingItemId) return;
     setUpdatingItemId(itemId);
+
+    // Instant zero-latency optimistic UI update in the exact same millisecond
+    setCart((prev) => {
+      if (!prev) return prev;
+      let newSubtotal = 0;
+      const updatedItems = (prev.items || []).map((it) => {
+        if (it.id === itemId) {
+          const found = (it.availableVariants || []).find((v) => v.id === variantId);
+          const newSize = found ? (found.size_value || found.size) : it.selectedSize;
+          const newColor = found ? (found.color_value || found.color) : it.selectedColor;
+          const newUnitPrice = found?.price ? Number(found.price) : Number(it.unitPrice || 0);
+          const lineTotal = newUnitPrice * it.quantity;
+          newSubtotal += lineTotal;
+          return {
+            ...it,
+            variantId,
+            selectedVariantId: variantId,
+            selectedSize: newSize,
+            selectedColor: newColor,
+            unitPrice: newUnitPrice,
+            lineTotal,
+            requiresVariantSelection: false,
+            variant: found ? {
+              id: found.id,
+              size: newSize,
+              color: newColor,
+              stock_quantity: found.stock_quantity
+            } : it.variant
+          };
+        }
+        const unitPrice = Number(it.unitPrice || it.product?.base_price || 0);
+        newSubtotal += Number(it.lineTotal != null ? it.lineTotal : unitPrice * it.quantity);
+        return it;
+      });
+      return {
+        ...prev,
+        items: updatedItems,
+        subtotal: parseFloat(newSubtotal.toFixed(2))
+      };
+    });
+
     try {
       const res = await productApi.updateCartItemVariant(itemId, variantId);
       if (res?.success) {
-        await loadCart();
+        const rawItems = Array.isArray(res.items)
+          ? res.items
+          : Array.isArray(res.cart?.items)
+          ? res.cart.items
+          : null;
+        if (rawItems) {
+          setCart({
+            ...(res.cart || {}),
+            items: rawItems,
+            subtotal: res.subtotal != null ? res.subtotal : res.cart?.subtotal || 0,
+            cartCount: res.cartCount != null ? res.cartCount : res.cart?.cartCount || 0
+          });
+        }
         if (typeof refreshCounts === 'function') refreshCounts();
       } else {
         await loadCart();
@@ -284,6 +337,14 @@ export default function CartPage() {
                 const colorVal = item.selectedColor || item.variant?.color;
                 const isUpdating = updatingItemId === item.id;
 
+                // Extract available size variants for interactive pills
+                const availableVariants = Array.isArray(item.availableVariants) ? item.availableVariants : [];
+                const sizeVariants = availableVariants.filter((v) => {
+                  const s = (v.size_value || v.size || '').replace(/standard/gi, '').trim();
+                  return Boolean(s);
+                });
+                const hasSizes = sizeVariants.length > 0;
+
                 return (
                   <div key={item.id} className="ks-cart-item-row" style={{ opacity: isUpdating ? 0.6 : 1 }}>
                     <div className="ks-cart-item-img-wrap">
@@ -302,45 +363,47 @@ export default function CartPage() {
                       <h3 className="ks-cart-item-name">
                         <Link to={`/products/${productSlug}`}>{productName}</Link>
                       </h3>
-                      <div className="ks-cart-item-meta">
-                        {sizeVal && !sizeVal.toLowerCase().includes('standard') && <span>Size: {sizeVal}</span>}
-                        {colorVal && <span>Color: {colorVal}</span>}
-                        {item.printedName && <span>Print: {item.printedName} #{item.printedNumber}</span>}
-                        {item.badge && <span>Badge: {item.badge}</span>}
-                      </div>
 
-                      {/* Deferred Size / Variant Selector */}
-                      {item.requiresVariantSelection && (
-                        <div className="ks-cart-variant-picker-box">
-                          <div className="ks-cart-variant-picker-label">
-                            <AlertTriangle size={13} className="ks-alert-icon" />
-                            <span>Please choose your size before checkout:</span>
-                          </div>
-                          <div className="ks-cart-variant-options-list">
-                            {Array.isArray(item.availableVariants) && item.availableVariants.length > 0 ? (
-                              item.availableVariants.map((v) => {
-                                const cleanLabel = (v.size || v.name || '').replace(/standard/gi, '').trim() || v.color || 'One Size';
-                                const cleanColor = v.color && v.size && !v.size.toLowerCase().includes('standard') ? `— ${v.color}` : '';
-                                return (
-                                  <button
-                                    key={v.id}
-                                    type="button"
-                                    onClick={() => handleSelectVariant(item.id, v.id)}
-                                    disabled={isUpdating}
-                                    className="ks-cart-variant-option-btn"
-                                  >
-                                    {cleanLabel} {cleanColor}
-                                  </button>
-                                );
-                              })
-                            ) : (
-                              <span className="ks-text-muted" style={{ fontSize: '12px' }}>
-                                No variants found.
-                              </span>
+                      {/* Interactive Size Pill Selector on Card */}
+                      {hasSizes && (
+                        <div className="ks-cart-size-picker-wrap">
+                          <div className="ks-cart-size-picker-header">
+                            <span className="ks-cart-size-title">SIZE:</span>
+                            {item.requiresVariantSelection && (
+                              <span className="ks-cart-size-required-badge">Choose Size</span>
                             )}
+                          </div>
+                          <div className="ks-cart-size-pills">
+                            {sizeVariants.map((v) => {
+                              const sText = (v.size_value || v.size || '').replace(/standard/gi, '').trim();
+                              const isSelected = item.variantId === v.id || item.selectedVariantId === v.id || item.selectedSize === sText;
+                              const isOutOfStock = v.stock_quantity <= 0;
+                              return (
+                                <button
+                                  key={v.id}
+                                  type="button"
+                                  disabled={isOutOfStock || isUpdating}
+                                  onClick={() => handleSelectVariant(item.id, v.id)}
+                                  className={`ks-cart-size-pill ${isSelected ? 'active' : ''} ${isOutOfStock ? 'out-of-stock' : ''}`}
+                                  title={isOutOfStock ? `${sText} (Out of Stock)` : `Choose Size ${sText}`}
+                                >
+                                  {sText}
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       )}
+
+                      {/* Item Meta Details - NO repetitive "size size size" */}
+                      <div className="ks-cart-item-meta">
+                        {!hasSizes && sizeVal && !sizeVal.toLowerCase().includes('standard') && (
+                          <span>Size: {sizeVal}</span>
+                        )}
+                        {colorVal && <span>Color: {colorVal}</span>}
+                        {item.printedName && <span>Print: {item.printedName} #{item.printedNumber || ''}</span>}
+                        {item.badge && <span>Badge: {item.badge}</span>}
+                      </div>
 
 
                       {/* Visible, high-contrast Quantity Controls and Delete */}

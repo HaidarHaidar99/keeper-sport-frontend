@@ -9273,3 +9273,310 @@ a:focus-visible {
     margin-top: 6px !important;
   }
 }
+
+/* =============================================================================
+   ORDER INFO FIELDS & CHECKOUT RESPONSIVENESS
+   ============================================================================= */
+.ks-checkout-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 380px !important;
+  gap: 32px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  align-items: start !important;
+}
+
+@media (max-width: 960px) {
+  .ks-checkout-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 24px !important;
+  }
+}
+
+.ks-checkout-form-col,
+.ks-checkout-summary-col {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.ks-checkout-card {
+  background: var(--ks-bg-card, #12141a) !important;
+  border: 1px solid var(--ks-border-card, rgba(255, 255, 255, 0.08)) !important;
+  border-radius: 24px !important;
+  padding: 28px 24px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+@media (max-width: 640px) {
+  .ks-checkout-card {
+    padding: 18px 14px !important;
+    border-radius: 20px !important;
+  }
+}
+
+/* Order Form Row: 2-column on desktop, single responsive column on mobile */
+.ks-form-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 16px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  margin-bottom: 0 !important;
+}
+
+@media (max-width: 680px) {
+  .ks-form-row {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    width: 100% !important;
+  }
+}
+
+.ks-form-group {
+  display: flex !important;
+  flex-direction: column !important;
+  margin-bottom: 18px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.ks-label {
+  display: block !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  color: var(--ks-text-muted, #9ca3af) !important;
+  margin-bottom: 8px !important;
+  text-transform: uppercase !important;
+}
+
+.ks-input {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: 48px !important;
+  padding: 0 16px !important;
+  background-color: var(--ks-bg-input, rgba(255, 255, 255, 0.05)) !important;
+  border: 1px solid var(--ks-border-input, rgba(255, 255, 255, 0.12)) !important;
+  border-radius: 24px !important;
+  color: var(--ks-text-title, #ffffff) !important;
+  font-size: 15px !important;
+  font-family: inherit !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+@media (max-width: 640px) {
+  .ks-input {
+    font-size: 16px !important; /* Prevents auto-zoom on iOS */
+    height: 46px !important;
+    padding: 0 14px !important;
+  }
+}
+
+.ks-input:focus {
+  border-color: var(--ks-accent-red, #E10600) !important;
+  box-shadow: 0 0 0 2px rgba(225, 6, 0, 0.15) !important;
+}
+
+.ks-input.has-error {
+  border-color: var(--ks-error-red, #ef4444) !important;
+  background-color: rgba(239, 68, 68, 0.04) !important;
+}
+
+.ks-field-error {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--ks-error-red, #ef4444) !important;
+  margin-top: 6px !important;
+  line-height: 1.3 !important;
+}
+
+/* Payment Options Responsive Styling */
+.ks-payment-method-title {
+  font-size: 0.85rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: var(--ks-text-title, #ffffff) !important;
+  margin: 22px 0 12px !important;
+}
+
+.ks-payment-options {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.ks-payment-option-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 14px 18px !important;
+  border: 1px solid var(--ks-border-card, rgba(255, 255, 255, 0.1)) !important;
+  border-radius: 18px !important;
+  background: var(--ks-bg-card, rgba(255, 255, 255, 0.02)) !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  transition: all 0.2s ease !important;
+}
+
+.ks-payment-option-label:hover {
+  border-color: rgba(225, 6, 0, 0.4) !important;
+}
+
+.ks-payment-option-label input[type="radio"] {
+  accent-color: var(--ks-accent-red, #E10600) !important;
+  width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0 !important;
+  cursor: pointer !important;
+}
+
+.ks-payment-option-label div {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+}
+
+.ks-payment-option-label strong {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: var(--ks-text-title, #ffffff) !important;
+}
+
+.ks-payment-option-label span {
+  font-size: 12px !important;
+  color: var(--ks-text-muted, #9ca3af) !important;
+}
+
+/* WhatsApp Forwarding Button */
+.ks-order-whatsapp-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  background: #25D366 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  letter-spacing: 0.04em !important;
+  padding: 14px 24px !important;
+  border-radius: 24px !important;
+  text-decoration: none !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease !important;
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.ks-order-whatsapp-btn:hover {
+  background: #20bd5a !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45) !important;
+}
+
+/* =============================================================================
+   CART INTERACTIVE SIZE PILL SELECTOR
+   ============================================================================= */
+.ks-cart-size-picker-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  margin: 8px 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.ks-cart-size-picker-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.ks-cart-size-title {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  color: var(--ks-text-muted, #9ca3af) !important;
+  text-transform: uppercase !important;
+}
+
+.ks-cart-size-required-badge {
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  color: #ffffff !important;
+  background: var(--ks-accent-red, #E10600) !important;
+  padding: 2px 8px !important;
+  border-radius: 10px !important;
+}
+
+.ks-cart-size-pills {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  align-items: center !important;
+  max-width: 100% !important;
+}
+
+.ks-cart-size-pill {
+  min-width: 34px !important;
+  height: 30px !important;
+  padding: 0 10px !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  border: 1px solid var(--ks-border-card, rgba(255, 255, 255, 0.15)) !important;
+  background: var(--ks-bg-card, rgba(255, 255, 255, 0.04)) !important;
+  color: var(--ks-text-title, #ffffff) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s ease !important;
+  user-select: none !important;
+  box-sizing: border-box !important;
+}
+
+.ks-cart-size-pill:hover:not(:disabled) {
+  border-color: var(--ks-accent-red, #E10600) !important;
+  color: var(--ks-accent-red, #E10600) !important;
+  background: rgba(225, 6, 0, 0.06) !important;
+}
+
+.ks-cart-size-pill.active {
+  background: var(--ks-accent-red, #E10600) !important;
+  border-color: var(--ks-accent-red, #E10600) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(225, 6, 0, 0.35) !important;
+}
+
+.ks-cart-size-pill.out-of-stock,
+.ks-cart-size-pill.disabled,
+.ks-cart-size-pill:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  text-decoration: line-through !important;
+}

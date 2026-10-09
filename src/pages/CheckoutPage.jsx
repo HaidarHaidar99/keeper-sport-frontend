@@ -7,6 +7,7 @@ import { productApi } from '../api/productApi';
 import { saveGuestOrder, saveGuestOrderToken } from '../utils/guestIdentity';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { WhatsAppIcon } from '../components/SocialIcons';
 
 export default function CheckoutPage() {
   const [searchParams] = useSearchParams();
@@ -183,7 +184,92 @@ export default function CheckoutPage() {
           saveGuestOrder({ ...res.order, guestAccessToken: token });
         }
         if (typeof refreshCounts === 'function') refreshCounts();
-        setOrderComplete(res.order);
+
+        // 1. Compile ALL Order Information for WhatsApp
+        const orderNumber = res.order.order_number || 'N/A';
+        const customerName = formData.customer_full_name.trim();
+        const customerPhone = formData.customer_phone.trim();
+        const customerEmail = formData.customer_email.trim() || 'Not specified';
+        const customerArea = formData.area.trim();
+        const customerAddress = formData.address.trim();
+        const customerLocationUrl = formData.location_url?.trim() || '';
+        const paymentMethodLabel = formData.payment_method === 'whish_money' ? 'Whish Money (App Transfer)' : 'Cash on Delivery (COD)';
+        const subtotalVal = Number(res.order.subtotal != null ? res.order.subtotal : subtotal).toFixed(2);
+        const deliveryVal = Number(res.order.delivery_fee != null ? res.order.delivery_fee : deliveryFee).toFixed(2);
+        const totalVal = Number(res.order.total != null ? res.order.total : total).toFixed(2);
+
+        const itemsSummaryText = checkoutItems.map((item, idx) => {
+          const lines = [
+            `${idx + 1}. *${item.name}*`,
+            `   • Qty: ${item.quantity} × $${Number(item.unitPrice).toFixed(2)} = $${(item.quantity * item.unitPrice).toFixed(2)}`
+          ];
+          if (item.size && !item.size.toLowerCase().includes('standard')) {
+            lines.push(`   • Size: ${item.size}`);
+          }
+          if (item.color) {
+            lines.push(`   • Color: ${item.color}`);
+          }
+          if (item.printedName) {
+            lines.push(`   • Custom Print: ${item.printedName}${item.printedNumber ? ` #${item.printedNumber}` : ''}`);
+          }
+          if (item.badge) {
+            lines.push(`   • Badge: ${item.badge}`);
+          }
+          return lines.join('\n');
+        }).join('\n\n');
+
+        const fullWhatsAppMessage = `⚽ *NEW ORDER - KEEPER SPORTS*
+━━━━━━━━━━━━━━━━━━━━
+📋 *Order #:* ${orderNumber}
+👤 *Customer:* ${customerName}
+📞 *Phone:* ${customerPhone}
+📧 *Email:* ${customerEmail}
+📍 *City / Area:* ${customerArea}
+🏠 *Address:* ${customerAddress}${customerLocationUrl ? `\n🗺️ *Maps Link:* ${customerLocationUrl}` : ''}
+💳 *Payment:* ${paymentMethodLabel}
+
+━━━━━━━━━━━━━━━━━━━━
+📦 *ORDER ITEMS (${checkoutItems.length}):*
+${itemsSummaryText}
+
+━━━━━━━━━━━━━━━━━━━━
+💰 *Subtotal:* $${subtotalVal}
+🚚 *Delivery Fee:* $${deliveryVal}
+🔥 *GRAND TOTAL:* $${totalVal}
+━━━━━━━━━━━━━━━━━━━━
+Thank you for shopping with Keeper Sports! ⚽`;
+
+        // 2. Resolve target WhatsApp numbers (Store configured in site settings / fields)
+        const storeRawNumber = siteSettings?.whatsapp_number || siteSettings?.phone_number || '+961 70 973 086';
+        const cleanStoreNumber = storeRawNumber.replace(/[^0-9]/g, '') || '96170973086';
+        const storeWhatsAppUrl = `https://wa.me/${cleanStoreNumber}?text=${encodeURIComponent(fullWhatsAppMessage)}`;
+
+        // Also prepare customer WhatsApp URL if customer phone provided
+        const cleanCustomerPhone = customerPhone.replace(/[^0-9]/g, '');
+        const customerWhatsAppUrl = cleanCustomerPhone ? `https://wa.me/${cleanCustomerPhone}?text=${encodeURIComponent(fullWhatsAppMessage)}` : null;
+
+        // Auto-open WhatsApp forwarding
+        try {
+          window.open(storeWhatsAppUrl, '_blank');
+        } catch (e) {
+          console.warn('Could not auto-open WhatsApp tab:', e);
+        }
+
+        setOrderComplete({
+          ...res.order,
+          storeRawNumber,
+          storeWhatsAppUrl,
+          customerWhatsAppUrl,
+          fullWhatsAppMessage,
+          customerName,
+          customerPhone,
+          customerArea,
+          customerAddress,
+          paymentMethodLabel,
+          subtotalVal,
+          deliveryVal,
+          totalVal
+        });
       } else {
         setServerError(res.message || 'Could not complete order. Please try again.');
       }
@@ -203,30 +289,85 @@ export default function CheckoutPage() {
           <div className="ks-order-success-card">
             <CheckCircle2 size={54} style={{ color: '#16a34a', margin: '0 auto 16px' }} />
             <h1 className="ks-catalog-title">Order Confirmed!</h1>
-            <p className="ks-catalog-subtitle" style={{ marginBottom: '20px' }}>
+            <p className="ks-catalog-subtitle" style={{ marginBottom: '16px' }}>
               Thank you for choosing Keeper Sports. Your order <strong>#{orderComplete.order_number}</strong> has been received and is being prepared.
             </p>
 
+            {/* Prominent WhatsApp Forward Action */}
+            <div className="ks-order-whatsapp-box" style={{ margin: '20px 0', padding: '20px 16px', borderRadius: '20px', background: 'rgba(37, 211, 102, 0.08)', border: '1px solid rgba(37, 211, 102, 0.35)', textAlign: 'center' }}>
+              <p style={{ margin: '0 0 12px', fontSize: '14px', fontWeight: 700, color: 'var(--ks-text-title)' }}>
+                All order details ready to send to WhatsApp:
+              </p>
+              <a
+                href={orderComplete.storeWhatsAppUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ks-order-whatsapp-btn"
+              >
+                <WhatsAppIcon size={22} />
+                <span>SEND ORDER TO WHATSAPP ({orderComplete.storeRawNumber})</span>
+              </a>
+
+              {orderComplete.customerWhatsAppUrl && (
+                <div style={{ marginTop: '12px' }}>
+                  <a
+                    href={orderComplete.customerWhatsAppUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: 'var(--ks-text-muted)',
+                      textDecoration: 'underline',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <WhatsAppIcon size={14} />
+                    <span>Send copy to Customer WhatsApp ({orderComplete.customerPhone})</span>
+                  </a>
+                </div>
+              )}
+            </div>
+
             <div className="ks-order-success-details">
               <div>
-                <span>Subtotal:</span>
-                <strong>${Number(orderComplete.subtotal != null ? orderComplete.subtotal : (orderComplete.total - (orderComplete.delivery_fee || 0))).toFixed(2)}</strong>
+                <span>Order Number:</span>
+                <strong>#{orderComplete.order_number}</strong>
               </div>
               <div>
-                <span>Delivery:</span>
-                <strong>${Number(orderComplete.delivery_fee || 0).toFixed(2)}</strong>
+                <span>Customer:</span>
+                <strong>{orderComplete.customerName}</strong>
+              </div>
+              <div>
+                <span>Phone:</span>
+                <strong>{orderComplete.customerPhone}</strong>
+              </div>
+              <div>
+                <span>Delivery Area:</span>
+                <strong>{orderComplete.customerArea}</strong>
+              </div>
+              <div>
+                <span>Subtotal:</span>
+                <strong>${orderComplete.subtotalVal}</strong>
+              </div>
+              <div>
+                <span>Delivery Fee:</span>
+                <strong>${orderComplete.deliveryVal}</strong>
               </div>
               <div>
                 <span>Grand Total:</span>
-                <strong style={{ color: 'var(--ks-accent-red)' }}>${Number(orderComplete.total).toFixed(2)}</strong>
+                <strong style={{ color: 'var(--ks-accent-red)' }}>${orderComplete.totalVal}</strong>
               </div>
               <div>
                 <span>Payment:</span>
-                <strong>Cash on Delivery</strong>
+                <strong>{orderComplete.paymentMethodLabel}</strong>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '24px' }}>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '24px', flexWrap: 'wrap' }}>
               <Link to="/orders" className="ks-btn-primary">
                 <span>VIEW MY ORDERS</span>
               </Link>
@@ -359,6 +500,20 @@ export default function CheckoutPage() {
                       />
                       {errors.address && <div className="ks-field-error">{errors.address}</div>}
                     </div>
+                  </div>
+
+                  <div className="ks-form-group">
+                    <label className="ks-label" htmlFor="chk-location-url">MAPS / GPS LINK (OPTIONAL)</label>
+                    <input
+                      id="chk-location-url"
+                      name="location_url"
+                      type="url"
+                      placeholder="e.g. Google Maps or WhatsApp Location Link"
+                      className="ks-input"
+                      value={formData.location_url}
+                      onChange={handleChange}
+                      disabled={isSubmitting}
+                    />
                   </div>
 
                   <h3 className="ks-payment-method-title">Payment Method</h3>
