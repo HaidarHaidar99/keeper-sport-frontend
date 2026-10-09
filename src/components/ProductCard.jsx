@@ -229,12 +229,12 @@ export default function ProductCard({
           </div>
         )}
 
-        {/* Favorite Heart Button: Top Right (or beside badge) */}
+        {/* Favorite Heart Button: Top Left */}
         <button
           ref={heartBtnRef}
           type="button"
           onClick={handleFavoriteClick}
-          className={`ks-card-fav-btn ${isFavorited ? 'is-active' : ''} ${favAnimating ? 'is-animating' : ''}`}
+          className={`ks-card-fav-btn ks-card-fav-left ${isFavorited ? 'is-active' : ''} ${favAnimating ? 'is-animating' : ''}`}
           aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
           title={isFavorited ? 'Favorited' : 'Add to Favorites'}
         >

@@ -8783,6 +8783,12 @@ textarea,
 }
 
 /* 12. ZERO CLICK/TAP SHADOW ON ANY BUTTON GLOBALLY */
+*,
+*::before,
+*::after {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
 button,
 a,
 .ks-btn,
@@ -8795,19 +8801,17 @@ a,
 .ks-hamburger-trigger,
 .ks-curtain-close-btn-creative,
 .ks-curtain-beauty-icon-btn,
-.ks-social-round-btn {
+.ks-social-round-btn,
+button:focus,
+button:active,
+button:focus-visible,
+a:focus,
+a:active,
+a:focus-visible {
   box-shadow: none !important;
   outline: none !important;
   -webkit-tap-highlight-color: transparent !important;
   user-select: none;
-}
-
-button:focus,
-button:active,
-a:focus,
-a:active {
-  box-shadow: none !important;
-  outline: none !important;
 }
 
 /* 13. PROMINENT BIGGER LOGOS */
@@ -8943,19 +8947,127 @@ a:active {
 }
 
 /* 16. PRODUCT CARD FULL-BLEED IMAGE COVER WITHOUT SPACES */
+.ks-product-card {
+  padding: 0 !important;
+  border-radius: 24px !important;
+  overflow: hidden !important;
+}
+
+.ks-card-media-wrap,
 .ks-card-media-fullbleed {
   margin: 0 !important;
   width: 100% !important;
-  border-radius: 20px 20px 0 0 !important;
+  aspect-ratio: 1 / 1 !important;
+  border-radius: 24px 24px 0 0 !important;
+  overflow: hidden !important;
+}
+
+.ks-card-img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  display: block !important;
+}
+
+.ks-card-body {
+  padding: 14px 16px 16px !important;
 }
 
 .ks-card-top-right-badges {
   position: absolute;
-  top: 10px;
-  right: 50px;
+  top: 12px !important;
+  right: 12px !important;
   z-index: 5;
   display: flex;
   align-items: center;
+}
+
+.ks-card-fav-left {
+  top: 12px !important;
+  left: 12px !important;
+  right: auto !important;
+}
+
+.ks-card-btn-plus {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  border-radius: 50% !important;
+}
+
+/* Equal 4-Card / 2x2 Grids for Categories & Featured Products */
+.ks-category-equal-grid,
+.ks-products-preview-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 16px !important;
+  margin-bottom: 32px !important;
+}
+
+@media (max-width: 1024px) {
+  .ks-category-equal-grid,
+  .ks-products-preview-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .ks-category-equal-grid,
+  .ks-products-preview-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+}
+
+.ks-category-equal-grid .ks-category-rail-card {
+  flex: none !important;
+  width: 100% !important;
+}
+
+/* Light Mode Overrides for Curtain Drawer Elements */
+[data-theme="light"] .ks-curtain-canvas {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+[data-theme="light"] .ks-curtain-top-bar {
+  border-bottom: 1px solid #EAEAEA !important;
+}
+
+[data-theme="light"] .ks-curtain-logo-text {
+  color: #000000 !important;
+}
+
+[data-theme="light"] .ks-curtain-close-btn-creative {
+  background-color: #F2F2F2 !important;
+  border-color: #E0E0E0 !important;
+  color: #000000 !important;
+}
+
+[data-theme="light"] .ks-curtain-close-btn-creative:hover {
+  background-color: #E10600 !important;
+  border-color: #E10600 !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="light"] .ks-curtain-beauty-card {
+  background-color: #F8F8F8 !important;
+  border-color: #E5E5E5 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .ks-curtain-beauty-icon-btn {
+  background-color: #EEEEEE !important;
+  border-color: #DDDDDD !important;
+  color: #111111 !important;
+}
+
+[data-theme="light"] .ks-curtain-beauty-icon-btn:hover {
+  background-color: #E10600 !important;
+  border-color: #E10600 !important;
+  color: #FFFFFF !important;
 }
 
 /* 17. FLYING HEART ANIMATION TO FAVORITE/NAV ICON */
@@ -9001,6 +9113,7 @@ a:active {
 /* 19. REMOVE PRODUCT-SHAPED SKELETON CARDS ACROSS SITE */
 .ks-product-skeleton,
 .ks-skeleton-card,
-.ks-card-skeleton {
+.ks-card-skeleton,
+.ks-product-card-skeleton {
   display: none !important;
 }

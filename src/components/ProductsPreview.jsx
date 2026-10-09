@@ -37,15 +37,7 @@ export default function ProductsPreview({
         ) : (
           <>
             {/* 4 Products Grid */}
-            <div
-              className="ks-products-preview-grid"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: '16px',
-                marginBottom: '32px'
-              }}
-            >
+            <div className="ks-products-preview-grid">
               {previewProducts.map((product) => (
                 <ProductCard
                   key={product.id}

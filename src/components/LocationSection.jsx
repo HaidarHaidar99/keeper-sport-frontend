@@ -19,9 +19,9 @@ export default function LocationSection({ siteSettings = {} }) {
         <div
           className="ks-location-card"
           style={{
-            maxWidth: '680px',
+            maxWidth: '520px',
             margin: '0 auto',
-            padding: '36px 32px',
+            padding: '28px 24px',
             borderRadius: '24px',
             backgroundColor: '#0E0E0E',
             border: '1px solid #222222',

@@ -54,15 +54,7 @@ export default function ShopByCategory({ categories = [] }) {
         </div>
 
         {/* 4 Equal Category Cards with Full Background Image */}
-        <div
-          className="ks-category-equal-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: '16px',
-            marginBottom: '32px'
-          }}
-        >
+        <div className="ks-category-equal-grid">
           {initialCategories.map((cat) => (
             <Link
               key={cat.id || cat.slug}
