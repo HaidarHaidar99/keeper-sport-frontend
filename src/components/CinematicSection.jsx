@@ -1,31 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
-import { contentApi } from '../api/contentApi';
 
-export default function CinematicSection({ storyData: propStoryData }) {
-  const [story, setStory] = useState(propStoryData || null);
+export default function CinematicSection() {
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef(null);
-
-  // If not passed as prop, fetch from API
-  useEffect(() => {
-    if (propStoryData) {
-      setStory(propStoryData);
-      return;
-    }
-
-    let isMounted = true;
-    contentApi.getHomepageStory().then((res) => {
-      if (isMounted && res?.success && res.story) {
-        setStory(res.story);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [propStoryData]);
 
   // Scroll reveal Intersection Observer
   useEffect(() => {
@@ -43,73 +20,49 @@ export default function CinematicSection({ storyData: propStoryData }) {
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [story]);
-
-  // If section is explicitly disabled by Admin or has no content, cleanly omit without gap
-  if (!story || story.is_active === false) {
-    return null;
-  }
-
-  const {
-    image_url,
-    heading,
-    subheading,
-    button_text = 'Shop Collection',
-    button_link = '/products'
-  } = story;
-
-  if (!heading && !image_url) {
-    return null;
-  }
+  }, []);
 
   return (
     <section
       ref={sectionRef}
       className={`ks-story-section ${isVisible ? 'is-in-view' : ''}`}
-      aria-label="Homepage Story"
+      aria-label="Story Showcase"
     >
       <div className="ks-story-container">
-        <div className="ks-story-card">
-          {/* Background Photography with Smooth Reveal */}
-          {image_url ? (
-            <div className="ks-story-media-wrap">
-              <img
-                src={image_url}
-                alt={heading || 'Keeper Sports Story'}
-                className="ks-story-img"
-                loading="lazy"
-                decoding="async"
-              />
-              <div className="ks-story-overlay-scrim" />
-            </div>
-          ) : (
-            <div className="ks-story-media-ambient" />
-          )}
+        <div className="ks-story-card" style={{ borderRadius: '24px', overflow: 'hidden', minHeight: '440px', position: 'relative' }}>
+          {/* Background Photography from frontend/images1/11.jpeg */}
+          <div className="ks-story-media-wrap">
+            <img
+              src="/images1/11.jpeg"
+              alt="Keeper Sports"
+              className="ks-story-img"
+              loading="lazy"
+              decoding="async"
+              onError={(e) => {
+                // Fallback to relative path if needed
+                e.currentTarget.src = '/images1/11.jpeg';
+              }}
+            />
+            <div className="ks-story-overlay-scrim" />
+          </div>
 
-          {/* Cinematic Text Entering from Above into Image Area */}
-          <div className="ks-story-content">
-            <span className="ks-story-eyebrow">AUTHENTIC MATCHDAY HERITAGE</span>
-
-            {heading && (
-              <h2 className="ks-story-heading">
-                {heading}
-              </h2>
-            )}
-
-            {subheading && (
-              <p className="ks-story-subheading">
-                {subheading}
-              </p>
-            )}
-
-            {button_text && button_link && (
-              <div className="ks-story-action">
-                <Link to={button_link} className="ks-story-btn">
-                  <span>{button_text}</span>
-                  <ArrowRight size={16} />
-                </Link>
-              </div>
-            )}
+          {/* Small Animated Falling Text in Pure White */}
+          <div className="ks-story-content" style={{ textAlign: 'center', padding: '40px 24px' }}>
+            <p
+              className="ks-story-falling-phrase"
+              style={{
+                fontFamily: 'Outfit, sans-serif',
+                fontSize: 'clamp(1.2rem, 2.5vw, 1.85rem)',
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: '#FFFFFF',
+                textShadow: '0 4px 20px rgba(0, 0, 0, 0.8)',
+                margin: 0
+              }}
+            >
+              ENGINEERED FOR CHAMPIONS &bull; ELEVATE YOUR GAME
+            </p>
           </div>
         </div>
       </div>

@@ -33,7 +33,7 @@ export default function HamburgerMenu({
     setTimeout(() => {
       setIsClosing(false);
       onClose();
-    }, 450);
+    }, 400);
   };
 
   // Close on route change
@@ -54,7 +54,7 @@ export default function HamburgerMenu({
       window.addEventListener('keydown', handleKeyDown);
       setTimeout(() => {
         closeBtnRef.current?.focus();
-      }, 120);
+      }, 100);
     }
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
@@ -97,9 +97,9 @@ export default function HamburgerMenu({
       {/* Backdrop */}
       <div className="ks-curtain-backdrop" onClick={handleClose} />
 
-      {/* Main Sliding Curtain Surface (Opens Smoothly, Slower Cascade Fall) */}
-      <div className="ks-curtain-canvas">
-        {/* Top Bar inside Curtain */}
+      {/* Main Sliding Curtain Surface (Top-Left Aligned, Full Theme Parity) */}
+      <div className="ks-curtain-canvas ks-curtain-canvas-theme">
+        {/* Top Header inside Curtain */}
         <div className="ks-curtain-top-bar">
           <div className="ks-curtain-brand">
             {siteSettings?.logo_path ? (
@@ -128,32 +128,34 @@ export default function HamburgerMenu({
           </button>
         </div>
 
-        {/* Dynamic Falling Content */}
-        <div className="ks-curtain-body-modern">
-          {/* Main Navigation Links: Falling One by One Slowly without 01, 02 numbers or CURRENT text */}
-          <nav className="ks-curtain-nav-list" aria-label="Mobile Navigation">
+        {/* Curtain Body: Aligned from BEGINNING of screen (Left & Top), NOT centered */}
+        <div className="ks-curtain-body-top-left">
+          {/* Main Navigation Links: Animated fall from top-left */}
+          <nav className="ks-curtain-nav-left" aria-label="Mobile Navigation">
             {navLinks.map((item, idx) => {
               const active = isItemActive(item.path);
               return (
                 <div
                   key={item.path}
-                  className="ks-curtain-falling-item"
-                  style={{ animationDelay: `${0.12 + idx * 0.08}s` }}
+                  className="ks-curtain-falling-item-left"
+                  style={{ animationDelay: `${0.08 + idx * 0.06}s` }}
                 >
                   <Link
                     to={item.path}
-                    className={`ks-curtain-modern-link ${active ? 'is-active' : ''}`}
+                    className={`ks-curtain-left-link ${active ? 'is-active' : ''}`}
                     onClick={handleClose}
                   >
-                    {item.label}
+                    {/* Small Red Dot Indicator to know which page we are on */}
+                    {active && <span className="ks-curtain-active-dot" aria-hidden="true" />}
+                    <span>{item.label}</span>
                   </Link>
                 </div>
               );
             })}
           </nav>
 
-          {/* Single Beauty Card: Small Circular Icons beside each other in the middle of screen */}
-          <div className="ks-curtain-beauty-card">
+          {/* Central Beauty Card: Small Circular Icons beside each other */}
+          <div className="ks-curtain-beauty-card ks-curtain-beauty-card-left">
             {/* Cart Icon */}
             <Link
               to="/cart"
@@ -210,7 +212,7 @@ export default function HamburgerMenu({
               )}
             </Link>
 
-            {/* Profile Icon (Goes to /profile if signed in, /login if not; NO username shown) */}
+            {/* Profile Icon */}
             <Link
               to={user ? '/profile' : '/login'}
               className="ks-curtain-beauty-icon-btn"

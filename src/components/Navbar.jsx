@@ -35,14 +35,14 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
     <>
       <header className="ks-navbar-root" role="banner">
         <div className="ks-navbar-container">
-          {/* Left: Prominent Keeper Sports Logo */}
+          {/* Left: Prominent & Bigger Keeper Sports Logo */}
           <div className="ks-navbar-left">
             <Link to="/" className="ks-navbar-brand-link" aria-label="Keeper Sports Home">
               {siteSettings?.logo_path ? (
                 <img
                   src={siteSettings.logo_path}
                   alt={siteSettings?.site_name || 'Keeper Sports'}
-                  className="ks-navbar-logo-img"
+                  className="ks-navbar-logo-img ks-navbar-logo-large"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     const fallback = e.currentTarget.parentElement?.querySelector('.ks-navbar-logo-fallback');
@@ -93,22 +93,22 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
             ))}
           </nav>
 
-          {/* Right: Circular Beauty Actions (No Transparent Square) */}
+          {/* Right: Actions */}
           <div className="ks-navbar-right">
-            {/* Search (Desktop only) */}
+            {/* Desktop Only: Search */}
             <Link
               to="/products"
-              className="ks-navbar-circle-btn ks-desktop-only-btn"
+              className="ks-navbar-circle-btn ks-desktop-only"
               aria-label="Search catalog"
-              title="Search catalog"
+              title="Search"
             >
               <Search size={18} />
             </Link>
 
-            {/* Favorites (Desktop only) */}
+            {/* Desktop Only: Favorites */}
             <Link
               to="/favorites"
-              className="ks-navbar-circle-btn ks-desktop-only-btn"
+              className="ks-navbar-circle-btn ks-desktop-only ks-desktop-fav-btn"
               aria-label="View favorites"
               title="Favorites"
             >
@@ -118,7 +118,7 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
               )}
             </Link>
 
-            {/* Cart Icon (Always visible on desktop and mobile) */}
+            {/* Cart Icon (Visible on Both Mobile & Desktop) */}
             <Link
               to="/cart"
               className="ks-navbar-circle-btn ks-nav-cart-btn"
@@ -126,26 +126,26 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
               aria-label="Shopping Cart"
               title="Cart"
             >
-              <ShoppingBag size={18} />
+              <ShoppingBag size={19} />
               {counts.cart > 0 && (
                 <span className="ks-navbar-badge-pill">{counts.cart}</span>
               )}
             </Link>
 
-            {/* Profile Icon (Desktop only) */}
+            {/* Desktop Only: Profile */}
             <Link
               to={user ? '/profile' : '/login'}
-              className="ks-navbar-circle-btn ks-desktop-only-btn"
+              className="ks-navbar-circle-btn ks-desktop-only"
               aria-label={user ? 'My Profile' : 'Sign In'}
               title={user ? 'My Profile' : 'Sign In'}
             >
               <User size={18} />
             </Link>
 
-            {/* Mobile Hamburger Trigger (Visible on mobile only) */}
+            {/* Mobile Navigation Button: Clean, NO circle background/border */}
             <button
               type="button"
-              className="ks-hamburger-trigger"
+              className="ks-hamburger-trigger ks-hamburger-clean"
               onClick={() => setMenuOpen(true)}
               aria-label="Open navigation menu"
               aria-expanded={menuOpen}
@@ -159,7 +159,7 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
         </div>
       </header>
 
-      {/* Full-Viewport Navigation Curtain for Mobile */}
+      {/* Full-Viewport Navigation Curtain */}
       <HamburgerMenu
         isOpen={menuOpen}
         onClose={() => setMenuOpen(false)}

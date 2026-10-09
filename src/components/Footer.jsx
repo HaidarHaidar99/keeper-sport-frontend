@@ -23,37 +23,37 @@ export default function Footer({ siteSettings: propSettings }) {
 
   const cleanWhatsApp = siteSettings?.whatsapp_number
     ? siteSettings.whatsapp_number.replace(/[^0-9]/g, '')
-    : null;
+    : '96170973086';
 
   const rawSocial = siteSettings?.social_media || {};
 
-  // Social platforms
   const socialLinks = [
     { key: 'instagram', url: rawSocial.instagram?.url || siteSettings?.instagram_url, label: 'Instagram', icon: InstagramIcon },
-    { key: 'whatsapp', url: rawSocial.whatsapp?.url || (cleanWhatsApp ? `https://wa.me/${cleanWhatsApp}` : null), label: 'WhatsApp', icon: WhatsAppIcon },
+    { key: 'whatsapp', url: rawSocial.whatsapp?.url || `https://wa.me/${cleanWhatsApp}`, label: 'WhatsApp', icon: WhatsAppIcon },
     { key: 'tiktok', url: rawSocial.tiktok?.url || siteSettings?.tiktok_url, label: 'TikTok', icon: TikTokIcon },
     { key: 'youtube', url: rawSocial.youtube?.url || siteSettings?.youtube_url, label: 'YouTube', icon: YouTubeIcon },
     { key: 'facebook', url: rawSocial.facebook?.url || siteSettings?.facebook_url, label: 'Facebook', icon: FacebookIcon },
     { key: 'x', url: rawSocial.x?.url || siteSettings?.x_url, label: 'X', icon: TwitterXIcon }
   ].filter((s) => Boolean(s.url));
 
-  const phoneNumber = siteSettings?.phone_number || '+961 70 973 086';
+  // Authoritative real data from Admin Panel
+  const phoneNumber = siteSettings?.phone_number || siteSettings?.location?.phone_number || '+961 70 973 086';
   const emailAddress = siteSettings?.email || 'support@keepersportlb.com';
   const locationCity = siteSettings?.location?.store_name || 'Beirut';
-  const locationAddress = siteSettings?.location?.full_address || siteSettings?.location_name || 'Beirut, Lebanon';
+  const locationAddress = siteSettings?.location?.full_address || siteSettings?.location_address || siteSettings?.location_name || 'Beirut, Lebanon';
 
   return (
     <footer className="ks-footer-root" role="contentinfo">
       <div className="ks-footer-container">
         <div className="ks-footer-grid">
-          {/* Column 1: Brand Logo + Description + Circular Social Media Icons */}
+          {/* Column 1: Bigger Keeper Sports Logo + Description + Circular Social Icons */}
           <div className="ks-footer-brand-col">
             <Link to="/" className="ks-footer-brand-link" aria-label="Keeper Sports Home">
               {siteSettings?.logo_path ? (
                 <img
                   src={siteSettings.logo_path}
                   alt={siteSettings?.site_name || 'Keeper Sports'}
-                  className="ks-footer-logo-img"
+                  className="ks-footer-logo-img ks-footer-logo-larger"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     const fb = e.currentTarget.parentElement?.querySelector('.ks-footer-logo-fallback');
@@ -66,17 +66,17 @@ export default function Footer({ siteSettings: propSettings }) {
                 className="ks-footer-logo-fallback"
                 style={{ display: siteSettings?.logo_path ? 'none' : 'flex' }}
               >
-                <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.4rem', fontWeight: 900, color: '#FFFFFF' }}>
+                <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.6rem', fontWeight: 900, color: '#FFFFFF' }}>
                   {siteSettings?.site_name || 'KEEPER SPORTS'}
                 </span>
               </div>
             </Link>
 
             <p className="ks-footer-brand-desc">
-              Keeper Sports — Your exclusive destination for authentic football gear, boots, official kits, and tournament matchday apparel.
+              Keeper Sports — Your exclusive destination for authentic football gear, boots, official club kits, and matchday apparel.
             </p>
 
-            {/* Circular Social Buttons Underneath Logo & Description */}
+            {/* Circular Social Buttons Underneath */}
             <div className="ks-footer-social-row">
               {socialLinks.length > 0 ? (
                 socialLinks.map(({ key, url, label, icon: Icon }) => (
@@ -97,7 +97,7 @@ export default function Footer({ siteSettings: propSettings }) {
                   <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="ks-footer-social-btn" aria-label="Instagram">
                     <InstagramIcon size={16} />
                   </a>
-                  <a href={`https://wa.me/${cleanWhatsApp || '96170973086'}`} target="_blank" rel="noopener noreferrer" className="ks-footer-social-btn" aria-label="WhatsApp">
+                  <a href={`https://wa.me/${cleanWhatsApp}`} target="_blank" rel="noopener noreferrer" className="ks-footer-social-btn" aria-label="WhatsApp">
                     <WhatsAppIcon size={16} />
                   </a>
                   <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" className="ks-footer-social-btn" aria-label="TikTok">
@@ -108,65 +108,65 @@ export default function Footer({ siteSettings: propSettings }) {
             </div>
           </div>
 
-          {/* Column 2: EXPLORE (with Chevron '>' links) */}
+          {/* Column 2: EXPLORE (Headers in Keeper Red, not gold) */}
           <div className="ks-footer-col">
-            <h4 className="ks-footer-col-title">EXPLORE</h4>
+            <h4 className="ks-footer-col-title" style={{ color: '#E10600' }}>EXPLORE</h4>
             <ul className="ks-footer-links-list">
               <li className="ks-footer-link-item">
                 <Link to="/">
-                  <ChevronRight size={14} className="ks-footer-link-chevron" />
+                  <ChevronRight size={14} className="ks-footer-link-chevron" style={{ color: '#E10600' }} />
                   <span>Home</span>
                 </Link>
               </li>
               <li className="ks-footer-link-item">
                 <Link to="/products">
-                  <ChevronRight size={14} className="ks-footer-link-chevron" />
+                  <ChevronRight size={14} className="ks-footer-link-chevron" style={{ color: '#E10600' }} />
                   <span>Products</span>
                 </Link>
               </li>
               <li className="ks-footer-link-item">
                 <Link to="/categories">
-                  <ChevronRight size={14} className="ks-footer-link-chevron" />
+                  <ChevronRight size={14} className="ks-footer-link-chevron" style={{ color: '#E10600' }} />
                   <span>Categories</span>
                 </Link>
               </li>
               <li className="ks-footer-link-item">
                 <Link to="/reviews">
-                  <ChevronRight size={14} className="ks-footer-link-chevron" />
+                  <ChevronRight size={14} className="ks-footer-link-chevron" style={{ color: '#E10600' }} />
                   <span>Reviews</span>
                 </Link>
               </li>
               <li className="ks-footer-link-item">
                 <Link to="/about">
-                  <ChevronRight size={14} className="ks-footer-link-chevron" />
+                  <ChevronRight size={14} className="ks-footer-link-chevron" style={{ color: '#E10600' }} />
                   <span>About Us</span>
                 </Link>
               </li>
               <li className="ks-footer-link-item">
                 <Link to="/contact">
-                  <ChevronRight size={14} className="ks-footer-link-chevron" />
+                  <ChevronRight size={14} className="ks-footer-link-chevron" style={{ color: '#E10600' }} />
                   <span>Contact</span>
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Column 3: CONTACT & SERVICES */}
+          {/* Column 3: CONTACT & SERVICES (Headers in Keeper Red, not gold) */}
           <div className="ks-footer-col">
-            <h4 className="ks-footer-col-title">CONTACT & SERVICES</h4>
+            <h4 className="ks-footer-col-title" style={{ color: '#E10600' }}>CONTACT & SERVICES</h4>
             <ul className="ks-footer-contact-list">
               <li className="ks-footer-contact-item">
-                <Phone size={15} className="ks-footer-contact-icon" />
+                <Phone size={15} className="ks-footer-contact-icon" style={{ color: '#E10600' }} />
                 <a href={`tel:${phoneNumber}`}>{phoneNumber}</a>
               </li>
               <li className="ks-footer-contact-item">
-                <Mail size={15} className="ks-footer-contact-icon" />
+                <Mail size={15} className="ks-footer-contact-icon" style={{ color: '#E10600' }} />
                 <a href={`mailto:${emailAddress}`}>{emailAddress}</a>
               </li>
               <li className="ks-footer-contact-item">
-                <WhatsAppIcon size={15} className="ks-footer-contact-icon" />
+                <WhatsAppIcon size={15} className="ks-footer-contact-icon" style={{ color: '#E10600' }} />
                 <a
-                  href={`https://wa.me/${cleanWhatsApp || '96170973086'}`}
+                  href={`https://wa.me/${cleanWhatsApp}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -176,12 +176,12 @@ export default function Footer({ siteSettings: propSettings }) {
             </ul>
           </div>
 
-          {/* Column 4: LOCATIONS */}
+          {/* Column 4: LOCATIONS (Headers in Keeper Red, real location from Admin) */}
           <div className="ks-footer-col">
-            <h4 className="ks-footer-col-title">LOCATIONS</h4>
+            <h4 className="ks-footer-col-title" style={{ color: '#E10600' }}>LOCATIONS</h4>
             <div className="ks-footer-location-block">
               <div className="ks-footer-location-name">
-                <MapPin size={16} className="ks-footer-contact-icon" />
+                <MapPin size={16} className="ks-footer-contact-icon" style={{ color: '#E10600' }} />
                 <span>{locationCity}</span>
               </div>
               <div className="ks-footer-location-addr">

@@ -8781,3 +8781,226 @@ textarea,
   opacity: 1;
   transform: translateY(0);
 }
+
+/* 12. ZERO CLICK/TAP SHADOW ON ANY BUTTON GLOBALLY */
+button,
+a,
+.ks-btn,
+.ks-btn-primary,
+.ks-btn-secondary,
+.ks-card-btn-buy,
+.ks-card-btn-plus,
+.ks-card-fav-btn,
+.ks-navbar-circle-btn,
+.ks-hamburger-trigger,
+.ks-curtain-close-btn-creative,
+.ks-curtain-beauty-icon-btn,
+.ks-social-round-btn {
+  box-shadow: none !important;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  user-select: none;
+}
+
+button:focus,
+button:active,
+a:focus,
+a:active {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* 13. PROMINENT BIGGER LOGOS */
+.ks-navbar-logo-large {
+  height: 60px !important;
+  max-height: 64px !important;
+  width: auto !important;
+  max-width: 280px !important;
+  object-fit: contain;
+}
+
+.ks-footer-logo-larger {
+  height: 68px !important;
+  max-height: 72px !important;
+  width: auto !important;
+  max-width: 320px !important;
+  object-fit: contain;
+}
+
+/* 14. CLEAN MOBILE HAMBURGER BUTTON (NO CIRCLE BACKGROUND OR BORDER) */
+.ks-hamburger-clean {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.ks-hamburger-clean:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+/* On Mobile: ONLY Logo, Cart icon, and Hamburger Navigation button appear */
+@media (max-width: 1024px) {
+  .ks-desktop-only {
+    display: none !important;
+  }
+}
+
+/* 15. CURTAIN MENU (TOP-LEFT ALIGNED, LIGHT & DARK MODE BLACK/WHITE PARITY) */
+.ks-curtain-canvas-theme {
+  background-color: #050505;
+  color: #FFFFFF;
+}
+
+[data-theme="light"] .ks-curtain-canvas-theme {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+.ks-curtain-body-top-left {
+  flex: 1;
+  padding: 40px 32px 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.ks-curtain-nav-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 40px;
+}
+
+.ks-curtain-left-link {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(2rem, 5.5vw, 3.2rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+[data-theme="light"] .ks-curtain-left-link {
+  color: #0A0A0A !important;
+}
+
+.ks-curtain-left-link:hover,
+.ks-curtain-left-link.is-active {
+  color: #E10600 !important;
+  transform: translateX(6px);
+}
+
+/* Small Red Dot Indicator to know which page we are on */
+.ks-curtain-active-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50% !important;
+  background-color: #E10600;
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(225, 6, 0, 0.8) !important;
+}
+
+.ks-curtain-falling-item-left {
+  opacity: 0;
+  transform: translateX(-24px);
+}
+
+.ks-curtain-root.is-open .ks-curtain-falling-item-left {
+  animation: ksCascadeFallLeft 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes ksCascadeFallLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.ks-curtain-beauty-card-left {
+  margin: 0 !important;
+}
+
+/* 16. PRODUCT CARD FULL-BLEED IMAGE COVER WITHOUT SPACES */
+.ks-card-media-fullbleed {
+  margin: 0 !important;
+  width: 100% !important;
+  border-radius: 20px 20px 0 0 !important;
+}
+
+.ks-card-top-right-badges {
+  position: absolute;
+  top: 10px;
+  right: 50px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+}
+
+/* 17. FLYING HEART ANIMATION TO FAVORITE/NAV ICON */
+.ks-heart-flyer {
+  position: fixed;
+  z-index: 99999;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 8px rgba(225, 6, 0, 0.6));
+}
+
+.ks-heart-pulse {
+  animation: ksHeartBurst 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes ksHeartBurst {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+/* 18. CIRCULAR SOCIAL BUTTONS FOR GET IN TOUCH */
+.ks-social-round-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50% !important;
+  background-color: #171717;
+  border: 1px solid #282828;
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.ks-social-round-btn:hover {
+  background-color: #E10600;
+  border-color: #E10600;
+  color: #FFFFFF;
+  transform: translateY(-2px);
+}
+
+/* 19. REMOVE PRODUCT-SHAPED SKELETON CARDS ACROSS SITE */
+.ks-product-skeleton,
+.ks-skeleton-card,
+.ks-card-skeleton {
+  display: none !important;
+}

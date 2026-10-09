@@ -1,7 +1,7 @@
 /**
- * Keeper Sports Football-to-Cart Flight Animation
- * Dynamically computes start position from the clicked Product Card / Add button
- * and flies smoothly to the actual visible Navbar Cart element.
+ * Keeper Sports Football-to-Cart & Heart-to-Favorites Flight Animations
+ * Dynamically computes start position from clicked card / button
+ * and flies smoothly to the target Navbar icon.
  * Respects `prefers-reduced-motion`.
  */
 
@@ -11,14 +11,12 @@ export function launchFootballToCart(startElement, onComplete) {
     return;
   }
 
-  // Respect prefers-reduced-motion
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     if (onComplete) onComplete();
     return;
   }
 
   // Locate visible Navbar cart target
-  // Check both desktop CART nav link and mobile cart button
   const targets = Array.from(document.querySelectorAll('.ks-nav-cart-btn, a[href="/cart"], [data-nav-cart="true"]'));
   const cartTarget = targets.find((el) => {
     const rect = el.getBoundingClientRect();
@@ -33,15 +31,12 @@ export function launchFootballToCart(startElement, onComplete) {
   const startRect = startElement.getBoundingClientRect();
   const targetRect = cartTarget.getBoundingClientRect();
 
-  // Starting coordinates (center of start element)
   const startX = startRect.left + startRect.width / 2 - 12;
   const startY = startRect.top + startRect.height / 2 - 12;
 
-  // Destination coordinates (center of cart target)
   const endX = targetRect.left + targetRect.width / 2 - 12;
   const endY = targetRect.top + targetRect.height / 2 - 12;
 
-  // Create flyer element
   const flyer = document.createElement('div');
   flyer.className = 'ks-football-flyer';
   flyer.setAttribute('aria-hidden', 'true');
@@ -67,14 +62,11 @@ export function launchFootballToCart(startElement, onComplete) {
   flyer.style.opacity = '1';
 
   document.body.appendChild(flyer);
-
-  // Force reflow
   flyer.getBoundingClientRect();
 
   const deltaX = endX - startX;
   const deltaY = endY - startY;
 
-  // Animate toward cart
   flyer.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(0.55) rotate(360deg)`;
   flyer.style.opacity = '0.9';
 
@@ -83,7 +75,6 @@ export function launchFootballToCart(startElement, onComplete) {
       flyer.parentElement.removeChild(flyer);
     }
 
-    // Subtle reaction on cart icon
     cartTarget.classList.add('ks-cart-pulse');
     setTimeout(() => {
       cartTarget.classList.remove('ks-cart-pulse');
@@ -91,4 +82,80 @@ export function launchFootballToCart(startElement, onComplete) {
 
     if (onComplete) onComplete();
   }, 600);
+}
+
+/**
+ * Flying Heart Animation to Navbar Favorites / Navigation
+ */
+export function launchHeartToFavorites(startElement, onComplete) {
+  if (typeof window === 'undefined') {
+    if (onComplete) onComplete();
+    return;
+  }
+
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (onComplete) onComplete();
+    return;
+  }
+
+  // Look for desktop favorites button first, or fallback to mobile nav/cart
+  const targets = Array.from(document.querySelectorAll('a[href="/favorites"], .ks-desktop-fav-btn, #ks-main-nav-toggle, .ks-hamburger-trigger, .ks-nav-cart-btn'));
+  const favTarget = targets.find((el) => {
+    const rect = el.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  }) || targets[0];
+
+  if (!favTarget || !startElement) {
+    if (onComplete) onComplete();
+    return;
+  }
+
+  const startRect = startElement.getBoundingClientRect();
+  const targetRect = favTarget.getBoundingClientRect();
+
+  const startX = startRect.left + startRect.width / 2 - 12;
+  const startY = startRect.top + startRect.height / 2 - 12;
+
+  const endX = targetRect.left + targetRect.width / 2 - 12;
+  const endY = targetRect.top + targetRect.height / 2 - 12;
+
+  const heartFlyer = document.createElement('div');
+  heartFlyer.className = 'ks-heart-flyer';
+  heartFlyer.setAttribute('aria-hidden', 'true');
+  heartFlyer.innerHTML = `
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="#E10600" stroke="#E10600" stroke-width="2">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  `;
+
+  heartFlyer.style.position = 'fixed';
+  heartFlyer.style.left = `${startX}px`;
+  heartFlyer.style.top = `${startY}px`;
+  heartFlyer.style.zIndex = '99999';
+  heartFlyer.style.pointerEvents = 'none';
+  heartFlyer.style.transition = 'transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.55s ease';
+  heartFlyer.style.transform = 'translate3d(0, 0, 0) scale(1.1)';
+  heartFlyer.style.opacity = '1';
+
+  document.body.appendChild(heartFlyer);
+  heartFlyer.getBoundingClientRect();
+
+  const deltaX = endX - startX;
+  const deltaY = endY - startY;
+
+  heartFlyer.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(0.6)`;
+  heartFlyer.style.opacity = '0.9';
+
+  setTimeout(() => {
+    if (heartFlyer.parentElement) {
+      heartFlyer.parentElement.removeChild(heartFlyer);
+    }
+
+    favTarget.classList.add('ks-heart-pulse');
+    setTimeout(() => {
+      favTarget.classList.remove('ks-heart-pulse');
+    }, 400);
+
+    if (onComplete) onComplete();
+  }, 550);
 }
