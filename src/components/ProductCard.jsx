@@ -59,7 +59,8 @@ export default function ProductCard({
   }
 
   const handleCardClick = (e) => {
-    if (e.target.closest('button') || e.target.closest('a')) {
+    // Only isolate the favorite button and plus button from triggering page navigation
+    if (e.target.closest('.ks-card-fav-btn') || e.target.closest('.ks-card-btn-plus')) {
       return;
     }
     navigate(productUrl);
@@ -177,12 +178,10 @@ export default function ProductCard({
     }
   };
 
-  const handleBuyNow = (e) => {
+  const handleViewDetails = (e) => {
     e.stopPropagation();
     e.preventDefault();
-
-    if (isOutOfStock) return;
-    navigate(`/checkout?direct=true&productId=${encodeURIComponent(product.id)}&qty=1`);
+    navigate(productUrl);
   };
 
   const currentPrice =
@@ -334,13 +333,12 @@ export default function ProductCard({
         <div className="ks-card-actions-row">
           <button
             type="button"
-            onClick={handleBuyNow}
-            disabled={isOutOfStock}
+            onClick={handleViewDetails}
             className="ks-card-btn-buy"
-            aria-label={`Buy ${product.name} now`}
-            title="Buy Now"
+            aria-label={`View details for ${product.name}`}
+            title="View Product Details"
           >
-            <span>BUY NOW</span>
+            <span>VIEW DETAILS</span>
           </button>
 
           <button

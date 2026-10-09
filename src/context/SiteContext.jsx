@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { contentApi } from '../api/contentApi';
+import { getGuestOrders, getHiddenOrderIds } from '../utils/guestIdentity';
 
 const SiteContext = createContext(null);
 
@@ -62,7 +63,12 @@ export function SiteProvider({ children }) {
   const [counts, setCounts] = useState(() => {
     try {
       const cached = localStorage.getItem(COUNTS_STORAGE_KEY) || sessionStorage.getItem(COUNTS_STORAGE_KEY);
-      return cached ? JSON.parse(cached) : { cart: 0, favorites: 0, orders: 0, notifications: 0 };
+      const parsed = cached ? JSON.parse(cached) : { cart: 0, favorites: 0, orders: 0, notifications: 0 };
+      const localOrders = getGuestOrders().filter((o) => !getHiddenOrderIds().includes(o.id));
+      if ((!parsed.orders || parsed.orders === 0) && localOrders.length > 0) {
+        parsed.orders = localOrders.length;
+      }
+      return parsed;
     } catch {
       return { cart: 0, favorites: 0, orders: 0, notifications: 0 };
     }
@@ -109,9 +115,17 @@ export function SiteProvider({ children }) {
     try {
       const res = await contentApi.getUserCounts();
       if (res?.success && res.counts) {
-        setCounts(res.counts);
+        const updated = { ...res.counts };
         try {
-          sessionStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(res.counts));
+          const localOrders = getGuestOrders().filter((o) => !getHiddenOrderIds().includes(o.id));
+          if ((!updated.orders || updated.orders === 0) && localOrders.length > 0) {
+            updated.orders = localOrders.length;
+          }
+        } catch {}
+        setCounts(updated);
+        try {
+          sessionStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
+          localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
         } catch {}
       }
     } catch (err) {
@@ -126,6 +140,7 @@ export function SiteProvider({ children }) {
       const updated = { ...prev, cart: newCartCount };
       try {
         sessionStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
+        localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
       } catch {}
       return updated;
     });
@@ -137,6 +152,19 @@ export function SiteProvider({ children }) {
       const updated = { ...prev, favorites: newFavCount };
       try {
         sessionStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
+        localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  }, []);
+
+  const updateOrdersCount = useCallback((newOrdersCount) => {
+    if (typeof newOrdersCount !== 'number') return;
+    setCounts((prev) => {
+      const updated = { ...prev, orders: newOrdersCount };
+      try {
+        sessionStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
+        localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
       } catch {}
       return updated;
     });
@@ -204,6 +232,7 @@ export function SiteProvider({ children }) {
     refreshCounts,
     updateCartCount,
     updateFavoritesCount,
+    updateOrdersCount,
     deliveryFee: Number(siteSettings?.delivery_fee || 0),
     printingPrice: Number(siteSettings?.printing_price || 0),
     badgePrice: Number(siteSettings?.badge_price || 0)

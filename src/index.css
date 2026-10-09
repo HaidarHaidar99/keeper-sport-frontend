@@ -7513,29 +7513,32 @@ textarea,
   color: #FFFFFF;
 }
 
-/* Badge number pill floats cleanly OUTSIDE the button circle */
+/* Badge number pill floats cleanly on the button circle */
 .ks-navbar-badge-pill {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  z-index: 10;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 4px;
+  position: absolute !important;
+  top: -6px !important;
+  right: -6px !important;
+  z-index: 25 !important;
+  min-width: 20px !important;
+  height: 20px !important;
+  padding: 0 4px !important;
   border-radius: 50% !important;
-  background-color: #E10600;
-  color: #FFFFFF;
-  font-size: 0.68rem;
-  font-weight: 900;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #000000;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  background-color: #E10600 !important;
+  color: #FFFFFF !important;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 0.72rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid #000000 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45) !important;
+  pointer-events: none !important;
 }
 
 [data-theme="light"] .ks-navbar-badge-pill {
-  border: 2px solid #FFFFFF;
+  border: 2px solid #FFFFFF !important;
 }
 
 [data-theme="light"] .ks-hamburger-clean .ks-hamburger-line {
@@ -7750,6 +7753,7 @@ textarea,
 .ks-curtain-beauty-icon-btn {
   width: 44px;
   height: 44px;
+  border-radius: 50% !important;
   background-color: #171717;
   border: 1px solid #2A2A2A;
   color: #FFFFFF;
@@ -7764,35 +7768,61 @@ textarea,
   flex-shrink: 0;
 }
 
+[data-theme="light"] .ks-curtain-beauty-icon-btn {
+  background-color: #F5F5F5;
+  border-color: #E0E0E0;
+  color: #111111;
+}
+
 .ks-curtain-beauty-icon-btn:hover {
-  background-color: #E10600;
-  border-color: #E10600;
-  color: #FFFFFF;
+  background-color: #E10600 !important;
+  border-color: #E10600 !important;
+  color: #FFFFFF !important;
   transform: translateY(-3px);
 }
 
 .ks-curtain-beauty-badge {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  z-index: 10;
-  min-width: 19px;
-  height: 19px;
-  padding: 0 4px;
+  position: absolute !important;
+  top: -6px !important;
+  right: -6px !important;
+  z-index: 25 !important;
+  min-width: 20px !important;
+  height: 20px !important;
+  padding: 0 4px !important;
   border-radius: 50% !important;
-  background-color: #E10600;
-  color: #FFFFFF;
-  font-size: 0.65rem;
-  font-weight: 900;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #0E0E0E;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  background-color: #E10600 !important;
+  color: #FFFFFF !important;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 0.72rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid #0E0E0E !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45) !important;
+  pointer-events: none !important;
 }
 
 [data-theme="light"] .ks-curtain-beauty-badge {
-  border: 2px solid #FFFFFF;
+  border: 2px solid #FFFFFF !important;
+}
+
+.ks-curtain-link-badge {
+  margin-left: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background-color: #E10600;
+  color: #FFFFFF;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
 }
 
 /* 4. HERO SECTION (Buttons ALWAYS Side-by-Side, 24px Radius) */

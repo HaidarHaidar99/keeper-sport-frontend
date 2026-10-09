@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Heart, ShoppingBag, User } from 'lucide-react';
+import { Search, Heart, ShoppingBag, User, Package } from 'lucide-react';
 import { useSite, DEFAULT_LOGO_URL } from '../context/SiteContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -157,7 +157,7 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
               title="Favorites"
             >
               <Heart size={18} />
-              {counts.favorites > 0 && (
+              {Number(counts.favorites) > 0 && (
                 <span className="ks-navbar-badge-pill">{counts.favorites}</span>
               )}
             </Link>
@@ -171,8 +171,21 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
               title="Cart"
             >
               <ShoppingBag size={19} />
-              {counts.cart > 0 && (
+              {Number(counts.cart) > 0 && (
                 <span className="ks-navbar-badge-pill">{counts.cart}</span>
+              )}
+            </Link>
+
+            {/* Desktop Only: Orders */}
+            <Link
+              to="/orders"
+              className="ks-navbar-circle-btn ks-desktop-only"
+              aria-label="My Orders"
+              title="Orders"
+            >
+              <Package size={18} />
+              {Number(counts.orders) > 0 && (
+                <span className="ks-navbar-badge-pill">{counts.orders}</span>
               )}
             </Link>
 
@@ -186,7 +199,7 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
               <User size={18} />
             </Link>
 
-            {/* Mobile Navigation Button: Clean, NO circle background/border */}
+            {/* Mobile Navigation Button: Clean, with badge if user has active orders */}
             <button
               type="button"
               className="ks-hamburger-trigger ks-hamburger-clean"
@@ -198,6 +211,9 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
             >
               <span className="ks-hamburger-line ks-hamburger-line-top" aria-hidden="true" />
               <span className="ks-hamburger-line ks-hamburger-line-bottom" aria-hidden="true" />
+              {Number(counts.orders) > 0 && (
+                <span className="ks-navbar-badge-pill">{counts.orders}</span>
+              )}
             </button>
           </div>
         </div>

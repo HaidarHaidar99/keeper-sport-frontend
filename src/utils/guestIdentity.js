@@ -57,6 +57,20 @@ export function saveGuestOrderToken(token) {
 }
 
 /**
+ * Get full array of guest orders stored locally on this device
+ */
+export function getGuestOrders() {
+  try {
+    const raw = localStorage.getItem(GUEST_ORDERS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Save full guest order snapshot for local reference
  */
 export function saveGuestOrder(order) {

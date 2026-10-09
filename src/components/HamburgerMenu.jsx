@@ -82,6 +82,8 @@ export default function HamburgerMenu({
     { label: 'HOME', path: '/' },
     { label: 'PRODUCTS', path: '/products' },
     { label: 'CATEGORIES', path: '/categories' },
+    { label: 'MY ORDERS', path: '/orders', count: counts.orders },
+    { label: 'CART', path: '/cart', count: counts.cart },
     { label: 'OFFERS', path: '/offers' },
     { label: 'REVIEWS', path: '/reviews' },
     { label: 'ABOUT US', path: '/about' },
@@ -153,6 +155,11 @@ export default function HamburgerMenu({
                     {/* Small Red Dot Indicator to know which page we are on */}
                     {active && <span className="ks-curtain-active-dot" aria-hidden="true" />}
                     <span>{item.label}</span>
+                    {Number(item.count) > 0 && (
+                      <span className="ks-curtain-link-badge">
+                        {item.count}
+                      </span>
+                    )}
                   </Link>
                 </div>
               );
@@ -170,7 +177,7 @@ export default function HamburgerMenu({
               title="Cart"
             >
               <ShoppingBag size={18} />
-              {counts.cart > 0 && (
+              {Number(counts.cart) > 0 && (
                 <span className="ks-curtain-beauty-badge">{counts.cart}</span>
               )}
             </Link>
@@ -184,7 +191,7 @@ export default function HamburgerMenu({
               title="Favorites"
             >
               <Heart size={18} />
-              {counts.favorites > 0 && (
+              {Number(counts.favorites) > 0 && (
                 <span className="ks-curtain-beauty-badge">{counts.favorites}</span>
               )}
             </Link>
@@ -198,7 +205,7 @@ export default function HamburgerMenu({
               title="Orders"
             >
               <Package size={18} />
-              {counts.orders > 0 && (
+              {Number(counts.orders) > 0 && (
                 <span className="ks-curtain-beauty-badge">{counts.orders}</span>
               )}
             </Link>
@@ -212,7 +219,7 @@ export default function HamburgerMenu({
               title="Notifications"
             >
               <Bell size={18} />
-              {counts.notifications > 0 && (
+              {Number(counts.notifications) > 0 && (
                 <span className="ks-curtain-beauty-badge">{counts.notifications}</span>
               )}
             </Link>
