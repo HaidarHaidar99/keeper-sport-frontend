@@ -23,6 +23,16 @@ export default function HeroCarousel({ slides = [], loading = false }) {
     return () => clearTimeout(timer);
   }, [currentIndex, validSlides.length, currentSlide?.duration_seconds]);
 
+  // Preload all hero slide images for instantaneous switching
+  useEffect(() => {
+    validSlides.forEach((s) => {
+      if (s?.media_path && s?.media_type !== 'video') {
+        const img = new Image();
+        img.src = s.media_path;
+      }
+    });
+  }, [validSlides]);
+
   const handlePrev = (e) => {
     e.stopPropagation();
     setCurrentIndex((prev) => (prev - 1 + validSlides.length) % validSlides.length);

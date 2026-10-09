@@ -98,12 +98,25 @@ export function launchHeartToFavorites(startElement, onComplete) {
     return;
   }
 
-  // Look for desktop favorites button first, or fallback to mobile nav/cart
-  const targets = Array.from(document.querySelectorAll('a[href="/favorites"], .ks-desktop-fav-btn, #ks-main-nav-toggle, .ks-hamburger-trigger, .ks-nav-cart-btn'));
-  const favTarget = targets.find((el) => {
-    const rect = el.getBoundingClientRect();
-    return rect.width > 0 && rect.height > 0;
-  }) || targets[0];
+  // In mobile view (<= 991px), fly to the mobile navigation toggle button.
+  // In desktop view (> 991px), fly to the desktop navbar favorites heart icon.
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 991;
+  let favTarget = null;
+
+  if (isMobile) {
+    favTarget = document.querySelector('#ks-main-nav-toggle') || document.querySelector('.ks-hamburger-trigger');
+  } else {
+    favTarget = document.querySelector('.ks-desktop-fav-btn') || document.querySelector('a[href="/favorites"]');
+  }
+
+  // Graceful fallback if preferred target is not currently visible
+  if (!favTarget || favTarget.getBoundingClientRect().width === 0) {
+    const candidates = Array.from(document.querySelectorAll('.ks-desktop-fav-btn, #ks-main-nav-toggle, .ks-hamburger-trigger, a[href="/favorites"], .ks-nav-cart-btn'));
+    favTarget = candidates.find((el) => {
+      const rect = el.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    }) || candidates[0];
+  }
 
   if (!favTarget || !startElement) {
     if (onComplete) onComplete();

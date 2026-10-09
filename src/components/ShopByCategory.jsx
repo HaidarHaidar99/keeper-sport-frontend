@@ -77,7 +77,8 @@ export default function ShopByCategory({ categories = [] }) {
                   src={cat.image_path}
                   alt={cat.name}
                   className="ks-category-card-bg-img"
-                  loading="lazy"
+                  loading={idx < 2 ? 'eager' : 'lazy'}
+                  decoding="async"
                 />
               ) : (
                 <div className="ks-category-card-fallback-canvas">

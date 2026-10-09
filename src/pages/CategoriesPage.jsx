@@ -75,7 +75,8 @@ export default function CategoriesPage() {
                       src={imageSrc}
                       alt={cat.name}
                       className="ks-category-card-bg-img"
-                      loading="lazy"
+                      loading={idx < 4 ? 'eager' : 'lazy'}
+                      decoding="async"
                     />
                   ) : (
                     <div className="ks-category-card-fallback-canvas">

@@ -38,8 +38,9 @@ export default function Footer({ siteSettings: propSettings }) {
   ].filter((s) => Boolean(s.url));
 
   // Authoritative real data from Admin Panel with real Tyre store location
-  const phoneNumber = siteSettings?.phone_number || siteSettings?.location?.phone_number || '+961 70 973 086';
-  const emailAddress = siteSettings?.email || 'support@keepersportlb.com';
+  const emailAddress = siteSettings?.email && !siteSettings.email.includes('support@keepersportlb.com')
+    ? siteSettings.email
+    : 'keepersportlb@gmail.com';
   const locationCity = 'Tyre';
   const locationAddress = 'Hanaway Main Street, Tyre, South Lebanon';
 

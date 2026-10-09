@@ -25,8 +25,7 @@ import Footer from '../components/Footer';
 export default function ProductDetailsPage() {
   const { slugOrId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { siteSettings, categories, refreshCounts } = useSite();
+  const { siteSettings, categories, refreshCounts, counts, updateFavoritesCount, updateCartCount } = useSite();
   const heartBtnRef = useRef(null);
 
   const [product, setProduct] = useState(null);
@@ -100,38 +99,69 @@ export default function ProductDetailsPage() {
     }
   };
 
-  // Immediate optimistic Favorite toggle
+  // Preload all gallery images in parallel for ultra-fast flipping
+  useEffect(() => {
+    if (product?.media && Array.isArray(product.media)) {
+      product.media.forEach((m) => {
+        if (m.storage_path && m.media_type !== 'video') {
+          const img = new Image();
+          img.src = m.storage_path;
+        }
+      });
+    }
+  }, [product?.media]);
+
+  // Immediate optimistic Favorite toggle with instant Navbar badge update
   const handleFavoriteClick = async () => {
     if (!product) return;
 
     const prevState = isFavorited;
     const nextState = !prevState;
+
+    // 1. Instant local state change
     setIsFavorited(nextState);
     setFavAnimating(true);
-    setTimeout(() => setFavAnimating(false), 400);
 
+    // 2. Direct count update in navbar in the exact same second!
+    if (typeof updateFavoritesCount === 'function') {
+      const currentFavs = counts?.favorites || 0;
+      updateFavoritesCount(Math.max(0, currentFavs + (nextState ? 1 : -1)));
+    }
+
+    // 3. Launch flying heart animation
     if (nextState && heartBtnRef.current) {
       launchHeartToFavorites(heartBtnRef.current);
     }
 
+    setTimeout(() => setFavAnimating(false), 400);
+
+    // 4. Background network sync
     try {
       const res = await productApi.toggleFavorite(product.id);
       if (res && res.success) {
         setIsFavorited(res.isFavorited);
-        if (typeof refreshCounts === 'function') refreshCounts();
+        if (typeof res.favoritesCount === 'number' && typeof updateFavoritesCount === 'function') {
+          updateFavoritesCount(res.favoritesCount);
+        }
       } else {
         setIsFavorited(prevState);
-        setActionError(res.message || 'Could not update favorites.');
+        if (typeof updateFavoritesCount === 'function') {
+          updateFavoritesCount(counts?.favorites || 0);
+        }
+        setActionError(res?.message || 'Could not update favorites.');
         setTimeout(() => setActionError(null), 3000);
       }
     } catch {
       setIsFavorited(prevState);
+      if (typeof updateFavoritesCount === 'function') {
+        updateFavoritesCount(counts?.favorites || 0);
+      }
       setActionError('Network error updating favorites.');
       setTimeout(() => setActionError(null), 3000);
     }
   };
 
-  // Add to Cart
+  // Add to Cart with direct instant count update and flying football animation
   const handleAddToCart = async (e) => {
     if (!product) return;
     if (product.stock?.isOutOfStock || product.stock_quantity === 0) return;
@@ -192,6 +222,14 @@ export default function ProductDetailsPage() {
       }
     }
 
+    // Direct count update in navbar in the exact same second!
+    if (typeof updateCartCount === 'function') {
+      updateCartCount((counts?.cart || 0) + quantity);
+    }
+
+    // Micro-animation: Football travels from button to Cart icon in Navbar
+    launchFootballToCart(btnEl);
+
     setCartLoading(true);
 
     try {
@@ -208,17 +246,22 @@ export default function ProductDetailsPage() {
 
       if (res && res.success) {
         setCartSuccess(true);
+        if (typeof res.cartCount === 'number' && typeof updateCartCount === 'function') {
+          updateCartCount(res.cartCount);
+        }
         setTimeout(() => setCartSuccess(false), 2000);
-
-        // Micro-animation: Football travels from button to Cart icon in Navbar
-        launchFootballToCart(btnEl, () => {
-          if (typeof refreshCounts === 'function') refreshCounts();
-        });
       } else {
+        // Revert count if addition failed
+        if (typeof updateCartCount === 'function') {
+          updateCartCount(counts?.cart || 0);
+        }
         setActionError(res.message || 'Failed to add to cart.');
         setTimeout(() => setActionError(null), 4000);
       }
     } catch {
+      if (typeof updateCartCount === 'function') {
+        updateCartCount(counts?.cart || 0);
+      }
       setActionError('Network error adding to cart.');
       setTimeout(() => setActionError(null), 4000);
     } finally {
@@ -416,19 +459,20 @@ export default function ProductDetailsPage() {
                 </>
               )}
 
-              {/* Top Right Favorite Button inside gallery frame */}
+              {/* Top Right Favorite Button inside gallery frame (identical styling to outer card) */}
               <button
                 ref={heartBtnRef}
                 type="button"
                 onClick={handleFavoriteClick}
-                className={`ks-details-fav-btn ${isFavorited ? 'is-active' : ''} ${favAnimating ? 'is-animating' : ''}`}
+                className={`ks-card-fav-btn ks-details-fav-btn ${isFavorited ? 'is-active' : ''} ${favAnimating ? 'is-animating' : ''}`}
                 aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
                 title={isFavorited ? 'Favorited' : 'Add to Favorites'}
               >
                 <Heart
                   size={20}
+                  className={`ks-fav-icon ${isFavorited ? 'ks-fav-icon-active' : ''}`}
                   fill={isFavorited ? '#E10600' : 'none'}
-                  stroke={isFavorited ? '#E10600' : 'currentColor'}
+                  stroke={isFavorited ? '#E10600' : '#FFFFFF'}
                   strokeWidth={2}
                 />
               </button>

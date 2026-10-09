@@ -2,21 +2,23 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Star, Plus, Check, AlertCircle } from 'lucide-react';
 import { productApi } from '../api/productApi';
+import { useSite } from '../context/SiteContext';
 import { launchFootballToCart, launchHeartToFavorites } from '../utils/cartAnimation';
 
 export default function ProductCard({
   product = {},
+  index = 0,
   onCartUpdated,
   onFavoriteToggled
 }) {
   const navigate = useNavigate();
+  const { counts, updateFavoritesCount, updateCartCount } = useSite();
   const heartBtnRef = useRef(null);
   const plusBtnRef = useRef(null);
 
   // Optimistic favorite state
   const [isFavorited, setIsFavorited] = useState(Boolean(product?.isFavorited));
   const [favAnimating, setFavAnimating] = useState(false);
-  const [favLoading, setFavLoading] = useState(false);
 
   // Cart action state
   const [cartLoading, setCartLoading] = useState(false);
@@ -63,20 +65,25 @@ export default function ProductCard({
     navigate(productUrl);
   };
 
-  // Favorite toggle: Optimistic update + Flying Heart to Navbar/Mobile Menu
+  // Favorite toggle: Instant optimistic update + Flying Heart to Navbar/Mobile Nav
   const handleFavoriteClick = async (e) => {
     e.stopPropagation();
     e.preventDefault();
 
-    if (favLoading) return;
-
     const previousState = isFavorited;
     const nextState = !previousState;
 
+    // 1. Instant local state change
     setIsFavorited(nextState);
     setFavAnimating(true);
 
-    // Launch flying heart to favorite icon in top bar (or mobile nav)
+    // 2. Direct count update in navbar in the exact same second!
+    if (typeof updateFavoritesCount === 'function') {
+      const currentFavs = counts?.favorites || 0;
+      updateFavoritesCount(Math.max(0, currentFavs + (nextState ? 1 : -1)));
+    }
+
+    // 3. Launch flying heart animation
     if (nextState && heartBtnRef.current) {
       launchHeartToFavorites(heartBtnRef.current);
     }
@@ -87,32 +94,38 @@ export default function ProductCard({
       onFavoriteToggled(product.id, nextState);
     }
 
-    setFavLoading(true);
-
+    // 4. Background network sync
     try {
       const res = await productApi.toggleFavorite(product.id);
       if (res && res.success) {
         setIsFavorited(res.isFavorited);
+        if (typeof res.favoritesCount === 'number' && typeof updateFavoritesCount === 'function') {
+          updateFavoritesCount(res.favoritesCount);
+        }
         if (onFavoriteToggled) {
           onFavoriteToggled(product.id, res.isFavorited, res.favoritesCount);
         }
       } else {
         setIsFavorited(previousState);
+        if (typeof updateFavoritesCount === 'function') {
+          updateFavoritesCount(counts?.favorites || 0);
+        }
         if (onFavoriteToggled) onFavoriteToggled(product.id, previousState);
         setErrorMessage(res?.message || 'Could not update favorites.');
         setTimeout(() => setErrorMessage(null), 3000);
       }
     } catch {
       setIsFavorited(previousState);
+      if (typeof updateFavoritesCount === 'function') {
+        updateFavoritesCount(counts?.favorites || 0);
+      }
       if (onFavoriteToggled) onFavoriteToggled(product.id, previousState);
       setErrorMessage('Network error updating favorites.');
       setTimeout(() => setErrorMessage(null), 3000);
-    } finally {
-      setFavLoading(false);
     }
   };
 
-  // Add to Cart with flying football animation
+  // Add to Cart with flying football animation and direct instant navbar count update
   const handleAddToCart = async (e) => {
     e.stopPropagation();
     e.preventDefault();
@@ -121,6 +134,11 @@ export default function ProductCard({
 
     if (plusBtnRef.current) {
       launchFootballToCart(plusBtnRef.current);
+    }
+
+    // Instant direct count update in navbar at the exact same second!
+    if (typeof updateCartCount === 'function') {
+      updateCartCount((counts?.cart || 0) + 1);
     }
 
     setCartLoading(true);
@@ -134,12 +152,19 @@ export default function ProductCard({
       });
 
       if (res && res.success) {
+        if (typeof res.cartCount === 'number' && typeof updateCartCount === 'function') {
+          updateCartCount(res.cartCount);
+        }
         if (onCartUpdated) {
           onCartUpdated(res.cartCount);
         }
         setTimeout(() => setCartSuccess(false), 1800);
       } else {
         setCartSuccess(false);
+        // Revert count if addition failed
+        if (typeof updateCartCount === 'function') {
+          updateCartCount(counts?.cart || 0);
+        }
         setErrorMessage(res?.message || 'Failed to add to cart.');
         setTimeout(() => setErrorMessage(null), 3500);
       }
@@ -205,7 +230,8 @@ export default function ProductCard({
               src={primaryImgSrc}
               alt={product.name || 'Keeper Sports Product'}
               className="ks-card-img"
-              loading="lazy"
+              loading={index < 4 ? 'eager' : 'lazy'}
+              fetchPriority={index < 2 ? 'high' : 'auto'}
               decoding="async"
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', margin: 0, padding: 0 }}
               onError={(e) => {

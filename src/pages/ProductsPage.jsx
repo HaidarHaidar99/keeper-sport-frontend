@@ -437,10 +437,11 @@ export default function ProductsPage() {
             /* Real Products Catalog Grid */
             <>
               <div className="ks-catalog-grid">
-                {products.map((prod) => (
+                {products.map((prod, idx) => (
                   <ProductCard
                     key={prod.id}
                     product={prod}
+                    index={idx}
                     onCartUpdated={handleCartUpdated}
                     onFavoriteToggled={handleFavoriteToggled}
                   />

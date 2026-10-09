@@ -61,10 +61,11 @@ export default function FeaturedRail({
               <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#A3A3A3' }}>Loading featured gear...</span>
             </div>
           ) : (
-            products.map((prod) => (
+            products.map((prod, idx) => (
               <div key={prod.id} className="ks-featured-rail-item">
                 <ProductCard
                   product={prod}
+                  index={idx}
                   onCartUpdated={onCartUpdated}
                   onFavoriteToggled={onFavoriteToggled}
                 />

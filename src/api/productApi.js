@@ -71,6 +71,17 @@ const FEATURED_CACHE_TTL = 60 * 1000;
 const productsMemoryCache = new Map();
 const PRODUCTS_CACHE_TTL = 45 * 1000;
 
+function preloadProductThumbnails(products) {
+  if (typeof window === 'undefined' || !Array.isArray(products)) return;
+  products.slice(0, 16).forEach((p) => {
+    const src = p?.primaryImage || p?.cover_image || p?.coverImage;
+    if (src && typeof src === 'string') {
+      const img = new Image();
+      img.src = src;
+    }
+  });
+}
+
 export const productApi = {
   /**
    * Query catalog products with filters, search, sort, pagination (cached 45s)
@@ -102,6 +113,9 @@ export const productApi = {
 
     if (res && res.success) {
       productsMemoryCache.set(cacheKey, { data: res, timestamp: now });
+      if (Array.isArray(res.products)) {
+        preloadProductThumbnails(res.products);
+      }
     }
 
     return res;
@@ -132,6 +146,7 @@ export const productApi = {
     const res = await safeRequest(`${API_BASE}/products/featured?limit=${limit}`);
     if (res && res.success && Array.isArray(res.products)) {
       featuredCache = { data: res, timestamp: now, limit };
+      preloadProductThumbnails(res.products);
       try {
         localStorage.setItem('ks_cached_featured_products', JSON.stringify(res.products));
         sessionStorage.setItem('ks_cached_featured_products', JSON.stringify(res.products));

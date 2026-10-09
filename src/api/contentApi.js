@@ -53,13 +53,36 @@ async function safeRequest(url, options = {}) {
   }
 }
 
+let categoriesCache = { data: null, timestamp: 0 };
+let heroSlidesCache = { data: null, timestamp: 0 };
+const CONTENT_CACHE_TTL = 60 * 1000;
+
+function preloadImages(urls) {
+  if (typeof window === 'undefined' || !Array.isArray(urls)) return;
+  urls.forEach((url) => {
+    if (url && typeof url === 'string') {
+      const img = new Image();
+      img.src = url;
+    }
+  });
+}
+
 export const contentApi = {
   async getSiteSettings() {
     return safeRequest(`${API_BASE}/site-settings`);
   },
 
   async getHeroSlides() {
-    return safeRequest(`${API_BASE}/hero-slides`);
+    const now = Date.now();
+    if (heroSlidesCache.data && now - heroSlidesCache.timestamp < CONTENT_CACHE_TTL) {
+      return heroSlidesCache.data;
+    }
+    const res = await safeRequest(`${API_BASE}/hero-slides`);
+    if (res?.success && Array.isArray(res.slides)) {
+      heroSlidesCache = { data: res, timestamp: now };
+      preloadImages(res.slides.map((s) => s.media_path));
+    }
+    return res;
   },
 
   async getOfferBars() {
@@ -67,7 +90,16 @@ export const contentApi = {
   },
 
   async getCategories() {
-    return safeRequest(`${API_BASE}/categories`);
+    const now = Date.now();
+    if (categoriesCache.data && now - categoriesCache.timestamp < CONTENT_CACHE_TTL) {
+      return categoriesCache.data;
+    }
+    const res = await safeRequest(`${API_BASE}/categories`);
+    if (res?.success && Array.isArray(res.categories)) {
+      categoriesCache = { data: res, timestamp: now };
+      preloadImages(res.categories.map((c) => c.image_path));
+    }
+    return res;
   },
 
   async getUserCounts() {

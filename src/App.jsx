@@ -1,10 +1,42 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { SiteProvider } from './context/SiteContext';
 import ErrorBoundary from './components/ErrorBoundary';
+
+if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual';
+}
+
+function ScrollToTop() {
+  const { pathname, search } = useLocation();
+
+  useEffect(() => {
+    // Immediate instant reset
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    // Reset potential inner scroll containers
+    const containers = document.querySelectorAll('.ks-page-canvas, .ks-catalog-page-container, #root, main');
+    containers.forEach((el) => {
+      if (el && el.scrollTop) el.scrollTop = 0;
+    });
+
+    // Enforce after paint
+    const rafId = requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+
+    return () => cancelAnimationFrame(rafId);
+  }, [pathname, search]);
+
+  return null;
+}
 
 // Core Public Storefront Pages (Bundled with entry for fast initial navigation)
 import HomePage from './pages/HomePage';
@@ -60,6 +92,7 @@ export default function App() {
           <AdminAuthProvider>
             <SiteProvider>
               <BrowserRouter>
+                <ScrollToTop />
                 <Suspense fallback={<PageFallback />}>
                   <Routes>
                     {/* Dedicated Public Storefront Routes */}

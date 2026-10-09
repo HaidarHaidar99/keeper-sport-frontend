@@ -8,10 +8,11 @@ import Footer from '../components/Footer';
 
 export default function CartPage() {
   const navigate = useNavigate();
-  const { siteSettings, categories, refreshCounts } = useSite();
+  const { siteSettings, categories, refreshCounts, updateCartCount } = useSite();
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updatingItemId, setUpdatingItemId] = useState(null);
+  const [stockNotice, setStockNotice] = useState(null);
   const [showClearModal, setShowClearModal] = useState(false);
   const [clearingCart, setClearingCart] = useState(false);
 
@@ -45,49 +46,70 @@ export default function CartPage() {
   }, []);
 
   const handleUpdateQty = async (itemId, currentQty, delta) => {
-    if (updatingItemId) return;
+    const item = (cart?.items || []).find((it) => it.id === itemId);
+    const maxStock = item?.variant?.stock_quantity ?? item?.product?.stock_quantity ?? 99;
     const newQty = currentQty + delta;
+
+    // Enforce max available stock
+    if (delta > 0 && currentQty >= maxStock) {
+      setStockNotice(`Cannot add more. Only ${maxStock} items available in stock.`);
+      setTimeout(() => setStockNotice(null), 3500);
+      return;
+    }
+
     if (newQty < 1) return; // Min quantity is 1; use Delete button to remove
+    setStockNotice(null);
 
-    setUpdatingItemId(itemId);
-
-    // Optimistic update
+    // Instant zero-latency optimistic update in the exact same millisecond
+    let nextCartCount = 0;
     setCart((prev) => {
       if (!prev) return prev;
+      let newSubtotal = 0;
+      let newTotalItems = 0;
       const updatedItems = (prev.items || []).map((it) => {
         if (it.id === itemId) {
           const unitPrice = Number(it.unitPrice || it.product?.base_price || 0);
-          return { ...it, quantity: newQty, lineTotal: unitPrice * newQty };
+          const lineTotal = unitPrice * newQty;
+          newSubtotal += lineTotal;
+          newTotalItems += newQty;
+          return { ...it, quantity: newQty, lineTotal };
         }
+        const unitPrice = Number(it.unitPrice || it.product?.base_price || 0);
+        newSubtotal += Number(it.lineTotal != null ? it.lineTotal : unitPrice * it.quantity);
+        newTotalItems += it.quantity;
         return it;
       });
-      return { ...prev, items: updatedItems };
+      nextCartCount = newTotalItems;
+      return {
+        ...prev,
+        items: updatedItems,
+        subtotal: parseFloat(newSubtotal.toFixed(2)),
+        cartCount: newTotalItems
+      };
     });
+
+    // Update navbar badge in the exact same second!
+    if (typeof updateCartCount === 'function') {
+      const calculatedTotal = (cart?.items || []).reduce(
+        (sum, it) => sum + (it.id === itemId ? newQty : it.quantity),
+        0
+      );
+      updateCartCount(calculatedTotal);
+    }
 
     try {
       const res = await productApi.updateCartQuantity(itemId, newQty);
       if (res?.success) {
-        const rawItems = Array.isArray(res.items)
-          ? res.items
-          : Array.isArray(res.cart?.items)
-          ? res.cart.items
-          : null;
-        if (rawItems) {
-          setCart({
-            ...(res.cart || {}),
-            items: rawItems,
-            subtotal: res.subtotal != null ? res.subtotal : res.cart?.subtotal || 0,
-            cartCount: res.cartCount != null ? res.cartCount : res.cart?.cartCount || 0
-          });
+        if (typeof res.cartCount === 'number' && typeof updateCartCount === 'function') {
+          updateCartCount(res.cartCount);
         }
-        if (typeof refreshCounts === 'function') refreshCounts();
       } else {
+        setStockNotice(res?.message || 'Could not update quantity.');
+        setTimeout(() => setStockNotice(null), 3500);
         await loadCart();
       }
     } catch {
       await loadCart();
-    } finally {
-      setUpdatingItemId(null);
     }
   };
 
@@ -212,6 +234,14 @@ export default function CartPage() {
           <div className="ks-cart-grid">
             {/* Items Column */}
             <div className="ks-cart-items-col">
+              {/* Dynamic Stock Limit / Error Notice */}
+              {stockNotice && (
+                <div className="ks-alert ks-alert-error" style={{ marginBottom: '16px' }} role="alert">
+                  <AlertTriangle size={16} />
+                  <span>{stockNotice}</span>
+                </div>
+              )}
+
               {/* Header with Clear Cart */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '8px', borderBottom: '1px solid var(--ks-border-card)' }}>
                 <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ks-text-muted)' }}>
@@ -315,85 +345,93 @@ export default function CartPage() {
 
                       {/* Visible, high-contrast Quantity Controls and Delete */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '10px' }}>
-                        <div
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            border: '1px solid var(--ks-border-card, #e5e7eb)',
-                            borderRadius: '8px',
-                            background: 'var(--ks-bg-card, #ffffff)',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                            overflow: 'hidden'
-                          }}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateQty(item.id, item.quantity, -1)}
-                            disabled={isUpdating || item.quantity <= 1}
-                            aria-label="Decrease quantity"
-                            title={item.quantity <= 1 ? "Minimum quantity is 1" : "Decrease quantity"}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: item.quantity <= 1 ? 'var(--ks-text-muted)' : 'var(--ks-text-title)',
-                              opacity: item.quantity <= 1 ? 0.4 : 1,
-                              padding: '8px 12px',
-                              cursor: item.quantity <= 1 ? 'not-allowed' : 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              transition: 'background-color 0.15s'
-                            }}
-                            onMouseEnter={(e) => {
-                              if (item.quantity > 1) e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.04)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'transparent';
-                            }}
-                          >
-                            <Minus size={13} strokeWidth={2.5} />
-                          </button>
+                        {(() => {
+                          const itemMaxStock = item.variant?.stock_quantity ?? item.product?.stock_quantity ?? 99;
+                          const isAtMax = item.quantity >= itemMaxStock;
 
-                          <span
-                            style={{
-                              fontSize: '14px',
-                              fontWeight: 700,
-                              minWidth: '28px',
-                              textAlign: 'center',
-                              color: 'var(--ks-text-title, #111317)',
-                              userSelect: 'none'
-                            }}
-                          >
-                            {item.quantity}
-                          </span>
+                          return (
+                            <div
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                border: '1px solid var(--ks-border-card, #e5e7eb)',
+                                borderRadius: '8px',
+                                background: 'var(--ks-bg-card, #ffffff)',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                                overflow: 'hidden'
+                              }}
+                            >
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateQty(item.id, item.quantity, -1)}
+                                disabled={item.quantity <= 1}
+                                aria-label="Decrease quantity"
+                                title={item.quantity <= 1 ? "Minimum quantity is 1" : "Decrease quantity"}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: item.quantity <= 1 ? 'var(--ks-text-muted)' : 'var(--ks-text-title)',
+                                  opacity: item.quantity <= 1 ? 0.4 : 1,
+                                  padding: '8px 12px',
+                                  cursor: item.quantity <= 1 ? 'not-allowed' : 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'background-color 0.15s'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (item.quantity > 1) e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.04)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'transparent';
+                                }}
+                              >
+                                <Minus size={13} strokeWidth={2.5} />
+                              </button>
 
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateQty(item.id, item.quantity, 1)}
-                            disabled={isUpdating}
-                            aria-label="Increase quantity"
-                            title="Increase quantity"
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: 'var(--ks-text-title)',
-                              padding: '8px 12px',
-                              cursor: isUpdating ? 'not-allowed' : 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              transition: 'background-color 0.15s'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.04)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'transparent';
-                            }}
-                          >
-                            <Plus size={13} strokeWidth={2.5} />
-                          </button>
-                        </div>
+                              <span
+                                style={{
+                                  fontSize: '14px',
+                                  fontWeight: 700,
+                                  minWidth: '28px',
+                                  textAlign: 'center',
+                                  color: 'var(--ks-text-title, #111317)',
+                                  userSelect: 'none'
+                                }}
+                              >
+                                {item.quantity}
+                              </span>
+
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateQty(item.id, item.quantity, 1)}
+                                disabled={isAtMax}
+                                aria-label="Increase quantity"
+                                title={isAtMax ? `Stock limit reached (${itemMaxStock} available)` : "Increase quantity"}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: isAtMax ? 'var(--ks-text-muted)' : 'var(--ks-text-title)',
+                                  opacity: isAtMax ? 0.35 : 1,
+                                  padding: '8px 12px',
+                                  cursor: isAtMax ? 'not-allowed' : 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'background-color 0.15s'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!isAtMax) e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.04)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'transparent';
+                                }}
+                              >
+                                <Plus size={13} strokeWidth={2.5} />
+                              </button>
+                            </div>
+                          );
+                        })()}
 
                         {/* Distinct Delete button */}
                         <button

@@ -13,7 +13,7 @@ export const DEFAULT_SITE_SETTINGS = {
   site_name: 'Keeper Sports',
   logo_path: DEFAULT_LOGO_URL,
   phone_number: '+961 70 973 086',
-  email: 'support@keepersportlb.com',
+  email: 'keepersportlb@gmail.com',
   whatsapp_number: '+961 70 973 086',
   instagram_url: 'https://instagram.com/keepersportlb',
   tiktok_url: 'https://tiktok.com/@keepersportlb',
@@ -37,7 +37,14 @@ export function SiteProvider({ children }) {
   const [siteSettings, setSiteSettings] = useState(() => {
     try {
       const cached = localStorage.getItem(SETTINGS_STORAGE_KEY) || sessionStorage.getItem(SETTINGS_STORAGE_KEY);
-      return cached ? JSON.parse(cached) : DEFAULT_SITE_SETTINGS;
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (!parsed.email || parsed.email.includes('support@keepersportlb.com')) {
+          parsed.email = 'keepersportlb@gmail.com';
+        }
+        return parsed;
+      }
+      return DEFAULT_SITE_SETTINGS;
     } catch {
       return DEFAULT_SITE_SETTINGS;
     }
@@ -148,6 +155,12 @@ export function SiteProvider({ children }) {
         if (settingsRes?.success && settingsRes.settings) {
           const merged = { ...DEFAULT_SITE_SETTINGS, ...settingsRes.settings };
           if (!merged.logo_path) merged.logo_path = DEFAULT_LOGO_URL;
+          if (!merged.email || merged.email.includes('support@keepersportlb.com')) {
+            merged.email = 'keepersportlb@gmail.com';
+          }
+          if (!merged.location_address || merged.location_address.includes('Beirut')) {
+            merged.location_address = 'Hanaway Main Street, Tyre, South Lebanon';
+          }
           setSiteSettings(merged);
           try {
             localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));

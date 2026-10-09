@@ -92,45 +92,47 @@ export default function ContactPage() {
             </p>
 
             <div className="ks-contact-items-list">
-              {siteSettings?.phone_number && (
-                <div className="ks-contact-detail-row">
-                  <div className="ks-contact-icon-box">
-                    <Phone size={18} />
-                  </div>
-                  <div>
-                    <span className="ks-contact-label">Phone</span>
-                    <a href={`tel:${siteSettings.phone_number}`} className="ks-contact-value">
-                      {siteSettings.phone_number}
-                    </a>
-                  </div>
+              <div className="ks-contact-detail-row">
+                <div className="ks-contact-icon-box">
+                  <Phone size={18} />
                 </div>
-              )}
+                <div>
+                  <span className="ks-contact-label">Phone &amp; WhatsApp</span>
+                  <a href={`tel:${siteSettings?.phone_number || '+961 70 973 086'}`} className="ks-contact-value">
+                    {siteSettings?.phone_number || '+961 70 973 086'}
+                  </a>
+                </div>
+              </div>
 
-              {siteSettings?.email && (
-                <div className="ks-contact-detail-row">
-                  <div className="ks-contact-icon-box">
-                    <Mail size={18} />
-                  </div>
-                  <div>
-                    <span className="ks-contact-label">Email</span>
-                    <a href={`mailto:${siteSettings.email}`} className="ks-contact-value">
-                      {siteSettings.email}
-                    </a>
-                  </div>
+              <div className="ks-contact-detail-row">
+                <div className="ks-contact-icon-box">
+                  <Mail size={18} />
                 </div>
-              )}
+                <div>
+                  <span className="ks-contact-label">Email</span>
+                  <a href={`mailto:${siteSettings?.email && !siteSettings.email.includes('support@keepersportlb.com') ? siteSettings.email : 'keepersportlb@gmail.com'}`} className="ks-contact-value">
+                    {siteSettings?.email && !siteSettings.email.includes('support@keepersportlb.com') ? siteSettings.email : 'keepersportlb@gmail.com'}
+                  </a>
+                </div>
+              </div>
 
-              {siteSettings?.location_name && (
-                <div className="ks-contact-detail-row">
-                  <div className="ks-contact-icon-box">
-                    <MapPin size={18} />
-                  </div>
-                  <div>
-                    <span className="ks-contact-label">Location</span>
-                    <span className="ks-contact-value">{siteSettings.location_name}</span>
-                  </div>
+              <div className="ks-contact-detail-row">
+                <div className="ks-contact-icon-box">
+                  <MapPin size={18} />
                 </div>
-              )}
+                <div>
+                  <span className="ks-contact-label">Store Location</span>
+                  <a
+                    href={siteSettings?.location_url || siteSettings?.location?.location_url || 'https://maps.app.goo.gl/mffodPxBbR573zzk8'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ks-contact-value"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    Hanaway Main Street, Tyre, South Lebanon
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
 
