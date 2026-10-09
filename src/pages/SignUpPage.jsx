@@ -147,10 +147,10 @@ export default function SignUpPage() {
       const data = await register(formData);
 
       if (data && data.success) {
-        setSuccessMessage('Account created successfully! Please check your email to verify your account.');
+        setSuccessMessage('Account created successfully! Please check your email to verify your account (link expires in 5 minutes).');
         setTimeout(() => {
           navigate('/login');
-        }, 1800);
+        }, 3000);
       } else {
         setServerError(data?.message || 'Could not complete registration.');
       }
