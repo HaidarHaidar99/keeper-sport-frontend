@@ -1,21 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Search, Heart, ShoppingBag, User } from 'lucide-react';
 import { useSite, DEFAULT_LOGO_URL } from '../context/SiteContext';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import HamburgerMenu from './HamburgerMenu';
 
 export default function Navbar({ siteSettings: propSettings, categories: propCategories, counts: propCounts }) {
   const siteCtx = useSite();
   const { user } = useAuth();
+  const { theme } = useTheme();
   const location = useLocation();
 
   const siteSettings = (propSettings && Object.keys(propSettings).length > 0) ? propSettings : (siteCtx?.siteSettings || {});
   const categories = (propCategories && propCategories.length > 0) ? propCategories : (siteCtx?.categories || []);
   const counts = (propCounts && Object.keys(propCounts).length > 0) ? propCounts : (siteCtx?.counts || {});
-  const logoSrc = siteSettings?.logo_path || DEFAULT_LOGO_URL;
+  
+  // Dynamic logo: switches automatically in light mode if a light logo is configured
+  const logoSrc = (theme === 'light' && siteSettings?.logo_light_path)
+    ? siteSettings.logo_light_path
+    : (siteSettings?.logo_path || DEFAULT_LOGO_URL);
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [navVisible, setNavVisible] = useState(true);
+
+  // Smart Scroll Reveal: Hides on scroll down, reappears immediately on even slight scroll up
+  useEffect(() => {
+    let lastScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+
+          if (currentScrollY <= 60) {
+            setNavVisible(true);
+          } else {
+            const diff = currentScrollY - lastScrollY;
+            if (diff > 8) {
+              // Scrolling down
+              setNavVisible(false);
+            } else if (diff < -4) {
+              // Scrolling up even a tiny bit -> instantly reveal!
+              setNavVisible(true);
+            }
+          }
+
+          lastScrollY = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const navLinks = [
     { label: 'Home', path: '/' },
@@ -34,12 +75,13 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
 
   return (
     <>
-      <header className="ks-navbar-root" role="banner">
+      <header className={`ks-navbar-root ${navVisible ? 'is-visible' : 'is-hidden'}`} role="banner">
         <div className="ks-navbar-container">
           {/* Left: Prominent & Bigger Keeper Sports Logo */}
           <div className="ks-navbar-left">
             <Link to="/" className="ks-navbar-brand-link" aria-label="Keeper Sports Home">
               <img
+                key={logoSrc}
                 src={logoSrc}
                 alt={siteSettings?.site_name || 'Keeper Sports'}
                 className="ks-navbar-logo-img ks-navbar-logo-large"

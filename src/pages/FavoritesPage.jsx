@@ -235,7 +235,7 @@ export default function FavoritesPage() {
         </div>
       )}
 
-      <Footer siteSettings={siteSettings} categories={categories} />
+      {!loading && <Footer siteSettings={siteSettings} categories={categories} />}
     </div>
   );
 }

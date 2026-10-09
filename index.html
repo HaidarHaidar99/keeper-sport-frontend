@@ -1,8 +1,19 @@
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="ltr" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('keeper_theme');
+          var theme = (saved === 'light' || saved === 'dark') ? saved : 'dark';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch(e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
     <meta name="description" content="Keeper Sports — Premium football shirts, boots, sportswear, training accessories, and interactive 2D custom kit designer." />
     <title>Keeper Sports | Authentic Football Kits & Performance Gear</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">

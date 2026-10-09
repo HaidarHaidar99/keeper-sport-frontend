@@ -8,11 +8,11 @@ export function ThemeProvider({ children }) {
     try {
       const saved = localStorage.getItem(THEME_STORAGE_KEY);
       if (saved === 'light' || saved === 'dark') return saved;
-      return 'light';
+      return 'dark';
     } catch (e) {
       // fallback
     }
-    return 'light';
+    return 'dark';
   });
 
   useEffect(() => {

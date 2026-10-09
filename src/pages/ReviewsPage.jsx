@@ -103,7 +103,7 @@ export default function ReviewsPage() {
         )}
       </main>
 
-      <Footer siteSettings={siteSettings} categories={categories} />
+      {!loading && <Footer siteSettings={siteSettings} categories={categories} />}
     </div>
   );
 }

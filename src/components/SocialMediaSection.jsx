@@ -40,11 +40,11 @@ export default function SocialMediaSection({ siteSettings = {} }) {
         <div
           className="ks-getintouch-card"
           style={{
-            backgroundColor: '#0E0E0E',
-            border: '1px solid #222222',
+            backgroundColor: 'var(--ks-bg-card, #0E0E0E)',
+            border: '1px solid var(--ks-border-card, #222222)',
             borderRadius: '24px',
             padding: '40px 36px',
-            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.5)'
+            boxShadow: 'var(--ks-shadow-card, 0 10px 40px rgba(0, 0, 0, 0.15))'
           }}
         >
           {/* Card Header: Title on Left, 'GET IN TOUCH ->' Button on Right */}
@@ -78,7 +78,7 @@ export default function SocialMediaSection({ siteSettings = {} }) {
                   fontFamily: 'Outfit, sans-serif',
                   fontSize: 'clamp(1.8rem, 3.5vw, 2.5rem)',
                   fontWeight: 900,
-                  color: '#FFFFFF',
+                  color: 'var(--ks-text-title, #FFFFFF)',
                   margin: 0
                 }}
               >
@@ -128,11 +128,11 @@ export default function SocialMediaSection({ siteSettings = {} }) {
                 alignItems: 'center',
                 gap: '14px',
                 padding: '20px',
-                backgroundColor: '#141414',
-                border: '1px solid #242424',
+                backgroundColor: 'var(--ks-bg-surface, #141414)',
+                border: '1px solid var(--ks-border-subtle, #242424)',
                 borderRadius: '20px',
                 textDecoration: 'none',
-                color: '#FFFFFF'
+                color: 'var(--ks-text-title, #FFFFFF)'
               }}
             >
               <div
@@ -154,7 +154,7 @@ export default function SocialMediaSection({ siteSettings = {} }) {
                 <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: '#E10600', textTransform: 'uppercase' }}>
                   PHONE
                 </span>
-                <span style={{ fontSize: '0.92rem', fontWeight: 700, color: '#FFFFFF' }}>
+                <span style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--ks-text-title, #FFFFFF)' }}>
                   {phoneNumber}
                 </span>
               </div>
@@ -170,11 +170,11 @@ export default function SocialMediaSection({ siteSettings = {} }) {
                 alignItems: 'center',
                 gap: '14px',
                 padding: '20px',
-                backgroundColor: '#141414',
-                border: '1px solid #242424',
+                backgroundColor: 'var(--ks-bg-surface, #141414)',
+                border: '1px solid var(--ks-border-subtle, #242424)',
                 borderRadius: '20px',
                 textDecoration: 'none',
-                color: '#FFFFFF'
+                color: 'var(--ks-text-title, #FFFFFF)'
               }}
             >
               <div
@@ -196,7 +196,7 @@ export default function SocialMediaSection({ siteSettings = {} }) {
                 <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: '#E10600', textTransform: 'uppercase' }}>
                   WHATSAPP
                 </span>
-                <span style={{ fontSize: '0.92rem', fontWeight: 700, color: '#FFFFFF' }}>
+                <span style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--ks-text-title, #FFFFFF)' }}>
                   Chat with us
                 </span>
               </div>
@@ -210,11 +210,11 @@ export default function SocialMediaSection({ siteSettings = {} }) {
                 alignItems: 'center',
                 gap: '14px',
                 padding: '20px',
-                backgroundColor: '#141414',
-                border: '1px solid #242424',
+                backgroundColor: 'var(--ks-bg-surface, #141414)',
+                border: '1px solid var(--ks-border-subtle, #242424)',
                 borderRadius: '20px',
                 textDecoration: 'none',
-                color: '#FFFFFF'
+                color: 'var(--ks-text-title, #FFFFFF)'
               }}
             >
               <div
@@ -236,7 +236,7 @@ export default function SocialMediaSection({ siteSettings = {} }) {
                 <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: '#E10600', textTransform: 'uppercase' }}>
                   E-MAIL
                 </span>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#FFFFFF', wordBreak: 'break-all' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--ks-text-title, #FFFFFF)', wordBreak: 'break-all' }}>
                   {emailAddress}
                 </span>
               </div>
@@ -249,10 +249,10 @@ export default function SocialMediaSection({ siteSettings = {} }) {
                 alignItems: 'center',
                 gap: '14px',
                 padding: '20px',
-                backgroundColor: '#141414',
-                border: '1px solid #242424',
+                backgroundColor: 'var(--ks-bg-surface, #141414)',
+                border: '1px solid var(--ks-border-subtle, #242424)',
                 borderRadius: '20px',
-                color: '#FFFFFF'
+                color: 'var(--ks-text-title, #FFFFFF)'
               }}
             >
               <div
@@ -274,10 +274,10 @@ export default function SocialMediaSection({ siteSettings = {} }) {
                 <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: '#E10600', textTransform: 'uppercase' }}>
                   OPENING HOURS
                 </span>
-                <span style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#FFFFFF' }}>
+                <span style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: 'var(--ks-text-title, #FFFFFF)' }}>
                   Mon – Sat: 10:00 – 19:00
                 </span>
-                <span style={{ display: 'block', fontSize: '0.78rem', color: '#A3A3A3' }}>
+                <span style={{ display: 'block', fontSize: '0.78rem', color: 'var(--ks-text-muted, #A3A3A3)' }}>
                   Sunday: 11:00 – 18:00
                 </span>
               </div>
@@ -288,7 +288,7 @@ export default function SocialMediaSection({ siteSettings = {} }) {
           <div
             style={{
               paddingTop: '24px',
-              borderTop: '1px solid #202020',
+              borderTop: '1px solid var(--ks-divider-line, #202020)',
               textAlign: 'center'
             }}
           >

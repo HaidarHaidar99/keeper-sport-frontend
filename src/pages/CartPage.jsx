@@ -114,10 +114,7 @@ export default function CartPage() {
   };
 
   const handleSelectVariant = async (itemId, variantId) => {
-    if (updatingItemId) return;
-    setUpdatingItemId(itemId);
-
-    // Instant zero-latency optimistic UI update in the exact same millisecond
+    // Instantaneous 0ms optimistic UI update without disabling or dimming the row
     setCart((prev) => {
       if (!prev) return prev;
       let newSubtotal = 0;
@@ -174,13 +171,10 @@ export default function CartPage() {
           });
         }
         if (typeof refreshCounts === 'function') refreshCounts();
-      } else {
-        await loadCart();
       }
     } catch {
+      // background silent failure recovery
       await loadCart();
-    } finally {
-      setUpdatingItemId(null);
     }
   };
 
@@ -382,7 +376,7 @@ export default function CartPage() {
                                 <button
                                   key={v.id}
                                   type="button"
-                                  disabled={isOutOfStock || isUpdating}
+                                  disabled={isOutOfStock}
                                   onClick={() => handleSelectVariant(item.id, v.id)}
                                   className={`ks-cart-size-pill ${isSelected ? 'active' : ''} ${isOutOfStock ? 'out-of-stock' : ''}`}
                                   title={isOutOfStock ? `${sText} (Out of Stock)` : `Choose Size ${sText}`}
@@ -683,7 +677,7 @@ export default function CartPage() {
         </div>
       )}
 
-      <Footer siteSettings={siteSettings} categories={categories} />
+      {!loading && <Footer siteSettings={siteSettings} categories={categories} />}
     </div>
   );
 }

@@ -495,8 +495,8 @@ export default function ProductsPage() {
         onApply={() => fetchCatalogProducts(1, false)}
       />
 
-      {/* Comprehensive Store Footer */}
-      <Footer siteSettings={siteSettings} categories={categories} />
+      {/* Comprehensive Store Footer (Hidden while loading) */}
+      {!loading && <Footer siteSettings={siteSettings} categories={categories} />}
     </div>
   );
 }

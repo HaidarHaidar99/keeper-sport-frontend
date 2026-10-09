@@ -15,12 +15,20 @@ import {
   WhatsAppIcon
 } from './SocialIcons';
 import { useSite, DEFAULT_LOGO_URL } from '../context/SiteContext';
+import { useTheme } from '../context/ThemeContext';
 
-export default function Footer({ siteSettings: propSettings }) {
+export default function Footer({ siteSettings: propSettings, loading = false, hidden = false }) {
+  const { theme } = useTheme();
+  
+  // Footer should never appear while any page or form is in a loading state
+  if (loading || hidden) return null;
+
   const siteCtx = useSite();
   const siteSettings = (propSettings && Object.keys(propSettings).length > 0) ? propSettings : (siteCtx?.siteSettings || {});
   const currentYear = new Date().getFullYear();
-  const logoSrc = siteSettings?.logo_path || DEFAULT_LOGO_URL;
+  const logoSrc = (theme === 'light' && siteSettings?.logo_light_path)
+    ? siteSettings.logo_light_path
+    : (siteSettings?.logo_path || DEFAULT_LOGO_URL);
 
   const cleanWhatsApp = siteSettings?.whatsapp_number
     ? siteSettings.whatsapp_number.replace(/[^0-9]/g, '')

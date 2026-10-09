@@ -104,7 +104,8 @@ export default function HamburgerMenu({
         <div className="ks-curtain-top-bar">
           <div className="ks-curtain-brand">
             <img
-              src={siteSettings?.logo_path || DEFAULT_LOGO_URL}
+              key={theme === 'light' && siteSettings?.logo_light_path ? siteSettings.logo_light_path : (siteSettings?.logo_path || DEFAULT_LOGO_URL)}
+              src={theme === 'light' && siteSettings?.logo_light_path ? siteSettings.logo_light_path : (siteSettings?.logo_path || DEFAULT_LOGO_URL)}
               alt={siteSettings?.site_name || 'Keeper Sports'}
               className="ks-curtain-logo-img"
               loading="eager"

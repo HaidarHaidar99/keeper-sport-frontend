@@ -4,12 +4,18 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function HeroCarousel({ slides = [], loading = false }) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [videoReady, setVideoReady] = useState(false);
   const videoRefs = useRef({});
 
   const validSlides = Array.isArray(slides)
     ? slides.filter((s) => s && s.is_active !== false && (s.media_path || s.title))
     : [];
   const currentSlide = validSlides[currentIndex] || validSlides[0] || null;
+
+  // Reset video ready state on slide switch
+  useEffect(() => {
+    setVideoReady(false);
+  }, [currentSlide?.media_path]);
 
   // Auto-rotation if multiple slides exist
   useEffect(() => {
@@ -73,20 +79,45 @@ export default function HeroCarousel({ slides = [], loading = false }) {
         {/* Media Background (Image / Video) */}
         <div className="ks-hero-media-wrapper">
           {currentSlide.media_type === 'video' && currentSlide.media_path ? (
-            <video
-              ref={(el) => {
-                if (currentSlide.id) videoRefs.current[currentSlide.id] = el;
-              }}
-              key={currentSlide.media_path}
-              src={currentSlide.media_path}
-              poster={currentSlide.fallback_image_path || undefined}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              className="ks-hero-media ks-hero-video"
-            />
+            <div className="ks-hero-video-container" style={{ position: 'relative', width: '100%', height: '100%' }}>
+              {/* Fallback image or ambient canvas shown while video buffers to avoid native browser play icon flash */}
+              {(!videoReady && currentSlide.fallback_image_path) && (
+                <img
+                  src={currentSlide.fallback_image_path}
+                  alt={currentSlide.title || 'Hero'}
+                  className="ks-hero-media ks-hero-image"
+                  style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+                />
+              )}
+              <video
+                ref={(el) => {
+                  if (currentSlide.id) videoRefs.current[currentSlide.id] = el;
+                }}
+                key={currentSlide.media_path}
+                src={currentSlide.media_path}
+                poster={currentSlide.fallback_image_path || undefined}
+                autoPlay
+                muted
+                loop
+                playsInline
+                webkit-playsinline="true"
+                x5-playsinline="true"
+                controls={false}
+                disablePictureInPicture
+                disableRemotePlayback
+                preload="auto"
+                onLoadedData={() => setVideoReady(true)}
+                onPlaying={() => setVideoReady(true)}
+                onCanPlay={() => setVideoReady(true)}
+                className="ks-hero-media ks-hero-video"
+                style={{
+                  opacity: videoReady ? 1 : 0,
+                  transition: 'opacity 0.4s ease',
+                  position: 'relative',
+                  zIndex: 2
+                }}
+              />
+            </div>
           ) : currentSlide.media_path ? (
             <img
               src={currentSlide.media_path}

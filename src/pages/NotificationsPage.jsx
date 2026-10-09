@@ -204,7 +204,7 @@ export default function NotificationsPage() {
         )}
       </main>
 
-      <Footer />
+      {!loading && <Footer siteSettings={siteSettings} categories={categories} />}
     </div>
   );
 }

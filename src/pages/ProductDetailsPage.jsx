@@ -305,7 +305,6 @@ export default function ProductDetailsPage() {
           <div className="ks-loading-spinner" />
           <p className="ks-loading-text">Loading product details...</p>
         </main>
-        <Footer siteSettings={siteSettings} categories={categories} />
       </div>
     );
   }

@@ -23,8 +23,9 @@ export default function LocationSection({ siteSettings = {} }) {
             margin: '0 auto',
             padding: '28px 24px',
             borderRadius: '24px',
-            backgroundColor: '#0E0E0E',
-            border: '1px solid #222222',
+            backgroundColor: 'var(--ks-bg-card, #0E0E0E)',
+            border: '1px solid var(--ks-border-card, #222222)',
+            boxShadow: 'var(--ks-shadow-card, 0 10px 40px rgba(0, 0, 0, 0.15))',
             textAlign: 'center'
           }}
         >
@@ -50,7 +51,7 @@ export default function LocationSection({ siteSettings = {} }) {
               fontSize: '1.45rem',
               fontWeight: 900,
               textTransform: 'uppercase',
-              color: '#FFFFFF',
+              color: 'var(--ks-text-title, #FFFFFF)',
               margin: '0 0 10px'
             }}
           >
@@ -60,7 +61,7 @@ export default function LocationSection({ siteSettings = {} }) {
           <p
             style={{
               fontSize: '0.96rem',
-              color: '#A3A3A3',
+              color: 'var(--ks-text-muted, #A3A3A3)',
               lineHeight: 1.5,
               maxWidth: '480px',
               margin: '0 auto 24px'

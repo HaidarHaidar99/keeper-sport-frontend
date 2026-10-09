@@ -239,28 +239,8 @@ ${itemsSummaryText}
 ━━━━━━━━━━━━━━━━━━━━
 Thank you for shopping with Keeper Sports! ⚽`;
 
-        // 2. Resolve target WhatsApp numbers (Store configured in site settings / fields)
-        const storeRawNumber = siteSettings?.whatsapp_number || siteSettings?.phone_number || '+961 70 973 086';
-        const cleanStoreNumber = storeRawNumber.replace(/[^0-9]/g, '') || '96170973086';
-        const storeWhatsAppUrl = `https://wa.me/${cleanStoreNumber}?text=${encodeURIComponent(fullWhatsAppMessage)}`;
-
-        // Also prepare customer WhatsApp URL if customer phone provided
-        const cleanCustomerPhone = customerPhone.replace(/[^0-9]/g, '');
-        const customerWhatsAppUrl = cleanCustomerPhone ? `https://wa.me/${cleanCustomerPhone}?text=${encodeURIComponent(fullWhatsAppMessage)}` : null;
-
-        // Auto-open WhatsApp forwarding
-        try {
-          window.open(storeWhatsAppUrl, '_blank');
-        } catch (e) {
-          console.warn('Could not auto-open WhatsApp tab:', e);
-        }
-
         setOrderComplete({
           ...res.order,
-          storeRawNumber,
-          storeWhatsAppUrl,
-          customerWhatsAppUrl,
-          fullWhatsAppMessage,
           customerName,
           customerPhone,
           customerArea,
@@ -293,43 +273,24 @@ Thank you for shopping with Keeper Sports! ⚽`;
               Thank you for choosing Keeper Sports. Your order <strong>#{orderComplete.order_number}</strong> has been received and is being prepared.
             </p>
 
-            {/* Prominent WhatsApp Forward Action */}
-            <div className="ks-order-whatsapp-box" style={{ margin: '20px 0', padding: '20px 16px', borderRadius: '20px', background: 'rgba(37, 211, 102, 0.08)', border: '1px solid rgba(37, 211, 102, 0.35)', textAlign: 'center' }}>
-              <p style={{ margin: '0 0 12px', fontSize: '14px', fontWeight: 700, color: 'var(--ks-text-title)' }}>
-                All order details ready to send to WhatsApp:
+            {/* Clean, professional WhatsApp contact confirmation */}
+            <div
+              style={{
+                margin: '20px 0',
+                padding: '16px 20px',
+                borderRadius: '16px',
+                background: 'rgba(37, 211, 102, 0.1)',
+                border: '1px solid rgba(37, 211, 102, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px'
+              }}
+            >
+              <WhatsAppIcon size={20} style={{ color: '#25D366', flexShrink: 0 }} />
+              <p style={{ margin: 0, fontSize: '0.94rem', fontWeight: 700, color: 'var(--ks-text-title)' }}>
+                We will contact you on WhatsApp as soon as possible.
               </p>
-              <a
-                href={orderComplete.storeWhatsAppUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ks-order-whatsapp-btn"
-              >
-                <WhatsAppIcon size={22} />
-                <span>SEND ORDER TO WHATSAPP ({orderComplete.storeRawNumber})</span>
-              </a>
-
-              {orderComplete.customerWhatsAppUrl && (
-                <div style={{ marginTop: '12px' }}>
-                  <a
-                    href={orderComplete.customerWhatsAppUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      fontSize: '13px',
-                      fontWeight: 600,
-                      color: 'var(--ks-text-muted)',
-                      textDecoration: 'underline',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <WhatsAppIcon size={14} />
-                    <span>Send copy to Customer WhatsApp ({orderComplete.customerPhone})</span>
-                  </a>
-                </div>
-              )}
             </div>
 
             <div className="ks-order-success-details">
@@ -367,11 +328,11 @@ Thank you for shopping with Keeper Sports! ⚽`;
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '24px', flexWrap: 'wrap' }}>
-              <Link to="/orders" className="ks-btn-primary">
+            <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', marginTop: '24px', flexWrap: 'wrap' }}>
+              <Link to="/orders" className="ks-btn-primary" style={{ textDecoration: 'none' }}>
                 <span>VIEW MY ORDERS</span>
               </Link>
-              <Link to="/products" className="ks-btn-secondary">
+              <Link to="/products" className="ks-btn-secondary" style={{ textDecoration: 'none' }}>
                 <span>CONTINUE SHOPPING</span>
               </Link>
             </div>
@@ -615,7 +576,7 @@ Thank you for shopping with Keeper Sports! ⚽`;
         )}
       </main>
 
-      <Footer siteSettings={siteSettings} categories={categories} />
+      {!loading && <Footer siteSettings={siteSettings} categories={categories} />}
     </div>
   );
 }

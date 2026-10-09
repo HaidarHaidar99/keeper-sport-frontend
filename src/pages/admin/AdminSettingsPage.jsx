@@ -8,6 +8,7 @@ export default function AdminSettingsPage() {
   const [formData, setFormData] = useState({
     site_name: 'Keeper Sports',
     logo_path: '',
+    logo_light_path: '',
     phone_number: '',
     email: '',
     whatsapp_number: '',
@@ -27,6 +28,7 @@ export default function AdminSettingsPage() {
 
   const [loading, setLoading] = useState(true);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingLightLogo, setUploadingLightLogo] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Toast feedback
@@ -49,6 +51,7 @@ export default function AdminSettingsPage() {
       setFormData({
         site_name: s.site_name || 'Keeper Sports',
         logo_path: s.logo_path || '',
+        logo_light_path: s.logo_light_path || s.favicon_path || '',
         phone_number: s.phone_number || '',
         email: s.email || '',
         whatsapp_number: s.whatsapp_number || '',
@@ -81,7 +84,7 @@ export default function AdminSettingsPage() {
         const saveRes = await adminApi.updateSettings({ logo_path: res.url });
         if (saveRes?.success) {
           refreshSettings();
-          showToast('Logo uploaded and saved! Storefront updated in real time.');
+          showToast('Dark/Default logo uploaded and saved!');
         } else {
           showToast('Logo uploaded. Click "Save Settings" to persist.');
         }
@@ -106,6 +109,43 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const handleLightLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingLightLogo(true);
+    try {
+      const res = await adminApi.uploadMedia(file);
+      if (res && res.success && res.url) {
+        setFormData((prev) => ({ ...prev, logo_light_path: res.url }));
+        const saveRes = await adminApi.updateSettings({ logo_light_path: res.url });
+        if (saveRes?.success) {
+          refreshSettings();
+          showToast('Light mode logo uploaded and saved! Storefront updated in real time.');
+        } else {
+          showToast('Light logo uploaded. Click "Save Settings" to persist.');
+        }
+      } else {
+        showToast(res.message || 'Light logo upload failed.');
+      }
+    } catch {
+      showToast('Network error uploading light logo.');
+    } finally {
+      setUploadingLightLogo(false);
+    }
+  };
+
+  const handleRemoveLightLogo = async () => {
+    setFormData((prev) => ({ ...prev, logo_light_path: '' }));
+    try {
+      await adminApi.updateSettings({ logo_light_path: null });
+      refreshSettings();
+      showToast('Light mode logo removed.');
+    } catch {
+      showToast('Error removing light mode logo.');
+    }
+  };
+
   const handleSaveSettings = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -114,6 +154,7 @@ export default function AdminSettingsPage() {
       const settingsPayload = {
         site_name: formData.site_name,
         logo_path: formData.logo_path,
+        logo_light_path: formData.logo_light_path,
         phone_number: formData.phone_number,
         email: formData.email,
         whatsapp_number: formData.whatsapp_number,
@@ -250,7 +291,7 @@ export default function AdminSettingsPage() {
             {formData.logo_path && (
               <div className="ks-settings-logo-preview">
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span className="ks-preview-tag">STORE LOGO PREVIEW:</span>
+                  <span className="ks-preview-tag">STORE LOGO PREVIEW (DARK / DEFAULT):</span>
                   <button
                     type="button"
                     onClick={handleRemoveLogo}
@@ -262,6 +303,68 @@ export default function AdminSettingsPage() {
                 </div>
                 <div className="ks-logo-box">
                   <img src={formData.logo_path} alt="Store Logo Preview" className="ks-logo-preview-img" />
+                </div>
+              </div>
+            )}
+
+            {/* Light Mode Specific Logo Field */}
+            <div className="ks-form-row" style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--ks-divider-line, #222)' }}>
+              <div className="ks-form-group" style={{ width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <label className="ks-form-label" style={{ margin: 0 }}>Store Logo (Light Mode)</label>
+                  <span style={{ fontSize: '12px', color: 'var(--ks-text-muted)' }}>
+                    Switches automatically when visitor toggles to Light Mode
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <label className="ks-admin-btn-secondary" style={{ cursor: 'pointer', flexShrink: 0 }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLightLogoUpload}
+                      style={{ display: 'none' }}
+                      disabled={uploadingLightLogo}
+                    />
+                    {uploadingLightLogo ? (
+                      <>
+                        <Loader2 size={15} className="ks-spin-icon" />
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload size={15} />
+                        <span>Upload Light Logo</span>
+                      </>
+                    )}
+                  </label>
+
+                  <input
+                    type="text"
+                    placeholder="or enter Light Mode Logo CDN URL"
+                    value={formData.logo_light_path || ''}
+                    onChange={(e) => setFormData({ ...formData, logo_light_path: e.target.value })}
+                    className="ks-admin-input"
+                    style={{ flex: 1 }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {formData.logo_light_path && (
+              <div className="ks-settings-logo-preview" style={{ marginTop: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span className="ks-preview-tag">LIGHT MODE LOGO PREVIEW (ON WHITE CANVAS):</span>
+                  <button
+                    type="button"
+                    onClick={handleRemoveLightLogo}
+                    className="ks-admin-btn-secondary"
+                    style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', color: 'var(--ks-error-red)' }}
+                  >
+                    Remove Light Logo
+                  </button>
+                </div>
+                <div className="ks-logo-box" style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '12px', border: '1px solid #E5E5E5' }}>
+                  <img src={formData.logo_light_path} alt="Light Mode Logo Preview" className="ks-logo-preview-img" style={{ maxHeight: '56px' }} />
                 </div>
               </div>
             )}
