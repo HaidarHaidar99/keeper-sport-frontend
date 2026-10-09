@@ -55,7 +55,7 @@ export default function ShopByCategory({ categories = [] }) {
 
         {/* 4 Equal Category Cards with Full Background Image */}
         <div className="ks-category-equal-grid">
-          {initialCategories.map((cat) => (
+          {initialCategories.map((cat, idx) => (
             <Link
               key={cat.id || cat.slug}
               to={`/products?category=${encodeURIComponent(cat.slug || cat.id)}`}
