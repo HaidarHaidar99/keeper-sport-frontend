@@ -10,7 +10,9 @@ import {
   InstagramIcon,
   FacebookIcon,
   TikTokIcon,
-  TwitterXIcon
+  TwitterXIcon,
+  YouTubeIcon,
+  WhatsAppIcon
 } from './SocialIcons';
 import { useSite } from '../context/SiteContext';
 
@@ -20,22 +22,28 @@ export default function Footer({ siteSettings: propSettings, categories: propCat
   const categories = (propCategories && propCategories.length > 0) ? propCategories : (siteCtx?.categories || []);
   const currentYear = new Date().getFullYear();
 
-  const socialLinks = [
-    { key: 'instagram', url: siteSettings?.instagram_url, label: 'Instagram', icon: InstagramIcon },
-    { key: 'facebook', url: siteSettings?.facebook_url, label: 'Facebook', icon: FacebookIcon },
-    { key: 'tiktok', url: siteSettings?.tiktok_url, label: 'TikTok', icon: TikTokIcon },
-    { key: 'x', url: siteSettings?.x_url, label: 'X', icon: TwitterXIcon },
-  ].filter((s) => Boolean(s.url));
-
   const cleanWhatsApp = siteSettings?.whatsapp_number
     ? siteSettings.whatsapp_number.replace(/[^0-9]/g, '')
     : null;
+
+  const rawSocial = siteSettings?.social_media || {};
+
+  const socialLinks = [
+    { key: 'instagram', url: rawSocial.instagram?.url || siteSettings?.instagram_url, label: 'Instagram', icon: InstagramIcon },
+    { key: 'facebook', url: rawSocial.facebook?.url || siteSettings?.facebook_url, label: 'Facebook', icon: FacebookIcon },
+    { key: 'whatsapp', url: rawSocial.whatsapp?.url || (cleanWhatsApp ? `https://wa.me/${cleanWhatsApp}` : null), label: 'WhatsApp', icon: WhatsAppIcon },
+    { key: 'youtube', url: rawSocial.youtube?.url || siteSettings?.youtube_url, label: 'YouTube', icon: YouTubeIcon },
+    { key: 'x', url: rawSocial.x?.url || siteSettings?.x_url, label: 'X', icon: TwitterXIcon },
+    { key: 'tiktok', url: rawSocial.tiktok?.url || siteSettings?.tiktok_url, label: 'TikTok', icon: TikTokIcon }
+  ].filter((s) => Boolean(s.url));
+
+  const locationText = siteSettings?.location?.full_address || siteSettings?.location_name || null;
 
   return (
     <footer className="ks-footer-root" role="contentinfo">
       <div className="ks-footer-container">
         <div className="ks-footer-grid">
-          {/* Col 1: Brand & Identity (Sensibly Sized Logo) */}
+          {/* Col 1: Brand & Identity */}
           <div className="ks-footer-col ks-footer-brand-col">
             <Link to="/" className="ks-footer-brand-link" aria-label="Keeper Sports Home">
               {siteSettings?.logo_path ? (
@@ -87,6 +95,7 @@ export default function Footer({ siteSettings: propSettings, categories: propCat
                     rel="noopener noreferrer"
                     className="ks-footer-social-btn"
                     aria-label={label}
+                    title={label}
                   >
                     <Icon size={16} />
                   </a>
@@ -109,7 +118,7 @@ export default function Footer({ siteSettings: propSettings, categories: propCat
             </ul>
           </div>
 
-          {/* Col 3: Categories from Real DB */}
+          {/* Col 3: Real Database Categories */}
           <div className="ks-footer-col">
             <h4 className="ks-footer-col-title">CATEGORIES</h4>
             <ul className="ks-footer-links-list">
@@ -139,13 +148,13 @@ export default function Footer({ siteSettings: propSettings, categories: propCat
               )}
               {siteSettings?.whatsapp_number && (
                 <li>
-                  <Phone size={14} className="ks-footer-contact-icon" />
+                  <WhatsAppIcon size={14} className="ks-footer-contact-icon" />
                   <a
                     href={`https://wa.me/${cleanWhatsApp}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    WhatsApp Service
+                    WhatsApp Chat
                   </a>
                 </li>
               )}
@@ -155,24 +164,24 @@ export default function Footer({ siteSettings: propSettings, categories: propCat
                   <a href={`mailto:${siteSettings.email}`}>{siteSettings.email}</a>
                 </li>
               )}
-              {siteSettings?.location_name && (
+              {locationText && (
                 <li>
                   <MapPin size={14} className="ks-footer-contact-icon" />
-                  <span>{siteSettings.location_name}</span>
+                  <span>{locationText}</span>
                 </li>
               )}
             </ul>
           </div>
         </div>
 
-        {/* Bottom Copyright Bar */}
+        {/* Bottom Bar: Copyright */}
         <div className="ks-footer-bottom">
           <p className="ks-footer-copyright">
             &copy; {currentYear} {siteSettings?.site_name || 'Keeper Sports'}. All rights reserved.
           </p>
           <div className="ks-footer-meta-pill">
             <Shield size={13} style={{ color: 'var(--ks-accent-red)' }} />
-            <span>100% Guaranteed Authentic</span>
+            <span>100% Guaranteed Authentic Gear</span>
           </div>
         </div>
       </div>

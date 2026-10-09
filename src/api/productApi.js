@@ -165,6 +165,16 @@ export const productApi = {
   },
 
   /**
+   * Update selected variant (size/color) of an item in cart
+   */
+  async updateCartItemVariant(itemId, variantId) {
+    return safeRequest(`${API_BASE}/cart/items/${itemId}/variant`, {
+      method: 'PUT',
+      body: JSON.stringify({ variantId })
+    });
+  },
+
+  /**
    * Remove item from cart
    */
   async removeFromCart(itemId) {

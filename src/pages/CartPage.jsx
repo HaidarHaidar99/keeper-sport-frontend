@@ -91,6 +91,24 @@ export default function CartPage() {
     }
   };
 
+  const handleSelectVariant = async (itemId, variantId) => {
+    if (updatingItemId) return;
+    setUpdatingItemId(itemId);
+    try {
+      const res = await productApi.updateCartItemVariant(itemId, variantId);
+      if (res?.success) {
+        await loadCart();
+        if (typeof refreshCounts === 'function') refreshCounts();
+      } else {
+        await loadCart();
+      }
+    } catch {
+      await loadCart();
+    } finally {
+      setUpdatingItemId(null);
+    }
+  };
+
   const handleRemoveItem = async (itemId) => {
     if (updatingItemId) return;
     setUpdatingItemId(itemId);
@@ -261,6 +279,36 @@ export default function CartPage() {
                         {item.badge && <span>Badge: {item.badge}</span>}
                       </div>
 
+                      {/* Deferred Size / Variant Selector */}
+                      {item.requiresVariantSelection && (
+                        <div className="ks-cart-variant-picker-box">
+                          <div className="ks-cart-variant-picker-label">
+                            <AlertTriangle size={13} className="ks-alert-icon" />
+                            <span>Please choose your size before checkout:</span>
+                          </div>
+                          <div className="ks-cart-variant-options-list">
+                            {Array.isArray(item.availableVariants) && item.availableVariants.length > 0 ? (
+                              item.availableVariants.map((v) => (
+                                <button
+                                  key={v.id}
+                                  type="button"
+                                  onClick={() => handleSelectVariant(item.id, v.id)}
+                                  disabled={isUpdating}
+                                  className="ks-cart-variant-option-btn"
+                                >
+                                  {v.size || v.name || 'Standard'} {v.color ? `— ${v.color}` : ''}
+                                </button>
+                              ))
+                            ) : (
+                              <span className="ks-text-muted" style={{ fontSize: '12px' }}>
+                                No variants found.
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+
                       {/* Visible, high-contrast Quantity Controls and Delete */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '10px' }}>
                         <div
@@ -409,11 +457,28 @@ export default function CartPage() {
                   <span>${total.toFixed(2)}</span>
                 </div>
 
+                {/* Unresolved Variants Warning */}
+                {(cart?.items || []).some((it) => it.requiresVariantSelection) ? (
+                  <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(225,6,0,0.08)', border: '1px solid var(--ks-accent-red)', color: 'var(--ks-accent-red)', fontSize: '13px', fontWeight: 600 }}>
+                    Please select a size for all highlighted items above before checkout.
+                  </div>
+                ) : null}
+
                 <button
                   type="button"
-                  onClick={() => navigate('/checkout')}
+                  onClick={() => {
+                    const unresolved = (cart?.items || []).some((it) => it.requiresVariantSelection);
+                    if (unresolved) return;
+                    navigate('/checkout');
+                  }}
+                  disabled={(cart?.items || []).some((it) => it.requiresVariantSelection)}
                   className="ks-btn-primary"
-                  style={{ width: '100%', marginTop: '20px' }}
+                  style={{
+                    width: '100%',
+                    marginTop: '20px',
+                    opacity: (cart?.items || []).some((it) => it.requiresVariantSelection) ? 0.5 : 1,
+                    cursor: (cart?.items || []).some((it) => it.requiresVariantSelection) ? 'not-allowed' : 'pointer'
+                  }}
                 >
                   <span>PROCEED TO CHECKOUT</span>
                   <ArrowRight size={16} style={{ marginLeft: '6px' }} />

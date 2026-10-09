@@ -55,6 +55,18 @@ export default function ProductsPage() {
   const [minPrice, setMinPrice] = useState(searchParams.get('min_price') || '');
   const [maxPrice, setMaxPrice] = useState(searchParams.get('max_price') || '');
 
+  // Synchronize incoming URL searchParams (e.g. from Category cards or Navbar curtain)
+  useEffect(() => {
+    const urlCategory = searchParams.get('category') || '';
+    if (urlCategory !== selectedCategory) {
+      setSelectedCategory(urlCategory);
+    }
+    const urlSearch = searchParams.get('search') || '';
+    if (urlSearch !== searchTerm) {
+      setSearchTerm(urlSearch);
+    }
+  }, [searchParams]);
+
   // 1. Fetch Offers on Mount
   useEffect(() => {
     let isMounted = true;

@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight, Loader2 } from 'lucide-react';
 import ProductCard from './ProductCard';
 
 export default function ProductsPreview({
@@ -69,21 +69,14 @@ export default function ProductsPreview({
           </div>
         </div>
 
-        {/* 2-Card Desktop Viewport Carousel Track */}
+        {/* Carousel Track */}
         <div className="ks-products-preview-track-wrap">
           <div className="ks-products-preview-track" ref={trackRef}>
-            {loading ? (
-              Array.from({ length: 2 }).map((_, idx) => (
-                <div key={idx} className="ks-preview-card-slot">
-                  <div className="ks-product-card-skeleton">
-                    <div className="ks-skeleton-img" />
-                    <div className="ks-skeleton-line short" />
-                    <div className="ks-skeleton-line title" />
-                    <div className="ks-skeleton-line price" />
-                    <div className="ks-skeleton-actions" />
-                  </div>
-                </div>
-              ))
+            {loading && validProducts.length === 0 ? (
+              <div className="ks-preview-loading-box">
+                <Loader2 size={24} className="ks-spin" />
+                <span>Loading products...</span>
+              </div>
             ) : (
               validProducts.map((prod) => (
                 <div key={prod.id} className="ks-preview-card-slot">
@@ -98,7 +91,7 @@ export default function ProductsPreview({
           </div>
         </div>
 
-        {/* View All Products Action Button */}
+        {/* View All Products Button (Square corners) */}
         <div className="ks-products-preview-footer">
           <Link to="/products" className="ks-products-view-all-btn">
             <span>View All Products</span>

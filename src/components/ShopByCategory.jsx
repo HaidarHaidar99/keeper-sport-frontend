@@ -20,7 +20,7 @@ export default function ShopByCategory({ categories = [] }) {
 
   const scrollRail = (direction) => {
     if (railRef.current) {
-      const scrollAmount = direction === 'left' ? -340 : 340;
+      const scrollAmount = direction === 'left' ? -320 : 320;
       railRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
   };
@@ -63,7 +63,7 @@ export default function ShopByCategory({ categories = [] }) {
           </div>
         </div>
 
-        {/* Integrated Category & Product Search Bar */}
+        {/* Clean Rectangular Search Bar with Generous Breathing Room */}
         <div className="ks-category-search-bar-wrap">
           <form onSubmit={handleSearchSubmit} className="ks-category-search-form">
             <Search size={18} className="ks-category-search-icon" aria-hidden="true" />
@@ -81,7 +81,7 @@ export default function ShopByCategory({ categories = [] }) {
           </form>
         </div>
 
-        {/* Desktop View: Horizontally Arranged Category Rail */}
+        {/* Desktop View: Horizontal Carousel Rail */}
         <div className="ks-category-desktop-rail-wrap">
           <div className="ks-category-desktop-rail" ref={railRef}>
             {validCategories.map((cat) => (
@@ -117,7 +117,7 @@ export default function ShopByCategory({ categories = [] }) {
           </div>
         </div>
 
-        {/* Mobile View: Compact 2-Column Grid (Max 4 items) */}
+        {/* Mobile View: Two-Column Grid (Max 4 items initially) */}
         <div className="ks-category-mobile-grid">
           {mobileCategories.map((cat) => (
             <Link
@@ -135,20 +135,24 @@ export default function ShopByCategory({ categories = [] }) {
                   />
                 ) : (
                   <div className="ks-category-card-fallback-canvas">
-                    <Shield size={26} className="ks-category-card-fallback-icon" />
+                    <Shield size={24} className="ks-category-card-fallback-icon" />
                   </div>
                 )}
                 <div className="ks-category-card-overlay" />
               </div>
               <div className="ks-category-card-info">
                 <h3 className="ks-category-card-name">{cat.name}</h3>
+                <span className="ks-category-card-cta">
+                  <span>Shop</span>
+                  <ArrowRight size={12} />
+                </span>
               </div>
             </Link>
           ))}
         </div>
 
-        {/* View All Categories Button */}
-        <div className="ks-category-footer">
+        {/* View All Categories Button — Aligned to the RIGHT */}
+        <div className="ks-category-footer-right">
           <Link to="/categories" className="ks-category-view-all-btn">
             <span>View All Categories</span>
             <ArrowRight size={16} />

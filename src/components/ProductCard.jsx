@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Plus, Star, Check, AlertCircle, ShoppingCart } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { Heart, Star, Check, AlertCircle } from 'lucide-react';
 import { productApi } from '../api/productApi';
-import { launchFootballToCart } from '../utils/cartAnimation';
-import { launchHeartToFavorites } from '../utils/favoriteAnimation';
 
 export default function ProductCard({
   product = {},
@@ -12,7 +9,6 @@ export default function ProductCard({
   onFavoriteToggled
 }) {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const heartBtnRef = useRef(null);
 
   // Optimistic favorite state
@@ -25,10 +21,7 @@ export default function ProductCard({
   const [cartSuccess, setCartSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
-  // Active badge index for controlled single badge slot
-  const [activeBadgeIndex, setActiveBadgeIndex] = useState(0);
-
-  // Keep favorite state synced if prop changes
+  // Keep favorite state in sync if prop changes
   useEffect(() => {
     setIsFavorited(Boolean(product?.isFavorited));
   }, [product?.isFavorited]);
@@ -36,7 +29,7 @@ export default function ProductCard({
   const productUrl = `/products/${product?.slug || product?.id || ''}`;
   const categoryName = product.category?.name || product.category_name || null;
 
-  // Real status badges computation from genuine DB fields only
+  // Real status tags from genuine database fields only
   const isOutOfStock = Boolean(product.stock?.isOutOfStock || product.stock_quantity === 0);
   const isLowStock = Boolean(
     (product.stock?.isLowStock || (product.stock_quantity > 0 && product.stock_quantity <= 5)) &&
@@ -59,26 +52,14 @@ export default function ProductCard({
       label: product.pricing?.discountLabel || 'SALE'
     });
   }
+  if (product.is_new_arrival) {
+    realBadges.push({ type: 'new', label: 'NEW ARRIVAL' });
+  }
   if (product.is_featured) {
     realBadges.push({ type: 'featured', label: 'FEATURED' });
   }
-  if (product.is_best_seller) {
-    realBadges.push({ type: 'bestseller', label: 'BEST SELLER' });
-  }
-  if (product.is_new_arrival) {
-    realBadges.push({ type: 'new', label: 'NEW' });
-  }
 
-  // Smooth rotation for multiple badges in single controlled area
-  useEffect(() => {
-    if (realBadges.length <= 1) return;
-    const interval = setInterval(() => {
-      setActiveBadgeIndex((prev) => (prev + 1) % realBadges.length);
-    }, 3800);
-    return () => clearInterval(interval);
-  }, [realBadges.length]);
-
-  // Navigate to product details
+  // Card click navigates to details unless clicking a button or link
   const handleCardClick = (e) => {
     if (e.target.closest('button') || e.target.closest('a')) {
       return;
@@ -86,7 +67,7 @@ export default function ProductCard({
     navigate(productUrl);
   };
 
-  // Immediate optimistic Favorite toggle
+  // Immediate optimistic Favorite toggle with rollback
   const handleFavoriteClick = async (e) => {
     e.stopPropagation();
     e.preventDefault();
@@ -96,14 +77,14 @@ export default function ProductCard({
     const previousState = isFavorited;
     const nextState = !previousState;
 
-    // 1. Immediate optimistic UI feedback
+    // 1. Immediate optimistic UI update
     setIsFavorited(nextState);
     setFavAnimating(true);
-    setTimeout(() => setFavAnimating(false), 400);
+    setTimeout(() => setFavAnimating(false), 350);
 
-    // 2. If favorited, launch fast micro-animation toward navbar heart
-    if (nextState && heartBtnRef.current) {
-      launchHeartToFavorites(heartBtnRef.current);
+    // Optimistically notify parent count updater
+    if (onFavoriteToggled) {
+      onFavoriteToggled(product.id, nextState);
     }
 
     setFavLoading(true);
@@ -116,14 +97,16 @@ export default function ProductCard({
           onFavoriteToggled(product.id, res.isFavorited, res.favoritesCount);
         }
       } else {
-        // Revert on failure
+        // Rollback on rejection
         setIsFavorited(previousState);
-        setErrorMessage(res.message || 'Could not update favorites.');
+        if (onFavoriteToggled) onFavoriteToggled(product.id, previousState);
+        setErrorMessage(res?.message || 'Could not update favorites.');
         setTimeout(() => setErrorMessage(null), 3000);
       }
     } catch {
-      // Revert on network error
+      // Rollback on network error
       setIsFavorited(previousState);
+      if (onFavoriteToggled) onFavoriteToggled(product.id, previousState);
       setErrorMessage('Network error updating favorites.');
       setTimeout(() => setErrorMessage(null), 3000);
     } finally {
@@ -131,17 +114,18 @@ export default function ProductCard({
     }
   };
 
-  // Add to Cart
+  // Add to Cart without choosing size (creates cart item with deferred variant)
   const handleAddToCart = async (e) => {
     e.stopPropagation();
     e.preventDefault();
 
-    if (isOutOfStock) return;
-    if (cartLoading) return;
+    if (isOutOfStock || cartLoading) return;
 
     setCartLoading(true);
     setErrorMessage(null);
-    const buttonEl = e.currentTarget;
+
+    // Immediate visual response
+    setCartSuccess(true);
 
     try {
       const res = await productApi.addToCart({
@@ -150,20 +134,17 @@ export default function ProductCard({
       });
 
       if (res && res.success) {
-        setCartSuccess(true);
+        if (onCartUpdated) {
+          onCartUpdated(res.cartCount);
+        }
         setTimeout(() => setCartSuccess(false), 2000);
-
-        // Micro-animation: Football travels from button to Cart icon in Navbar
-        launchFootballToCart(buttonEl, () => {
-          if (onCartUpdated) {
-            onCartUpdated(res.cartCount);
-          }
-        });
       } else {
-        setErrorMessage(res.message || 'Failed to add to cart.');
+        setCartSuccess(false);
+        setErrorMessage(res?.message || 'Failed to add to cart.');
         setTimeout(() => setErrorMessage(null), 3500);
       }
     } catch {
+      setCartSuccess(false);
       setErrorMessage('Network error adding to cart.');
       setTimeout(() => setErrorMessage(null), 3500);
     } finally {
@@ -171,8 +152,8 @@ export default function ProductCard({
     }
   };
 
-  // Order Now (Direct Checkout Flow)
-  const handleOrderNow = (e) => {
+  // Buy Now: Takes shopper directly into the purchase flow preserving guest checkout
+  const handleBuyNow = (e) => {
     e.stopPropagation();
     e.preventDefault();
 
@@ -180,7 +161,7 @@ export default function ProductCard({
     navigate(`/checkout?direct=true&productId=${encodeURIComponent(product.id)}&qty=1`);
   };
 
-  // Pricing calculations
+  // Pricing
   const currentPrice =
     typeof product.pricing?.currentPrice === 'number'
       ? product.pricing.currentPrice
@@ -193,7 +174,7 @@ export default function ProductCard({
       ? Number(product.old_price)
       : null;
 
-  // Real Reviews / Ratings only
+  // Real ratings only
   const ratingAverage = product.rating?.average || product.avg_rating || null;
   const ratingCount = product.rating?.count ?? product.reviews_count ?? null;
   const hasRealRating = Boolean(ratingCount && ratingCount > 0 && ratingAverage);
@@ -206,35 +187,7 @@ export default function ProductCard({
       onClick={handleCardClick}
       data-product-id={product.id}
     >
-      {/* Top Header Area: Real Category on Left, Favorite Heart on Right */}
-      <div className="ks-card-top-bar">
-        <div className="ks-card-category-wrap">
-          {categoryName ? (
-            <span className="ks-card-category-label">{categoryName}</span>
-          ) : (
-            <span className="ks-card-category-placeholder" aria-hidden="true" />
-          )}
-        </div>
-
-        <button
-          ref={heartBtnRef}
-          type="button"
-          onClick={handleFavoriteClick}
-          className={`ks-card-fav-btn ${isFavorited ? 'is-active' : ''} ${favAnimating ? 'is-animating' : ''}`}
-          aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
-          title={isFavorited ? 'Favorited' : 'Add to Favorites'}
-        >
-          <Heart
-            size={18}
-            className={`ks-fav-icon ${isFavorited ? 'ks-fav-icon-active' : ''}`}
-            fill={isFavorited ? '#E10600' : 'none'}
-            stroke={isFavorited ? '#E10600' : 'currentColor'}
-            strokeWidth={1.8}
-          />
-        </button>
-      </div>
-
-      {/* Large Dominant Product Image */}
+      {/* Rectangular Image Area */}
       <div className="ks-card-media-wrap">
         <a
           href={productUrl}
@@ -259,7 +212,7 @@ export default function ProductCard({
             />
           ) : null}
 
-          {/* Clean Neutral Fallback when no image is uploaded */}
+          {/* Clean Neutral Brand Fallback */}
           <div
             className="ks-card-img-fallback"
             style={{ display: primaryImgSrc ? 'none' : 'flex' }}
@@ -272,22 +225,45 @@ export default function ProductCard({
           </div>
         </a>
 
-        {/* Single Controlled Status Badge Area (No stacking, smooth rotation) */}
+        {/* Top-Left Overlays: Category & Price arranged so they never collide */}
+        <div className="ks-card-top-left-badges">
+          {categoryName && (
+            <span className="ks-card-category-tag">{categoryName}</span>
+          )}
+          <span className="ks-card-price-tag">${currentPrice.toFixed(2)}</span>
+        </div>
+
+        {/* Top-Right: Favorite Heart Button */}
+        <button
+          ref={heartBtnRef}
+          type="button"
+          onClick={handleFavoriteClick}
+          className={`ks-card-fav-btn ${isFavorited ? 'is-active' : ''} ${favAnimating ? 'is-animating' : ''}`}
+          aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+          title={isFavorited ? 'Favorited' : 'Add to Favorites'}
+        >
+          <Heart
+            size={18}
+            className={`ks-fav-icon ${isFavorited ? 'ks-fav-icon-active' : ''}`}
+            fill={isFavorited ? '#E10600' : 'none'}
+            stroke={isFavorited ? '#E10600' : 'currentColor'}
+            strokeWidth={2}
+          />
+        </button>
+
+        {/* Real Status Badge (Sale, Stock status, New, etc.) */}
         {realBadges.length > 0 && (
-          <div className="ks-card-badge-container">
-            <span
-              key={activeBadgeIndex}
-              className={`ks-badge ks-badge-${realBadges[activeBadgeIndex]?.type || 'default'} ks-badge-animate`}
-            >
-              {realBadges[activeBadgeIndex]?.label}
+          <div className="ks-card-badge-row">
+            <span className={`ks-badge ks-badge-${realBadges[0].type}`}>
+              {realBadges[0].label}
             </span>
           </div>
         )}
       </div>
 
-      {/* Product Content */}
+      {/* Product Content Information Below Image */}
       <div className="ks-card-body">
-        {/* Title */}
+        {/* Product Name */}
         <h3 className="ks-card-title">
           <a
             href={productUrl}
@@ -302,26 +278,24 @@ export default function ProductCard({
           </a>
         </h3>
 
-        {/* Pricing */}
+        {/* Pricing Row: Real Price + Original Price if Genuine Discount */}
         <div className="ks-card-pricing-row">
-          <span className="ks-card-price-current">
+          <span className="ks-card-price-main">
             ${currentPrice.toFixed(2)}
           </span>
-          {hasDiscount && originalPrice && originalPrice > currentPrice ? (
+          {hasDiscount && originalPrice && originalPrice > currentPrice && (
             <span className="ks-card-price-original">
               ${originalPrice.toFixed(2)}
             </span>
-          ) : null}
+          )}
         </div>
 
-        {/* Short Description */}
-        {product.description ? (
-          <p className="ks-card-description">{product.description}</p>
-        ) : (
-          <p className="ks-card-description-placeholder" aria-hidden="true" />
-        )}
+        {/* Short Product Description */}
+        <p className="ks-card-description">
+          {product.description || 'Authentic matchday gear engineered for performance.'}
+        </p>
 
-        {/* Rating row: Real stars & count, clean zero-review state */}
+        {/* Rating Row: Real Stars and Real Count Only */}
         <div className="ks-card-rating-row">
           {hasRealRating ? (
             <div className="ks-card-rating">
@@ -332,7 +306,7 @@ export default function ProductCard({
           ) : (
             <div className="ks-card-rating ks-rating-empty">
               <Star size={13} className="ks-star-icon-empty" stroke="currentColor" fill="none" />
-              <span className="ks-rating-empty-label">No reviews yet</span>
+              <span className="ks-rating-empty-label">Authentic Gear</span>
             </div>
           )}
         </div>
@@ -345,8 +319,9 @@ export default function ProductCard({
           </div>
         )}
 
-        {/* Bottom Two Actions: Add to Cart and Order Now */}
+        {/* Bottom Actions: Two Buttons Side by Side with Equal Height */}
         <div className="ks-card-actions-grid">
+          {/* ADD TO CART: Transparent background, red text, refined red outline, square corners */}
           <button
             type="button"
             onClick={handleAddToCart}
@@ -358,25 +333,23 @@ export default function ProductCard({
             {cartSuccess ? (
               <>
                 <Check size={14} strokeWidth={2.5} />
-                <span className="ks-btn-label">ADDED</span>
+                <span>ADDED</span>
               </>
             ) : (
-              <>
-                <Plus size={14} strokeWidth={2.5} />
-                <span className="ks-btn-label">ADD TO CART</span>
-              </>
+              <span>ADD TO CART</span>
             )}
           </button>
 
+          {/* BUY NOW: Solid red background, white text, square corners */}
           <button
             type="button"
-            onClick={handleOrderNow}
+            onClick={handleBuyNow}
             disabled={isOutOfStock}
-            className="ks-card-btn-order"
-            aria-label={`Order ${product.name} now`}
-            title="Order Now"
+            className="ks-card-btn-buy"
+            aria-label={`Buy ${product.name} now`}
+            title="Buy Now"
           >
-            ORDER NOW
+            <span>BUY NOW</span>
           </button>
         </div>
       </div>

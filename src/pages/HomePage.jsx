@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Truck, RotateCcw, Headphones } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSite } from '../context/SiteContext';
 import { contentApi } from '../api/contentApi';
@@ -9,11 +8,11 @@ import Navbar from '../components/Navbar';
 import OffersBar from '../components/OffersBar';
 import HeroCarousel from '../components/HeroCarousel';
 import CinematicSection from '../components/CinematicSection';
-import ProductsPreview from '../components/ProductsPreview';
 import ShopByCategory from '../components/ShopByCategory';
+import ProductsPreview from '../components/ProductsPreview';
 import OffersSection from '../components/OffersSection';
-import ReviewsSection from '../components/ReviewsSection';
-import ContactLocationSection from '../components/ContactLocationSection';
+import LocationSection from '../components/LocationSection';
+import SocialMediaSection from '../components/SocialMediaSection';
 import Footer from '../components/Footer';
 
 export default function HomePage() {
@@ -38,7 +37,7 @@ export default function HomePage() {
     }
   });
 
-  // 2. Offer Bars (Announcement Bar)
+  // 2. Offer Bars (Announcement Bar above Navbar)
   const [offerBars, setOfferBars] = useState(() => {
     try {
       const cached = sessionStorage.getItem('ks_cached_offer_bars');
@@ -68,9 +67,6 @@ export default function HomePage() {
 
   // 4. Promotions / Offers
   const [activeOffers, setActiveOffers] = useState([]);
-
-  // 5. Customer Reviews
-  const [reviews, setReviews] = useState([]);
 
   // Fetch Public Content on Mount
   useEffect(() => {
@@ -112,17 +108,10 @@ export default function HomePage() {
       }
     });
 
-    // Promotions / Offers
+    // Active Offers
     contentApi.getOffers().then((res) => {
       if (isMounted && res?.success && Array.isArray(res.offers)) {
         setActiveOffers(res.offers);
-      }
-    });
-
-    // Public Reviews
-    contentApi.getReviews().then((res) => {
-      if (isMounted && res?.success && Array.isArray(res.reviews)) {
-        setReviews(res.reviews);
       }
     });
 
@@ -150,89 +139,49 @@ export default function HomePage() {
 
   return (
     <div className="ks-home-root">
-      {/* 1. Slim Announcement Bar */}
+      {/* 0. Slim Announcement Bar (Renders ONLY when real active Admin offers exist) */}
       <OffersBar offers={offerBars} />
 
-      {/* 2. Premium Minimal Navigation Header */}
+      {/* Navbar with 2-Line Hamburger and full-viewport Curtain */}
       <Navbar
         siteSettings={siteSettings}
         categories={categories}
         counts={counts}
       />
 
-      {/* 3. True Full-Viewport Responsive Hero (Admin Content Only) */}
-      <HeroCarousel slides={heroSlides} loading={heroLoading} />
+      <main id="main-content">
+        {/* 1. Full-screen Hero (Admin media only, side-by-side square CTAs) */}
+        <HeroCarousel slides={heroSlides} loading={heroLoading} />
 
-      {/* 4. Second Section — Cinematic Image & Scroll Text */}
-      <CinematicSection categories={categories} products={featuredProducts} />
+        {/* 2. Animated After-Hero Story (Admin-managed media & scroll-reveal text) */}
+        <CinematicSection />
 
-      {/* 5. Products Preview (2-Card Desktop Carousel + Mobile Swipe) */}
-      <ProductsPreview
-        products={featuredProducts}
-        loading={featuredLoading}
-        onCartUpdated={handleCartUpdated}
-        onFavoriteToggled={handleFavoriteToggled}
+        {/* 3. Shop by Category (Uniform square cards, horizontal rail on desktop, 2-column mobile grid, right-aligned View All) */}
+        <ShopByCategory categories={categories} />
+
+        {/* 4. Products Preview (2-card desktop carousel + swipe support, rectangular View All) */}
+        <ProductsPreview
+          products={featuredProducts}
+          loading={featuredLoading}
+          onCartUpdated={handleCartUpdated}
+          onFavoriteToggled={handleFavoriteToggled}
+        />
+
+        {/* 5. Offers, only if active offers exist */}
+        <OffersSection offers={activeOffers} />
+
+        {/* 6. Location / Google Maps (Admin-managed card, Open in Google Maps action) */}
+        <LocationSection siteSettings={siteSettings} />
+
+        {/* 7. Animated Social Media Section (Monochrome/red square cards for enabled Admin platforms) */}
+        <SocialMediaSection siteSettings={siteSettings} />
+      </main>
+
+      {/* 8. Compact Footer */}
+      <Footer
+        siteSettings={siteSettings}
+        categories={categories}
       />
-
-      {/* 6. Shop by Category (Images, Search Field, Rail & Compact Mobile Grid) */}
-      <ShopByCategory categories={categories} />
-
-      {/* 7. Active Offers Section (Omitted if no active offers exist) */}
-      <OffersSection offers={activeOffers} />
-
-      {/* 8. Customer Reviews Section (Omitted gracefully if empty) */}
-      <ReviewsSection reviews={reviews} />
-
-      {/* 9. Brand Quality Pillars */}
-      <section className="ks-pillars-section" aria-label="Store Guarantees">
-        <div className="ks-pillars-container">
-          <div className="ks-pillar-item">
-            <div className="ks-pillar-icon-wrap">
-              <Shield size={22} />
-            </div>
-            <div className="ks-pillar-content">
-              <h3 className="ks-pillar-title">100% AUTHENTIC</h3>
-              <p className="ks-pillar-desc">Direct from official manufacturers and top goalkeeper brands.</p>
-            </div>
-          </div>
-
-          <div className="ks-pillar-item">
-            <div className="ks-pillar-icon-wrap">
-              <Truck size={22} />
-            </div>
-            <div className="ks-pillar-content">
-              <h3 className="ks-pillar-title">FAST DISPATCH</h3>
-              <p className="ks-pillar-desc">Prompt delivery across all Lebanese territories.</p>
-            </div>
-          </div>
-
-          <div className="ks-pillar-item">
-            <div className="ks-pillar-icon-wrap">
-              <RotateCcw size={22} />
-            </div>
-            <div className="ks-pillar-content">
-              <h3 className="ks-pillar-title">EASY SIZING &amp; RETURNS</h3>
-              <p className="ks-pillar-desc">Professional size consultation and hassle-free exchanges.</p>
-            </div>
-          </div>
-
-          <div className="ks-pillar-item">
-            <div className="ks-pillar-icon-wrap">
-              <Headphones size={22} />
-            </div>
-            <div className="ks-pillar-content">
-              <h3 className="ks-pillar-title">DEDICATED SUPPORT</h3>
-              <p className="ks-pillar-desc">Direct assistance via WhatsApp and live matchday hotline.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 10. Contact, Location & Social Section */}
-      <ContactLocationSection siteSettings={siteSettings} />
-
-      {/* 11. Compact Luxury Footer */}
-      <Footer siteSettings={siteSettings} categories={categories} />
     </div>
   );
 }

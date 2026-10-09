@@ -1,18 +1,33 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { contentApi } from '../api/contentApi';
 
-export default function CinematicSection({ categories = [], products = [] }) {
+export default function CinematicSection({ storyData: propStoryData }) {
+  const [story, setStory] = useState(propStoryData || null);
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef(null);
 
-  // Discover real Admin-managed media source (category image or product image)
-  const candidateCategory = categories.find((c) => c && c.image_path);
-  const candidateProduct = products.find((p) => p && (p.primaryImage || p.coverImage));
-  const mediaUrl = candidateCategory?.image_path || candidateProduct?.primaryImage || candidateProduct?.coverImage || null;
-  const mediaLabel = candidateCategory?.name || candidateProduct?.name || 'Exclusive Matchday Apparel';
-  const targetRoute = candidateCategory ? `/products?category=${encodeURIComponent(candidateCategory.slug || candidateCategory.id)}` : '/products';
+  // If not passed as prop, fetch from API
+  useEffect(() => {
+    if (propStoryData) {
+      setStory(propStoryData);
+      return;
+    }
 
+    let isMounted = true;
+    contentApi.getHomepageStory().then((res) => {
+      if (isMounted && res?.success && res.story) {
+        setStory(res.story);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [propStoryData]);
+
+  // Scroll reveal Intersection Observer
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
@@ -28,53 +43,73 @@ export default function CinematicSection({ categories = [], products = [] }) {
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [story]);
+
+  // If section is explicitly disabled by Admin or has no content, cleanly omit without gap
+  if (!story || story.is_active === false) {
+    return null;
+  }
+
+  const {
+    image_url,
+    heading,
+    subheading,
+    button_text = 'Shop Collection',
+    button_link = '/products'
+  } = story;
+
+  if (!heading && !image_url) {
+    return null;
+  }
 
   return (
     <section
       ref={sectionRef}
-      className={`ks-cinematic-section ${isVisible ? 'is-in-view' : ''}`}
-      aria-label="Editorial Showcase"
+      className={`ks-story-section ${isVisible ? 'is-in-view' : ''}`}
+      aria-label="Homepage Story"
     >
-      <div className="ks-cinematic-container">
-        <div className="ks-cinematic-frame">
-          {/* Admin Media Layer */}
-          {mediaUrl ? (
-            <div className="ks-cinematic-media-wrap">
+      <div className="ks-story-container">
+        <div className="ks-story-card">
+          {/* Background Photography with Smooth Reveal */}
+          {image_url ? (
+            <div className="ks-story-media-wrap">
               <img
-                src={mediaUrl}
-                alt={mediaLabel}
-                className="ks-cinematic-img"
+                src={image_url}
+                alt={heading || 'Keeper Sports Story'}
+                className="ks-story-img"
                 loading="lazy"
                 decoding="async"
               />
-              <div className="ks-cinematic-gradient-overlay" />
+              <div className="ks-story-overlay-scrim" />
             </div>
           ) : (
-            <div className="ks-cinematic-ambient-canvas" />
+            <div className="ks-story-media-ambient" />
           )}
 
-          {/* Animated Editorial Text Revealing into Image */}
-          <div className="ks-cinematic-content">
-            <div className="ks-cinematic-eyebrow-pill">
-              <Sparkles size={13} className="ks-cinematic-sparkle" />
-              <span>EDITORIAL SPOTLIGHT</span>
-            </div>
+          {/* Cinematic Text Entering from Above into Image Area */}
+          <div className="ks-story-content">
+            <span className="ks-story-eyebrow">AUTHENTIC MATCHDAY HERITAGE</span>
 
-            <h2 className="ks-cinematic-title">
-              CRAFTED FOR MATCHDAY EXCELLENCE
-            </h2>
+            {heading && (
+              <h2 className="ks-story-heading">
+                {heading}
+              </h2>
+            )}
 
-            <p className="ks-cinematic-subtitle">
-              Engineered with championship durability and high-performance ergonomics. Designed for athletes who command the field.
-            </p>
+            {subheading && (
+              <p className="ks-story-subheading">
+                {subheading}
+              </p>
+            )}
 
-            <div className="ks-cinematic-action">
-              <Link to={targetRoute} className="ks-cinematic-btn">
-                <span>Explore {candidateCategory ? candidateCategory.name : 'Collection'}</span>
-                <ArrowRight size={16} />
-              </Link>
-            </div>
+            {button_text && button_link && (
+              <div className="ks-story-action">
+                <Link to={button_link} className="ks-story-btn">
+                  <span>{button_text}</span>
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -56,10 +56,38 @@ export default function AdminHomePage() {
   });
   const [offerSaveLoading, setOfferSaveLoading] = useState(false);
 
+  // Homepage Story State
+  const [storyData, setStoryData] = useState({
+    is_active: true,
+    image_url: '',
+    heading: '',
+    subheading: '',
+    button_text: 'Shop Collection',
+    button_link: '/products'
+  });
+  const [storySaving, setStorySaving] = useState(false);
+  const [uploadingStoryMedia, setUploadingStoryMedia] = useState(false);
+
+  // Store Offers State
+  const [storeOffers, setStoreOffers] = useState([]);
+  const [storeOfferModalOpen, setStoreOfferModalOpen] = useState(false);
+  const [editingStoreOffer, setEditingStoreOffer] = useState(null);
+  const [storeOfferFormData, setStoreOfferFormData] = useState({
+    title: '',
+    description: '',
+    discount_type: 'percentage',
+    discount_value: 10,
+    free_delivery: false,
+    starts_at: '',
+    ends_at: '',
+    is_visible: true
+  });
+  const [storeOfferSaving, setStoreOfferSaving] = useState(false);
+
   // Confirm Delete Modal State
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
-    type: null, // 'slide' or 'offer'
+    type: null, // 'slide', 'offer', 'storeOffer'
     id: null,
     title: '',
     message: ''
@@ -78,15 +106,19 @@ export default function AdminHomePage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [overviewRes, slidesRes, offersRes] = await Promise.all([
+      const [overviewRes, slidesRes, offersRes, storyRes, storeOffersRes] = await Promise.all([
         adminApi.getHomeOverview(),
         adminApi.getHeroSlides(),
-        adminApi.getOfferBars()
+        adminApi.getOfferBars(),
+        adminApi.getHomepageStory().catch(() => null),
+        adminApi.getOffers().catch(() => null)
       ]);
 
       if (overviewRes?.success) setStats(overviewRes.stats);
       if (slidesRes?.success) setSlides(slidesRes.slides);
       if (offersRes?.success) setOffers(offersRes.offers);
+      if (storyRes?.success && storyRes.story) setStoryData(storyRes.story);
+      if (storeOffersRes?.success && Array.isArray(storeOffersRes.offers)) setStoreOffers(storeOffersRes.offers);
     } catch (err) {
       console.error('Error loading home data:', err);
     } finally {
@@ -290,6 +322,111 @@ export default function AdminHomePage() {
     }
   };
 
+  // Homepage Story File Upload
+  const handleStoryImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingStoryMedia(true);
+    try {
+      const res = await adminApi.uploadMedia(file);
+      if (res && res.success && res.url) {
+        setStoryData((prev) => ({ ...prev, image_url: res.url }));
+        showToast('Story image uploaded successfully.');
+      } else {
+        showToast(res.message || 'Media upload failed.');
+      }
+    } catch {
+      showToast('Network error uploading image.');
+    } finally {
+      setUploadingStoryMedia(false);
+    }
+  };
+
+  // Save Homepage Story
+  const handleSaveStory = async (e) => {
+    e.preventDefault();
+    setStorySaving(true);
+    try {
+      const res = await adminApi.updateHomepageStory(storyData);
+      if (res && res.success) {
+        showToast('Homepage Story saved successfully! Public storefront updated in real time.');
+      } else {
+        showToast(res.message || 'Failed to save Homepage Story.');
+      }
+    } catch {
+      showToast('Network error saving story.');
+    } finally {
+      setStorySaving(false);
+    }
+  };
+
+  // Store Offer Handlers
+  const openStoreOfferModal = (offer = null) => {
+    setEditingStoreOffer(offer);
+    if (offer) {
+      setStoreOfferFormData({
+        title: offer.title || '',
+        description: offer.description || '',
+        discount_type: offer.discount_type || 'percentage',
+        discount_value: offer.discount_value !== null ? offer.discount_value : 10,
+        free_delivery: Boolean(offer.free_delivery),
+        starts_at: offer.starts_at || '',
+        ends_at: offer.ends_at || '',
+        is_visible: offer.is_visible !== false
+      });
+    } else {
+      setStoreOfferFormData({
+        title: '',
+        description: '',
+        discount_type: 'percentage',
+        discount_value: 10,
+        free_delivery: false,
+        starts_at: '',
+        ends_at: '',
+        is_visible: true
+      });
+    }
+    setStoreOfferModalOpen(true);
+  };
+
+  const handleSaveStoreOffer = async (e) => {
+    e.preventDefault();
+    setStoreOfferSaving(true);
+    try {
+      let res;
+      if (editingStoreOffer) {
+        res = await adminApi.updateOffer(editingStoreOffer.id, storeOfferFormData);
+      } else {
+        res = await adminApi.createOffer(storeOfferFormData);
+      }
+
+      if (res && res.success) {
+        showToast(res.message || 'Store offer saved successfully.');
+        setStoreOfferModalOpen(false);
+        loadData();
+      } else {
+        showToast(res.message || 'Failed to save offer.');
+      }
+    } catch {
+      showToast('Network error saving offer.');
+    } finally {
+      setStoreOfferSaving(false);
+    }
+  };
+
+  const handleToggleStoreOffer = async (offer) => {
+    try {
+      const res = await adminApi.updateOffer(offer.id, { is_visible: !offer.is_visible });
+      if (res && res.success) {
+        showToast(`Offer ${!offer.is_visible ? 'activated' : 'deactivated'}.`);
+        loadData();
+      }
+    } catch {
+      showToast('Error toggling offer visibility.');
+    }
+  };
+
   // Confirm Delete Action
   const handleConfirmDelete = async () => {
     setDeleteLoading(true);
@@ -299,6 +436,8 @@ export default function AdminHomePage() {
         res = await adminApi.deleteHeroSlide(deleteModal.id);
       } else if (deleteModal.type === 'offer') {
         res = await adminApi.deleteOfferBar(deleteModal.id);
+      } else if (deleteModal.type === 'storeOffer') {
+        res = await adminApi.deleteOffer(deleteModal.id);
       }
 
       if (res && res.success) {
@@ -547,6 +686,241 @@ export default function AdminHomePage() {
                             }
                             className="ks-table-icon-btn is-danger"
                             title="Delete Announcement"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* SECTION 3: HOMEPAGE STORY (AFTER-HERO CINEMATIC SECTION) */}
+      <section className="ks-admin-panel" style={{ marginBottom: '32px' }} aria-label="Homepage Story">
+        <div className="ks-admin-panel-header">
+          <div>
+            <h2 className="ks-admin-panel-title">Homepage Story (After-Hero Showcase)</h2>
+            <p className="ks-admin-panel-desc">
+              Cinematic brand storytelling section displayed immediately below the hero carousel.
+            </p>
+          </div>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}>
+            <input
+              type="checkbox"
+              checked={storyData.is_active}
+              onChange={(e) => setStoryData({ ...storyData, is_active: e.target.checked })}
+            />
+            <span>Active on Storefront</span>
+          </label>
+        </div>
+
+        <form onSubmit={handleSaveStory} className="ks-admin-panel-body">
+          <div className="ks-form-row">
+            <div className="ks-form-group">
+              <label className="ks-form-label">Headline</label>
+              <input
+                type="text"
+                placeholder="e.g. CRAFTED FOR MATCHDAY EXCELLENCE"
+                value={storyData.heading || ''}
+                onChange={(e) => setStoryData({ ...storyData, heading: e.target.value })}
+                className="ks-admin-input"
+              />
+            </div>
+
+            <div className="ks-form-group">
+              <label className="ks-form-label">Story Image</label>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <label className="ks-admin-btn-secondary" style={{ cursor: 'pointer', flexShrink: 0 }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleStoryImageUpload}
+                    style={{ display: 'none' }}
+                    disabled={uploadingStoryMedia}
+                  />
+                  {uploadingStoryMedia ? (
+                    <>
+                      <Loader2 size={15} className="ks-spin-icon" />
+                      <span>Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={15} />
+                      <span>Upload Photo</span>
+                    </>
+                  )}
+                </label>
+
+                <input
+                  type="text"
+                  placeholder="or enter image CDN URL"
+                  value={storyData.image_url || ''}
+                  onChange={(e) => setStoryData({ ...storyData, image_url: e.target.value })}
+                  className="ks-admin-input"
+                  style={{ flex: 1 }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="ks-form-group">
+            <label className="ks-form-label">Supporting Text / Paragraph</label>
+            <textarea
+              rows={3}
+              placeholder="e.g. Engineered with championship durability and high-performance ergonomics. Designed for athletes who command the field."
+              value={storyData.subheading || ''}
+              onChange={(e) => setStoryData({ ...storyData, subheading: e.target.value })}
+              className="ks-admin-input"
+            />
+          </div>
+
+          <div className="ks-form-row">
+            <div className="ks-form-group">
+              <label className="ks-form-label">Call to Action Button Label</label>
+              <input
+                type="text"
+                placeholder="e.g. Explore Collection"
+                value={storyData.button_text || ''}
+                onChange={(e) => setStoryData({ ...storyData, button_text: e.target.value })}
+                className="ks-admin-input"
+              />
+            </div>
+
+            <div className="ks-form-group">
+              <label className="ks-form-label">Button Target Route</label>
+              <input
+                type="text"
+                placeholder="e.g. /products?category=jerseys"
+                value={storyData.button_link || ''}
+                onChange={(e) => setStoryData({ ...storyData, button_link: e.target.value })}
+                className="ks-admin-input"
+              />
+            </div>
+          </div>
+
+          {/* Live Preview Card */}
+          {storyData.image_url && (
+            <div style={{ marginTop: '16px', padding: '16px', background: '#0A0A0A', color: '#FFF', position: 'relative', overflow: 'hidden' }}>
+              <span style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.1em', color: '#E10600', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
+                LIVE PREVIEW
+              </span>
+              <div style={{ position: 'relative', minHeight: '180px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '24px', background: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.85)), url(${storyData.image_url}) center/cover no-repeat` }}>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', margin: '0 0 6px' }}>
+                  {storyData.heading || 'HEADLINE'}
+                </h3>
+                <p style={{ fontSize: '0.88rem', color: '#CCC', margin: '0 0 12px', maxWidth: '500px' }}>
+                  {storyData.subheading || 'Supporting narrative text...'}
+                </p>
+                <div style={{ display: 'inline-block' }}>
+                  <span style={{ background: '#E10600', color: '#FFF', padding: '6px 14px', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase' }}>
+                    {storyData.button_text || 'Button'} &rarr;
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+            <button
+              type="submit"
+              disabled={storySaving}
+              className="ks-admin-btn-primary"
+            >
+              {storySaving ? 'Saving Story...' : 'Save Homepage Story'}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {/* SECTION 4: STORE OFFERS & PROMOTIONS */}
+      <section className="ks-admin-panel" style={{ marginBottom: '32px' }} aria-label="Store Offers">
+        <div className="ks-admin-panel-header">
+          <div>
+            <h2 className="ks-admin-panel-title">Active Offers &amp; Promotions</h2>
+            <p className="ks-admin-panel-desc">
+              Customer offers linked to actual products or categories. Displayed in the storefront Offers section.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => openStoreOfferModal(null)}
+            className="ks-admin-btn-primary"
+          >
+            <Plus size={15} />
+            <span>Add Store Offer</span>
+          </button>
+        </div>
+
+        <div className="ks-admin-panel-body">
+          {storeOffers.length === 0 ? (
+            <div className="ks-admin-empty-notice">
+              <span>No store promotions created yet. Add an offer to display in the homepage Offers section.</span>
+            </div>
+          ) : (
+            <div className="ks-admin-table-responsive">
+              <table className="ks-admin-table">
+                <thead>
+                  <tr>
+                    <th>Title &amp; Description</th>
+                    <th>Discount</th>
+                    <th>Free Delivery</th>
+                    <th>Visibility</th>
+                    <th>Controls</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {storeOffers.map((o) => (
+                    <tr key={o.id}>
+                      <td>
+                        <div className="ks-table-strong">{o.title}</div>
+                        {o.description && <div className="ks-table-subtext">{o.description}</div>}
+                      </td>
+                      <td>
+                        <span className="ks-badge ks-badge-sale">
+                          {o.discount_type === 'percentage' ? `${o.discount_value}% OFF` : `$${o.discount_value} OFF`}
+                        </span>
+                      </td>
+                      <td>{o.free_delivery ? 'Yes' : 'No'}</td>
+                      <td>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStoreOffer(o)}
+                          className={`ks-toggle-switch ${o.is_visible ? 'is-active' : ''}`}
+                          aria-label={o.is_visible ? 'Deactivate offer' : 'Activate offer'}
+                        >
+                          <span className="ks-toggle-slider" />
+                        </button>
+                      </td>
+                      <td>
+                        <div className="ks-table-actions-cell">
+                          <button
+                            type="button"
+                            onClick={() => openStoreOfferModal(o)}
+                            className="ks-table-icon-btn"
+                            title="Edit Offer"
+                          >
+                            <Edit2 size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setDeleteModal({
+                                isOpen: true,
+                                type: 'storeOffer',
+                                id: o.id,
+                                title: 'Delete Store Offer',
+                                message: `Are you sure you want to delete offer "${o.title}"?`
+                              })
+                            }
+                            className="ks-table-icon-btn is-danger"
+                            title="Delete Offer"
                           >
                             <Trash2 size={15} />
                           </button>
@@ -832,6 +1206,117 @@ export default function AdminHomePage() {
                   className="ks-admin-btn-primary"
                 >
                   {offerSaveLoading ? 'Saving...' : 'Save Announcement'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CREATE / EDIT STORE OFFER MODAL */}
+      {storeOfferModalOpen && (
+        <div className="ks-admin-modal-backdrop" onClick={() => setStoreOfferModalOpen(false)} role="dialog" aria-modal="true">
+          <div className="ks-admin-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="ks-admin-modal-header">
+              <h3 className="ks-admin-modal-title">
+                {editingStoreOffer ? 'Edit Store Offer' : 'New Store Offer'}
+              </h3>
+              <button type="button" onClick={() => setStoreOfferModalOpen(false)} className="ks-admin-modal-close-btn" aria-label="Close">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveStoreOffer} className="ks-admin-form">
+              <div className="ks-admin-modal-body">
+                <div className="ks-form-group">
+                  <label className="ks-form-label">Offer Title</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 20% Off Matchday Kits"
+                    value={storeOfferFormData.title}
+                    onChange={(e) => setStoreOfferFormData({ ...storeOfferFormData, title: e.target.value })}
+                    className="ks-admin-input"
+                    required
+                  />
+                </div>
+
+                <div className="ks-form-group">
+                  <label className="ks-form-label">Description (Optional)</label>
+                  <textarea
+                    rows={2}
+                    placeholder="e.g. Save on all official jerseys this week."
+                    value={storeOfferFormData.description}
+                    onChange={(e) => setStoreOfferFormData({ ...storeOfferFormData, description: e.target.value })}
+                    className="ks-admin-input"
+                  />
+                </div>
+
+                <div className="ks-form-row">
+                  <div className="ks-form-group">
+                    <label className="ks-form-label">Discount Type</label>
+                    <select
+                      value={storeOfferFormData.discount_type}
+                      onChange={(e) => setStoreOfferFormData({ ...storeOfferFormData, discount_type: e.target.value })}
+                      className="ks-admin-input"
+                    >
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="fixed">Fixed Amount ($ USD)</option>
+                    </select>
+                  </div>
+
+                  <div className="ks-form-group">
+                    <label className="ks-form-label">Discount Value</label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={storeOfferFormData.discount_value}
+                      onChange={(e) => setStoreOfferFormData({ ...storeOfferFormData, discount_value: parseFloat(e.target.value) || 0 })}
+                      className="ks-admin-input"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="ks-form-group">
+                  <label className="ks-checkbox-wrap">
+                    <input
+                      type="checkbox"
+                      checked={storeOfferFormData.free_delivery}
+                      onChange={(e) => setStoreOfferFormData({ ...storeOfferFormData, free_delivery: e.target.checked })}
+                    />
+                    <span className="ks-checkbox-custom" />
+                    <span>Includes Free Delivery</span>
+                  </label>
+                </div>
+
+                <div className="ks-form-group">
+                  <label className="ks-checkbox-wrap">
+                    <input
+                      type="checkbox"
+                      checked={storeOfferFormData.is_visible}
+                      onChange={(e) => setStoreOfferFormData({ ...storeOfferFormData, is_visible: e.target.checked })}
+                    />
+                    <span className="ks-checkbox-custom" />
+                    <span>Visible in Active Offers section on storefront</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="ks-admin-modal-footer">
+                <button
+                  type="button"
+                  onClick={() => setStoreOfferModalOpen(false)}
+                  className="ks-admin-btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={storeOfferSaving}
+                  className="ks-admin-btn-primary"
+                >
+                  {storeOfferSaving ? 'Saving...' : 'Save Offer'}
                 </button>
               </div>
             </form>

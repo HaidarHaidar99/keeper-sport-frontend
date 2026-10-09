@@ -163,6 +163,67 @@ export const adminApi = {
     });
   },
 
+  // 4a. Homepage Story (After-Hero Cinematic Section)
+  async getHomepageStory() {
+    return adminRequest(`${API_BASE}/homepage-story`);
+  },
+
+  async updateHomepageStory(data) {
+    return adminRequest(`${API_BASE}/homepage-story`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  // 4b. Location Settings
+  async getLocationSettings() {
+    return adminRequest(`${API_BASE}/location`);
+  },
+
+  async updateLocationSettings(data) {
+    return adminRequest(`${API_BASE}/location`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  // 4c. Social Media Settings
+  async getSocialSettings() {
+    return adminRequest(`${API_BASE}/social-media`);
+  },
+
+  async updateSocialSettings(data) {
+    return adminRequest(`${API_BASE}/social-media`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  // 4d. Offers & Promotions Management
+  async getOffers() {
+    return adminRequest(`${API_BASE}/offers`);
+  },
+
+  async createOffer(data) {
+    return adminRequest(`${API_BASE}/offers`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async updateOffer(id, data) {
+    return adminRequest(`${API_BASE}/offers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async deleteOffer(id) {
+    return adminRequest(`${API_BASE}/offers/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
   // 5. Products Management
   async getProductsOverview() {
     return adminRequest(`${API_BASE}/products/overview`);

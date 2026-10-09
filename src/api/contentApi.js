@@ -103,5 +103,17 @@ export const contentApi = {
     return safeRequest(`${API_BASE}/notifications/mark-all-read`, {
       method: 'POST'
     });
+  },
+
+  async getHomepageStory() {
+    return safeRequest(`${API_BASE}/homepage-story`);
+  },
+
+  async getLocationSettings() {
+    return safeRequest(`${API_BASE}/location`);
+  },
+
+  async getSocialSettings() {
+    return safeRequest(`${API_BASE}/social-media`);
   }
 };

@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function HeroCarousel({ slides = [], loading = false }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const videoRefs = useRef({});
 
   const validSlides = Array.isArray(slides)
-    ? slides.filter((s) => s && (s.media_path || s.title))
+    ? slides.filter((s) => s && s.is_active !== false && (s.media_path || s.title))
     : [];
-  const currentSlide = validSlides[currentIndex] || validSlides[0] || {};
+  const currentSlide = validSlides[currentIndex] || validSlides[0] || null;
 
-  // Auto rotation if multiple slides
+  // Auto-rotation if multiple slides exist
   useEffect(() => {
-    if (validSlides.length <= 1) return;
+    if (validSlides.length <= 1 || !currentSlide) return;
 
-    const duration = Math.max(3, currentSlide?.duration_seconds || 6) * 1000;
+    const duration = Math.max(3, currentSlide.duration_seconds || 6) * 1000;
     const timer = setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % validSlides.length);
     }, duration);
@@ -33,60 +33,39 @@ export default function HeroCarousel({ slides = [], loading = false }) {
     setCurrentIndex((prev) => (prev + 1) % validSlides.length);
   };
 
-  // 1. Loading State: Neutral ambient container without any promotional text or fake content
+  // 1. Loading State: Subtle ambient canvas without layout shift or fake promotional banners
   if (loading && validSlides.length === 0) {
     return (
       <section className="ks-hero-root ks-hero-loading" aria-label="Hero Loading">
         <div className="ks-hero-container">
           <div className="ks-hero-ambient-canvas" />
-          <div className="ks-hero-overlay" />
         </div>
       </section>
     );
   }
 
-  // 2. Intentional Minimal Empty State when Admin has no slides configured (NO hardcoded Antigravity card)
-  if (!loading && validSlides.length === 0) {
-    return (
-      <section className="ks-hero-root ks-hero-empty" aria-label="Hero Showcase">
-        <div className="ks-hero-container">
-          <div className="ks-hero-ambient-canvas" />
-          <div className="ks-hero-overlay" />
-          <div className="ks-hero-content-group">
-            <h1 className="ks-hero-title">KEEPER SPORTS</h1>
-            <p className="ks-hero-subtitle">Authentic Football Kits &amp; Performance Equipment</p>
-            <div className="ks-hero-actions">
-              <Link to="/products" className="ks-hero-btn-primary">
-                <span>Shop Now</span>
-                <ArrowRight size={16} />
-              </Link>
-              <Link to="/contact" className="ks-hero-btn-secondary">
-                <span>Contact Us</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
+  // 2. If no Admin slides configured in database, hide or show minimal neutral frame
+  if (!loading && (!currentSlide || validSlides.length === 0)) {
+    return null;
   }
 
-  // Resolve Real Button Routes & Labels
-  const primaryRoute = currentSlide?.primary_button_route || '/products';
-  const primaryLabel = currentSlide?.primary_button_text || 'Shop Now';
-  const secondaryRoute = (currentSlide?.secondary_button_route === '/contact_us')
+  // Real button routes & labels from Admin config
+  const primaryRoute = currentSlide.primary_button_route || '/products';
+  const primaryLabel = currentSlide.primary_button_text || 'Shop Now';
+  const secondaryRoute = (currentSlide.secondary_button_route === '/contact_us')
     ? '/contact'
-    : (currentSlide?.secondary_button_route || '/contact');
-  const secondaryLabel = currentSlide?.secondary_button_text || 'Contact Us';
+    : (currentSlide.secondary_button_route || '/contact');
+  const secondaryLabel = currentSlide.secondary_button_text || 'Contact Us';
 
   return (
     <section className="ks-hero-root" aria-label="Hero Showcase">
       <div className="ks-hero-container">
-        {/* Media Background */}
+        {/* Media Background (Image / Video) */}
         <div className="ks-hero-media-wrapper">
-          {currentSlide?.media_type === 'video' && currentSlide?.media_path ? (
+          {currentSlide.media_type === 'video' && currentSlide.media_path ? (
             <video
               ref={(el) => {
-                if (currentSlide?.id) videoRefs.current[currentSlide.id] = el;
+                if (currentSlide.id) videoRefs.current[currentSlide.id] = el;
               }}
               key={currentSlide.media_path}
               src={currentSlide.media_path}
@@ -98,7 +77,7 @@ export default function HeroCarousel({ slides = [], loading = false }) {
               preload="metadata"
               className="ks-hero-media ks-hero-video"
             />
-          ) : currentSlide?.media_path ? (
+          ) : currentSlide.media_path ? (
             <img
               src={currentSlide.media_path}
               alt={currentSlide.title || 'Hero Banner'}
@@ -119,23 +98,22 @@ export default function HeroCarousel({ slides = [], loading = false }) {
 
         {/* Dynamic Admin-Configured Content */}
         <div className="ks-hero-content-group">
-          {currentSlide?.title && (
+          {currentSlide.title && (
             <h1 className="ks-hero-title">
               {currentSlide.title}
             </h1>
           )}
 
-          {currentSlide?.subtitle && (
+          {currentSlide.subtitle && (
             <p className="ks-hero-subtitle">
               {currentSlide.subtitle}
             </p>
           )}
 
-          {/* Side-by-Side Hero Actions */}
+          {/* Hero CTAs: Side by Side when space permits, square corners */}
           <div className="ks-hero-actions">
             <Link to={primaryRoute} className="ks-hero-btn-primary">
               <span>{primaryLabel}</span>
-              <ArrowRight size={16} />
             </Link>
 
             <Link to={secondaryRoute} className="ks-hero-btn-secondary">
@@ -144,7 +122,7 @@ export default function HeroCarousel({ slides = [], loading = false }) {
           </div>
         </div>
 
-        {/* Carousel Arrow Controls (When multiple slides exist) */}
+        {/* Carousel Arrow Controls (Visible only when multiple slides exist) */}
         {validSlides.length > 1 && (
           <div className="ks-hero-arrows">
             <button
@@ -153,7 +131,7 @@ export default function HeroCarousel({ slides = [], loading = false }) {
               className="ks-hero-arrow-btn ks-hero-arrow-prev"
               aria-label="Previous slide"
             >
-              <ChevronLeft size={22} />
+              <ChevronLeft size={24} />
             </button>
             <button
               type="button"
@@ -161,7 +139,7 @@ export default function HeroCarousel({ slides = [], loading = false }) {
               className="ks-hero-arrow-btn ks-hero-arrow-next"
               aria-label="Next slide"
             >
-              <ChevronRight size={22} />
+              <ChevronRight size={24} />
             </button>
           </div>
         )}

@@ -152,6 +152,12 @@ export default function CheckoutPage() {
       return;
     }
 
+    const hasUnresolvedVariants = cartItems.some((i) => i.requiresVariantSelection);
+    if (hasUnresolvedVariants) {
+      setServerError('Please select a size/color for all items in your cart before placing your order.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
