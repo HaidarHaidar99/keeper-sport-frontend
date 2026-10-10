@@ -26,7 +26,7 @@ import Footer from '../components/Footer';
 export default function ProductDetailsPage() {
   const { slugOrId } = useParams();
   const navigate = useNavigate();
-  const { siteSettings, categories, refreshCounts, counts, updateFavoritesCount, updateCartCount } = useSite();
+  const { siteSettings, categories, isFavorite, toggleFavorite, registerFavorite } = useSite();
   const heartBtnRef = useRef(null);
 
   const [product, setProduct] = useState(null);
@@ -47,8 +47,8 @@ export default function ProductDetailsPage() {
   const [printedNumber, setPrintedNumber] = useState('');
   const [selectedBadge, setSelectedBadge] = useState(null);
 
-  // Action states
-  const [isFavorited, setIsFavorited] = useState(false);
+  // Action states - favorite state comes directly from global single source of truth
+  const isFavorited = isFavorite(product?.id || product?.slug || slugOrId);
   const [favAnimating, setFavAnimating] = useState(false);
   const [cartLoading, setCartLoading] = useState(false);
   const [cartSuccess, setCartSuccess] = useState(false);
@@ -69,18 +69,6 @@ export default function ProductDetailsPage() {
     }
   }, [loading]);
 
-  // Listen to global favorites updates across the application
-  useEffect(() => {
-    const handleFavUpdated = (e) => {
-      const ids = e.detail?.favoriteIds;
-      if (Array.isArray(ids) && product?.id) {
-        setIsFavorited(ids.includes(String(product.id)) || ids.includes(Number(product.id)));
-      }
-    };
-    window.addEventListener('ks:favorites_updated', handleFavUpdated);
-    return () => window.removeEventListener('ks:favorites_updated', handleFavUpdated);
-  }, [product?.id]);
-
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
@@ -94,13 +82,9 @@ export default function ProductDetailsPage() {
         if (prodRes && prodRes.success && prodRes.product) {
           const p = prodRes.product;
           setProduct(p);
-          const isFav = isProductFavoritedLocally(p.id) || Boolean(p.isFavorited);
-          setIsFavorited(isFav);
-          if (isFav) {
-            addLocalFavoriteId(p.id);
+          if (p.isFavorited && typeof registerFavorite === 'function') {
+            registerFavorite(p.id);
           }
-
-          // Do not auto-select: customer must explicitly choose size/color if options exist
         } else {
           setError(prodRes?.message || 'Product not found.');
         }
@@ -147,68 +131,18 @@ export default function ProductDetailsPage() {
   const handleFavoriteClick = async () => {
     if (!product) return;
 
-    const prevState = isFavorited;
-    const nextState = !prevState;
-
-    // 1. Instant local state change & persistence
-    setIsFavorited(nextState);
-    if (nextState) {
-      addLocalFavoriteId(product.id);
-    } else {
-      removeLocalFavoriteId(product.id);
-    }
+    const willBeFavorited = !isFavorited;
     setFavAnimating(true);
 
-    // 2. Direct count update in navbar in the exact same second!
-    if (typeof updateFavoritesCount === 'function') {
-      const currentFavs = counts?.favorites || 0;
-      updateFavoritesCount(Math.max(0, currentFavs + (nextState ? 1 : -1)));
-    }
-
-    // 3. Launch flying heart animation
-    if (nextState && heartBtnRef.current) {
+    if (willBeFavorited && heartBtnRef.current) {
       launchHeartToFavorites(heartBtnRef.current);
     }
 
     setTimeout(() => setFavAnimating(false), 400);
 
-    // 4. Background network sync
-    try {
-      const res = await productApi.toggleFavorite(product.id);
-      if (res && res.success) {
-        setIsFavorited(res.isFavorited);
-        if (res.isFavorited) {
-          addLocalFavoriteId(product.id);
-        } else {
-          removeLocalFavoriteId(product.id);
-        }
-        if (typeof res.favoritesCount === 'number' && typeof updateFavoritesCount === 'function') {
-          updateFavoritesCount(res.favoritesCount);
-        }
-      } else {
-        setIsFavorited(prevState);
-        if (prevState) {
-          addLocalFavoriteId(product.id);
-        } else {
-          removeLocalFavoriteId(product.id);
-        }
-        if (typeof updateFavoritesCount === 'function') {
-          updateFavoritesCount(counts?.favorites || 0);
-        }
-        setActionError(res?.message || 'Could not update favorites.');
-        setTimeout(() => setActionError(null), 3000);
-      }
-    } catch {
-      setIsFavorited(prevState);
-      if (prevState) {
-        addLocalFavoriteId(product.id);
-      } else {
-        removeLocalFavoriteId(product.id);
-      }
-      if (typeof updateFavoritesCount === 'function') {
-        updateFavoritesCount(counts?.favorites || 0);
-      }
-      setActionError('Network error updating favorites.');
+    const res = await toggleFavorite(product.id);
+    if (!res.success && res.message) {
+      setActionError(res.message);
       setTimeout(() => setActionError(null), 3000);
     }
   };

@@ -13,37 +13,18 @@ export default function ProductCard({
   onFavoriteToggled
 }) {
   const navigate = useNavigate();
-  const { counts, updateFavoritesCount, updateCartCount } = useSite();
+  const { isFavorite, toggleFavorite, updateCartCount, counts } = useSite();
   const heartBtnRef = useRef(null);
   const plusBtnRef = useRef(null);
 
-  // Optimistic favorite state initialized from local persistence or prop
-  const [isFavorited, setIsFavorited] = useState(() => {
-    return isProductFavoritedLocally(product?.id) || Boolean(product?.isFavorited);
-  });
+  // Single truth source: is this product favorited?
+  const isFavorited = isFavorite(product?.id || product);
   const [favAnimating, setFavAnimating] = useState(false);
 
   // Cart action state
   const [cartLoading, setCartLoading] = useState(false);
   const [cartSuccess, setCartSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
-
-  // Listen to global favorites update events across the app
-  useEffect(() => {
-    const handleFavUpdated = (e) => {
-      const ids = e.detail?.favoriteIds;
-      if (Array.isArray(ids) && product?.id) {
-        setIsFavorited(ids.includes(String(product.id)) || ids.includes(Number(product.id)));
-      }
-    };
-    window.addEventListener('ks:favorites_updated', handleFavUpdated);
-    return () => window.removeEventListener('ks:favorites_updated', handleFavUpdated);
-  }, [product?.id]);
-
-  useEffect(() => {
-    const isFav = isProductFavoritedLocally(product?.id) || Boolean(product?.isFavorited);
-    setIsFavorited(isFav);
-  }, [product?.id, product?.isFavorited]);
 
   const productUrl = `/products/${product?.slug || product?.id || ''}`;
 
@@ -82,77 +63,26 @@ export default function ProductCard({
     navigate(productUrl);
   };
 
-  // Favorite toggle: Instant optimistic update + Flying Heart to Navbar/Mobile Nav
+  // Favorite toggle: Instant optimistic update + Flying Heart animation
   const handleFavoriteClick = async (e) => {
     e.stopPropagation();
     e.preventDefault();
 
-    const previousState = isFavorited;
-    const nextState = !previousState;
-
-    // 1. Instant local state change & persistent storage
-    setIsFavorited(nextState);
-    if (nextState) {
-      addLocalFavoriteId(product.id);
-    } else {
-      removeLocalFavoriteId(product.id);
-    }
+    const willBeFavorited = !isFavorited;
     setFavAnimating(true);
 
-    // 2. Direct count update in navbar in the exact same second!
-    if (typeof updateFavoritesCount === 'function') {
-      const currentFavs = counts?.favorites || 0;
-      updateFavoritesCount(Math.max(0, currentFavs + (nextState ? 1 : -1)));
-    }
-
-    // 3. Launch flying heart animation
-    if (nextState && heartBtnRef.current) {
+    if (willBeFavorited && heartBtnRef.current) {
       launchHeartToFavorites(heartBtnRef.current);
     }
 
     setTimeout(() => setFavAnimating(false), 400);
 
+    const res = await toggleFavorite(product.id);
     if (onFavoriteToggled) {
-      onFavoriteToggled(product.id, nextState);
+      onFavoriteToggled(product.id, res.isFavorited);
     }
-
-    // 4. Background network sync
-    try {
-      const res = await productApi.toggleFavorite(product.id);
-      if (res && res.success) {
-        setIsFavorited(res.isFavorited);
-        if (res.isFavorited) {
-          addLocalFavoriteId(product.id);
-        } else {
-          removeLocalFavoriteId(product.id);
-        }
-        if (typeof res.favoritesCount === 'number' && typeof updateFavoritesCount === 'function') {
-          updateFavoritesCount(res.favoritesCount);
-        }
-        if (onFavoriteToggled) {
-          onFavoriteToggled(product.id, res.isFavorited, res.favoritesCount);
-        }
-      } else {
-        setIsFavorited(previousState);
-        if (previousState) {
-          addLocalFavoriteId(product.id);
-        } else {
-          removeLocalFavoriteId(product.id);
-        }
-        if (typeof updateFavoritesCount === 'function') {
-          updateFavoritesCount(counts?.favorites || 0);
-        }
-        if (onFavoriteToggled) onFavoriteToggled(product.id, previousState);
-        setErrorMessage(res?.message || 'Could not update favorites.');
-        setTimeout(() => setErrorMessage(null), 3000);
-      }
-    } catch {
-      setIsFavorited(previousState);
-      if (typeof updateFavoritesCount === 'function') {
-        updateFavoritesCount(counts?.favorites || 0);
-      }
-      if (onFavoriteToggled) onFavoriteToggled(product.id, previousState);
-      setErrorMessage('Network error updating favorites.');
+    if (!res.success && res.message) {
+      setErrorMessage(res.message);
       setTimeout(() => setErrorMessage(null), 3000);
     }
   };

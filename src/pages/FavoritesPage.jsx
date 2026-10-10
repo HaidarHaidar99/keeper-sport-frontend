@@ -9,7 +9,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function FavoritesPage() {
-  const { siteSettings, categories, refreshCounts } = useSite();
+  const { siteSettings, categories, refreshCounts, clearAllFavorites } = useSite();
   const [favoriteProducts, setFavoriteProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showClearModal, setShowClearModal] = useState(false);
@@ -65,7 +65,11 @@ export default function FavoritesPage() {
     setClearingFavorites(true);
 
     try {
-      clearLocalFavorites();
+      if (typeof clearAllFavorites === 'function') {
+        clearAllFavorites();
+      } else {
+        clearLocalFavorites();
+      }
       const res = await productApi.clearFavorites();
       if (res?.success || true) {
         setFavoriteProducts([]);

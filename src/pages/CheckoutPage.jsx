@@ -532,19 +532,34 @@ Thank you for shopping with Keeper Sports! ⚽`;
               <div className="ks-cart-summary-card">
                 <h3 className="ks-cart-summary-title">Order Items ({checkoutItems.length})</h3>
 
-                <div className="ks-checkout-items-list">
+                <div className="ks-checkout-items-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '320px', overflowY: 'auto', marginBottom: '16px' }}>
                   {checkoutItems.map((item, idx) => (
-                    <div key={idx} className="ks-checkout-item-mini">
-                      <div className="ks-checkout-item-thumb">
+                    <div
+                      key={idx}
+                      className="ks-checkout-item-mini"
+                      style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 12px', background: 'var(--ks-bg-card, rgba(255, 255, 255, 0.03))', border: '1px solid var(--ks-border, rgba(255, 255, 255, 0.08))', borderRadius: '10px' }}
+                    >
+                      <div
+                        className="ks-checkout-item-thumb"
+                        style={{ width: '58px', height: '58px', minWidth: '58px', maxWidth: '58px', minHeight: '58px', maxHeight: '58px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 0, 0, 0.25)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+                      >
                         {item.image ? (
-                          <img src={item.image} alt={item.name} />
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="ks-checkout-thumb-img"
+                            style={{ width: '100%', height: '100%', maxWidth: '58px', maxHeight: '58px', objectFit: 'cover', display: 'block' }}
+                            loading="lazy"
+                          />
                         ) : (
-                          <div className="ks-card-img-fallback">KS</div>
+                          <div className="ks-card-img-fallback ks-checkout-thumb-fallback" style={{ fontSize: '11px', fontWeight: 800 }}>KS</div>
                         )}
                       </div>
-                      <div className="ks-checkout-item-info">
-                        <span className="ks-checkout-item-name">{item.name}</span>
-                        <span className="ks-checkout-item-meta">
+                      <div className="ks-checkout-item-info" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                        <span className="ks-checkout-item-name" title={item.name} style={{ fontSize: '0.88rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {item.name}
+                        </span>
+                        <span className="ks-checkout-item-meta" style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--ks-text-muted, #a3a3a3)' }}>
                           Qty: {item.quantity} · ${(item.unitPrice * item.quantity).toFixed(2)}
                           {item.size && ` · ${item.size}`}
                           {item.color && ` · ${item.color}`}

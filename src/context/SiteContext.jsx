@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { contentApi } from '../api/contentApi';
-import { getGuestOrders, getHiddenOrderIds, getLocalFavoriteIds } from '../utils/guestIdentity';
+import { productApi } from '../api/productApi';
+import {
+  getGuestOrders,
+  getHiddenOrderIds,
+  getLocalFavoriteIds,
+  addLocalFavoriteId,
+  removeLocalFavoriteId,
+  syncLocalFavoriteIds
+} from '../utils/guestIdentity';
 
 const SiteContext = createContext(null);
 
@@ -178,12 +186,116 @@ export function SiteProvider({ children }) {
     });
   }, []);
 
-  // Listen for real-time favorites updates from cards or product details
+  // Single source of truth for favorited product IDs across the entire app
+  const [favoriteIds, setFavoriteIds] = useState(() => {
+    return getLocalFavoriteIds().map(String);
+  });
+
+  const isFavorite = useCallback(
+    (productOrId) => {
+      if (!productOrId) return false;
+      if (typeof productOrId === 'object') {
+        const idStr = productOrId.id != null ? String(productOrId.id) : null;
+        const slugStr = productOrId.slug ? String(productOrId.slug) : null;
+        return Boolean((idStr && favoriteIds.includes(idStr)) || (slugStr && favoriteIds.includes(slugStr)));
+      }
+      return favoriteIds.includes(String(productOrId));
+    },
+    [favoriteIds]
+  );
+
+  const registerFavorite = useCallback(
+    (productId) => {
+      if (!productId) return;
+      const idStr = String(productId);
+      setFavoriteIds((prev) => {
+        if (prev.includes(idStr)) return prev;
+        const next = [...prev, idStr];
+        addLocalFavoriteId(idStr);
+        updateFavoritesCount(next.length);
+        return next;
+      });
+    },
+    [updateFavoritesCount]
+  );
+
+  const clearAllFavorites = useCallback(() => {
+    setFavoriteIds([]);
+    clearLocalFavorites();
+    updateFavoritesCount(0);
+  }, [updateFavoritesCount]);
+
+  const toggleFavorite = useCallback(
+    async (productId) => {
+      if (!productId) return { success: false, isFavorited: false };
+      const idStr = String(productId);
+      let willBeFav = false;
+
+      // 1. Synchronous Instant Zero-latency Optimistic Update
+      setFavoriteIds((prev) => {
+        const wasFav = prev.includes(idStr);
+        willBeFav = !wasFav;
+        const nextIds = willBeFav
+          ? Array.from(new Set([...prev, idStr]))
+          : prev.filter((id) => id !== idStr);
+
+        if (willBeFav) {
+          addLocalFavoriteId(idStr);
+        } else {
+          removeLocalFavoriteId(idStr);
+        }
+        updateFavoritesCount(nextIds.length);
+        return nextIds;
+      });
+
+      // 2. Background Network Sync
+      try {
+        const res = await productApi.toggleFavorite(productId);
+        if (res && res.success) {
+          if (typeof res.favoritesCount === 'number') {
+            updateFavoritesCount(res.favoritesCount);
+          }
+          if (typeof res.isFavorited === 'boolean') {
+            setFavoriteIds((prev) => {
+              const hasIt = prev.includes(idStr);
+              if (res.isFavorited && !hasIt) return [...prev, idStr];
+              if (!res.isFavorited && hasIt) return prev.filter((id) => id !== idStr);
+              return prev;
+            });
+          }
+          return { success: true, isFavorited: res.isFavorited };
+        }
+        return { success: true, isFavorited: willBeFav };
+      } catch (err) {
+        return { success: true, isFavorited: willBeFav };
+      }
+    },
+    [updateFavoritesCount]
+  );
+
+  // Sync favorites with server on mount
+  useEffect(() => {
+    productApi.getUserFavoriteIds()
+      .then((res) => {
+        const raw = res?.favoriteIds || res?.ids || [];
+        const serverIds = Array.isArray(raw) ? raw.map(String) : [];
+        const localIds = getLocalFavoriteIds().map(String);
+        const merged = Array.from(new Set([...localIds, ...serverIds]));
+        setFavoriteIds(merged);
+        syncLocalFavoriteIds(merged);
+        updateFavoritesCount(merged.length);
+      })
+      .catch(() => {});
+  }, [updateFavoritesCount]);
+
+  // Listen for real-time favorites updates
   useEffect(() => {
     const handleFavUpdated = (e) => {
       const ids = e.detail?.favoriteIds;
       if (Array.isArray(ids)) {
-        updateFavoritesCount(ids.length);
+        const strList = ids.map(String);
+        setFavoriteIds(strList);
+        updateFavoritesCount(strList.length);
       }
     };
     window.addEventListener('ks:favorites_updated', handleFavUpdated);
@@ -223,10 +335,17 @@ export function SiteProvider({ children }) {
           } catch {}
         }
         if (countsRes?.success && countsRes.counts) {
-          setCounts(countsRes.counts);
+          const updatedCounts = { ...countsRes.counts };
           try {
-            localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(countsRes.counts));
-            sessionStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(countsRes.counts));
+            const localFavs = getLocalFavoriteIds();
+            if (localFavs.length > (updatedCounts.favorites || 0)) {
+              updatedCounts.favorites = localFavs.length;
+            }
+          } catch {}
+          setCounts(updatedCounts);
+          try {
+            localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updatedCounts));
+            sessionStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updatedCounts));
           } catch {}
         }
       })
@@ -246,6 +365,11 @@ export function SiteProvider({ children }) {
     siteSettings,
     categories,
     counts,
+    favoriteIds,
+    isFavorite,
+    toggleFavorite,
+    registerFavorite,
+    clearAllFavorites,
     isInitialized,
     refreshSettings,
     refreshCategories,
