@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { contentApi } from '../api/contentApi';
-import { getGuestOrders, getHiddenOrderIds } from '../utils/guestIdentity';
+import { getGuestOrders, getHiddenOrderIds, getLocalFavoriteIds } from '../utils/guestIdentity';
 
 const SiteContext = createContext(null);
 
@@ -68,6 +68,10 @@ export function SiteProvider({ children }) {
       if ((!parsed.orders || parsed.orders === 0) && localOrders.length > 0) {
         parsed.orders = localOrders.length;
       }
+      const localFavs = getLocalFavoriteIds();
+      if ((!parsed.favorites || parsed.favorites === 0) && localFavs.length > 0) {
+        parsed.favorites = localFavs.length;
+      }
       return parsed;
     } catch {
       return { cart: 0, favorites: 0, orders: 0, notifications: 0 };
@@ -121,6 +125,10 @@ export function SiteProvider({ children }) {
           if ((!updated.orders || updated.orders === 0) && localOrders.length > 0) {
             updated.orders = localOrders.length;
           }
+          const localFavs = getLocalFavoriteIds();
+          if (localFavs.length > (updated.favorites || 0)) {
+            updated.favorites = localFavs.length;
+          }
         } catch {}
         setCounts(updated);
         try {
@@ -169,6 +177,18 @@ export function SiteProvider({ children }) {
       return updated;
     });
   }, []);
+
+  // Listen for real-time favorites updates from cards or product details
+  useEffect(() => {
+    const handleFavUpdated = (e) => {
+      const ids = e.detail?.favoriteIds;
+      if (Array.isArray(ids)) {
+        updateFavoritesCount(ids.length);
+      }
+    };
+    window.addEventListener('ks:favorites_updated', handleFavUpdated);
+    return () => window.removeEventListener('ks:favorites_updated', handleFavUpdated);
+  }, [updateFavoritesCount]);
 
   // Initial fetch on mount - run in parallel once
   useEffect(() => {

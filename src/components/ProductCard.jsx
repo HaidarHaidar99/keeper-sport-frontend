@@ -4,6 +4,7 @@ import { Heart, Star, Plus, Check, AlertCircle } from 'lucide-react';
 import { productApi } from '../api/productApi';
 import { useSite } from '../context/SiteContext';
 import { launchFootballToCart, launchHeartToFavorites } from '../utils/cartAnimation';
+import { isProductFavoritedLocally, addLocalFavoriteId, removeLocalFavoriteId } from '../utils/guestIdentity';
 
 export default function ProductCard({
   product = {},
@@ -16,8 +17,10 @@ export default function ProductCard({
   const heartBtnRef = useRef(null);
   const plusBtnRef = useRef(null);
 
-  // Optimistic favorite state
-  const [isFavorited, setIsFavorited] = useState(Boolean(product?.isFavorited));
+  // Optimistic favorite state initialized from local persistence or prop
+  const [isFavorited, setIsFavorited] = useState(() => {
+    return isProductFavoritedLocally(product?.id) || Boolean(product?.isFavorited);
+  });
   const [favAnimating, setFavAnimating] = useState(false);
 
   // Cart action state
@@ -25,9 +28,22 @@ export default function ProductCard({
   const [cartSuccess, setCartSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
+  // Listen to global favorites update events across the app
   useEffect(() => {
-    setIsFavorited(Boolean(product?.isFavorited));
-  }, [product?.isFavorited]);
+    const handleFavUpdated = (e) => {
+      const ids = e.detail?.favoriteIds;
+      if (Array.isArray(ids) && product?.id) {
+        setIsFavorited(ids.includes(String(product.id)) || ids.includes(Number(product.id)));
+      }
+    };
+    window.addEventListener('ks:favorites_updated', handleFavUpdated);
+    return () => window.removeEventListener('ks:favorites_updated', handleFavUpdated);
+  }, [product?.id]);
+
+  useEffect(() => {
+    const isFav = isProductFavoritedLocally(product?.id) || Boolean(product?.isFavorited);
+    setIsFavorited(isFav);
+  }, [product?.id, product?.isFavorited]);
 
   const productUrl = `/products/${product?.slug || product?.id || ''}`;
 
@@ -74,8 +90,13 @@ export default function ProductCard({
     const previousState = isFavorited;
     const nextState = !previousState;
 
-    // 1. Instant local state change
+    // 1. Instant local state change & persistent storage
     setIsFavorited(nextState);
+    if (nextState) {
+      addLocalFavoriteId(product.id);
+    } else {
+      removeLocalFavoriteId(product.id);
+    }
     setFavAnimating(true);
 
     // 2. Direct count update in navbar in the exact same second!
@@ -100,6 +121,11 @@ export default function ProductCard({
       const res = await productApi.toggleFavorite(product.id);
       if (res && res.success) {
         setIsFavorited(res.isFavorited);
+        if (res.isFavorited) {
+          addLocalFavoriteId(product.id);
+        } else {
+          removeLocalFavoriteId(product.id);
+        }
         if (typeof res.favoritesCount === 'number' && typeof updateFavoritesCount === 'function') {
           updateFavoritesCount(res.favoritesCount);
         }
@@ -108,6 +134,11 @@ export default function ProductCard({
         }
       } else {
         setIsFavorited(previousState);
+        if (previousState) {
+          addLocalFavoriteId(product.id);
+        } else {
+          removeLocalFavoriteId(product.id);
+        }
         if (typeof updateFavoritesCount === 'function') {
           updateFavoritesCount(counts?.favorites || 0);
         }
@@ -178,10 +209,11 @@ export default function ProductCard({
     }
   };
 
-  const handleViewDetails = (e) => {
+  // Buy Now: Direct purchase into checkout
+  const handleBuyNow = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    navigate(productUrl);
+    navigate(`/checkout?direct=true&productId=${encodeURIComponent(product.id)}&qty=1`);
   };
 
   const currentPrice =
@@ -333,12 +365,12 @@ export default function ProductCard({
         <div className="ks-card-actions-row">
           <button
             type="button"
-            onClick={handleViewDetails}
+            onClick={handleBuyNow}
             className="ks-card-btn-buy"
-            aria-label={`View details for ${product.name}`}
-            title="View Product Details"
+            aria-label={`Buy ${product.name} now`}
+            title="Buy Now"
           >
-            <span>VIEW DETAILS</span>
+            <span>BUY NOW</span>
           </button>
 
           <button

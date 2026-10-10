@@ -24,30 +24,47 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
   const [menuOpen, setMenuOpen] = useState(false);
   const [navVisible, setNavVisible] = useState(true);
 
-  // Smart Scroll Reveal: Hides on scroll down, reappears immediately on even slight scroll up
+  // Always ensure navbar is visible on route changes
   useEffect(() => {
-    let lastScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+    setNavVisible(true);
+  }, [location.pathname, location.search]);
+
+  // Smart Scroll Reveal: Hides on scroll down, reappears immediately on even slight scroll up across ALL pages
+  useEffect(() => {
+    let lastScrollY = typeof window !== 'undefined'
+      ? (window.pageYOffset || window.scrollY || document.documentElement.scrollTop || 0)
+      : 0;
     let ticking = false;
+
+    const getScrollTop = () => {
+      return (
+        window.pageYOffset ||
+        window.scrollY ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop ||
+        0
+      );
+    };
 
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
+          const currentScrollY = getScrollTop();
 
-          if (currentScrollY <= 60) {
+          if (currentScrollY <= 80) {
             setNavVisible(true);
           } else {
             const diff = currentScrollY - lastScrollY;
-            if (diff > 8) {
+            if (diff > 6) {
               // Scrolling down
               setNavVisible(false);
-            } else if (diff < -4) {
-              // Scrolling up even a tiny bit -> instantly reveal!
+            } else if (diff < -2) {
+              // Scrolling up even slightly -> instantly reveal!
               setNavVisible(true);
             }
           }
 
-          lastScrollY = currentScrollY;
+          lastScrollY = Math.max(0, currentScrollY);
           ticking = false;
         });
         ticking = true;
@@ -55,7 +72,11 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    document.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   const navLinks = [
@@ -199,7 +220,7 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
               <User size={18} />
             </Link>
 
-            {/* Mobile Navigation Button: Clean, with badge if user has active orders */}
+            {/* Mobile Navigation Button: Clean without badge numbers */}
             <button
               type="button"
               className="ks-hamburger-trigger ks-hamburger-clean"
@@ -211,9 +232,6 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
             >
               <span className="ks-hamburger-line ks-hamburger-line-top" aria-hidden="true" />
               <span className="ks-hamburger-line ks-hamburger-line-bottom" aria-hidden="true" />
-              {Number(counts.orders) > 0 && (
-                <span className="ks-navbar-badge-pill">{counts.orders}</span>
-              )}
             </button>
           </div>
         </div>

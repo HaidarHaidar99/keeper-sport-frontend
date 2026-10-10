@@ -306,8 +306,8 @@ export default function SocialMediaSection({ siteSettings = {} }) {
               OFFICIAL CHANNELS & SOCIAL NETWORKS
             </span>
 
-            {/* Circular Social Icons in Red & Dark (No Gold!) */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            {/* Circular Social Icons in Red & Dark - One Single Line Without Wrapping */}
+            <div className="ks-social-icons-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'nowrap', maxWidth: '100%' }}>
               {/* Email / Gmail */}
               <a
                 href={`mailto:${emailAddress}`}

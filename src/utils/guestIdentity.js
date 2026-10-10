@@ -99,6 +99,7 @@ export function saveGuestOrder(order) {
 }
 
 const HIDDEN_ORDERS_KEY = 'ks_hidden_order_ids';
+const FAVORITES_KEY = 'ks_favorite_ids';
 
 /**
  * Get array of order IDs hidden from customer-side history
@@ -129,4 +130,82 @@ export function hideOrderFromHistory(orderId) {
     console.warn('Could not hide order from history:', err);
   }
 }
+
+/**
+ * Persistent local favorites helpers to ensure favorites never disappear
+ * across pages, reloads, or navigation between catalog and product details.
+ */
+export function getLocalFavoriteIds() {
+  try {
+    const raw = localStorage.getItem(FAVORITES_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function isProductFavoritedLocally(productId) {
+  if (!productId) return false;
+  const list = getLocalFavoriteIds();
+  return list.includes(String(productId)) || list.includes(Number(productId));
+}
+
+function notifyFavoritesChanged(ids) {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('ks:favorites_updated', { detail: { favoriteIds: ids } }));
+  }
+}
+
+export function addLocalFavoriteId(productId) {
+  if (!productId) return;
+  try {
+    const list = getLocalFavoriteIds().map(String);
+    const idStr = String(productId);
+    if (!list.includes(idStr)) {
+      list.push(idStr);
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(list));
+      notifyFavoritesChanged(list);
+    }
+  } catch (err) {
+    console.warn('Could not persist favorite ID:', err);
+  }
+}
+
+export function removeLocalFavoriteId(productId) {
+  if (!productId) return;
+  try {
+    const list = getLocalFavoriteIds().map(String);
+    const idStr = String(productId);
+    const filtered = list.filter((id) => id !== idStr);
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(filtered));
+    notifyFavoritesChanged(filtered);
+  } catch (err) {
+    console.warn('Could not remove favorite ID:', err);
+  }
+}
+
+export function syncLocalFavoriteIds(serverIds = []) {
+  try {
+    const local = getLocalFavoriteIds().map(String);
+    const server = Array.isArray(serverIds) ? serverIds.map(String) : [];
+    const merged = Array.from(new Set([...local, ...server]));
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(merged));
+    notifyFavoritesChanged(merged);
+    return merged;
+  } catch {
+    return serverIds;
+  }
+}
+
+export function clearLocalFavorites() {
+  try {
+    localStorage.removeItem(FAVORITES_KEY);
+    notifyFavoritesChanged([]);
+  } catch (err) {
+    console.warn('Could not clear local favorites:', err);
+  }
+}
+
 

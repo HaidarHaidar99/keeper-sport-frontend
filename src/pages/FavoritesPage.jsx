@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Heart, Loader2, Trash2, AlertTriangle } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
 import { productApi } from '../api/productApi';
+import { getLocalFavoriteIds, removeLocalFavoriteId, clearLocalFavorites, syncLocalFavoriteIds } from '../utils/guestIdentity';
 import ProductCard from '../components/ProductCard';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -15,6 +16,12 @@ export default function FavoritesPage() {
   const [clearingFavorites, setClearingFavorites] = useState(false);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, []);
+
+  useEffect(() => {
     let isMounted = true;
     Promise.all([
       productApi.getUserFavoriteIds(),
@@ -24,12 +31,14 @@ export default function FavoritesPage() {
         if (!isMounted) return;
 
         const rawIds = favIdsRes?.favoriteIds || favIdsRes?.ids || [];
-        const ids = Array.isArray(rawIds) ? rawIds : [];
+        const serverIds = Array.isArray(rawIds) ? rawIds.map(String) : [];
+        const localIds = getLocalFavoriteIds().map(String);
+        const mergedIds = syncLocalFavoriteIds([...serverIds, ...localIds]);
         const allProds = prodsRes?.success && Array.isArray(prodsRes.products) ? prodsRes.products : [];
 
         // Filter products that are in user's / guest's favorites
         const matched = allProds
-          .filter((p) => ids.includes(p.id))
+          .filter((p) => mergedIds.includes(String(p.id)) || mergedIds.includes(Number(p.id)))
           .map((p) => ({ ...p, isFavorited: true }));
 
         setFavoriteProducts(matched);
@@ -45,6 +54,7 @@ export default function FavoritesPage() {
 
   const handleFavoriteToggled = (productId, isFav) => {
     if (!isFav) {
+      removeLocalFavoriteId(productId);
       setFavoriteProducts((prev) => prev.filter((p) => p.id !== productId));
       if (typeof refreshCounts === 'function') refreshCounts();
     }
@@ -55,13 +65,15 @@ export default function FavoritesPage() {
     setClearingFavorites(true);
 
     try {
+      clearLocalFavorites();
       const res = await productApi.clearFavorites();
-      if (res?.success) {
+      if (res?.success || true) {
         setFavoriteProducts([]);
         if (typeof refreshCounts === 'function') refreshCounts();
       }
     } catch (err) {
       console.warn("Failed to clear favorites:", err);
+      setFavoriteProducts([]);
     } finally {
       setClearingFavorites(false);
       setShowClearModal(false);

@@ -14,25 +14,30 @@ function ScrollToTop() {
   const { pathname, search } = useLocation();
 
   useEffect(() => {
-    // Immediate instant reset
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+    const resetScroll = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      const containers = document.querySelectorAll('.ks-page-canvas, .ks-catalog-page-container, #root, main, body');
+      containers.forEach((el) => {
+        if (el && el.scrollTop) el.scrollTop = 0;
+      });
+    };
 
-    // Reset potential inner scroll containers
-    const containers = document.querySelectorAll('.ks-page-canvas, .ks-catalog-page-container, #root, main');
-    containers.forEach((el) => {
-      if (el && el.scrollTop) el.scrollTop = 0;
-    });
+    // Immediate instant reset
+    resetScroll();
 
     // Enforce after paint
     const rafId = requestAnimationFrame(() => {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
+      resetScroll();
     });
 
-    return () => cancelAnimationFrame(rafId);
+    const timer = setTimeout(resetScroll, 60);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timer);
+    };
   }, [pathname, search]);
 
   return null;

@@ -19,6 +19,7 @@ import { useSite } from '../context/SiteContext';
 import { productApi } from '../api/productApi';
 import { launchFootballToCart } from '../utils/cartAnimation';
 import { launchHeartToFavorites } from '../utils/favoriteAnimation';
+import { isProductFavoritedLocally, addLocalFavoriteId, removeLocalFavoriteId } from '../utils/guestIdentity';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -53,6 +54,33 @@ export default function ProductDetailsPage() {
   const [cartSuccess, setCartSuccess] = useState(false);
   const [actionError, setActionError] = useState(null);
 
+  // Ensure the page always opens at the top
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [slugOrId]);
+
+  useEffect(() => {
+    if (!loading) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+  }, [loading]);
+
+  // Listen to global favorites updates across the application
+  useEffect(() => {
+    const handleFavUpdated = (e) => {
+      const ids = e.detail?.favoriteIds;
+      if (Array.isArray(ids) && product?.id) {
+        setIsFavorited(ids.includes(String(product.id)) || ids.includes(Number(product.id)));
+      }
+    };
+    window.addEventListener('ks:favorites_updated', handleFavUpdated);
+    return () => window.removeEventListener('ks:favorites_updated', handleFavUpdated);
+  }, [product?.id]);
+
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
@@ -66,7 +94,11 @@ export default function ProductDetailsPage() {
         if (prodRes && prodRes.success && prodRes.product) {
           const p = prodRes.product;
           setProduct(p);
-          setIsFavorited(Boolean(p.isFavorited));
+          const isFav = isProductFavoritedLocally(p.id) || Boolean(p.isFavorited);
+          setIsFavorited(isFav);
+          if (isFav) {
+            addLocalFavoriteId(p.id);
+          }
 
           // Do not auto-select: customer must explicitly choose size/color if options exist
         } else {
@@ -118,8 +150,13 @@ export default function ProductDetailsPage() {
     const prevState = isFavorited;
     const nextState = !prevState;
 
-    // 1. Instant local state change
+    // 1. Instant local state change & persistence
     setIsFavorited(nextState);
+    if (nextState) {
+      addLocalFavoriteId(product.id);
+    } else {
+      removeLocalFavoriteId(product.id);
+    }
     setFavAnimating(true);
 
     // 2. Direct count update in navbar in the exact same second!
@@ -140,11 +177,21 @@ export default function ProductDetailsPage() {
       const res = await productApi.toggleFavorite(product.id);
       if (res && res.success) {
         setIsFavorited(res.isFavorited);
+        if (res.isFavorited) {
+          addLocalFavoriteId(product.id);
+        } else {
+          removeLocalFavoriteId(product.id);
+        }
         if (typeof res.favoritesCount === 'number' && typeof updateFavoritesCount === 'function') {
           updateFavoritesCount(res.favoritesCount);
         }
       } else {
         setIsFavorited(prevState);
+        if (prevState) {
+          addLocalFavoriteId(product.id);
+        } else {
+          removeLocalFavoriteId(product.id);
+        }
         if (typeof updateFavoritesCount === 'function') {
           updateFavoritesCount(counts?.favorites || 0);
         }
@@ -153,6 +200,11 @@ export default function ProductDetailsPage() {
       }
     } catch {
       setIsFavorited(prevState);
+      if (prevState) {
+        addLocalFavoriteId(product.id);
+      } else {
+        removeLocalFavoriteId(product.id);
+      }
       if (typeof updateFavoritesCount === 'function') {
         updateFavoritesCount(counts?.favorites || 0);
       }
@@ -400,7 +452,7 @@ export default function ProductDetailsPage() {
         <div className="ks-details-grid">
           {/* LEFT: GALLERY AREA */}
           <section className="ks-details-media-col" aria-label="Product Media Gallery">
-            <div className="ks-details-viewport">
+            <div className="ks-details-viewport" style={{ padding: 0, overflow: 'hidden' }}>
               {currentMedia.media_type === 'video' ? (
                 <video
                   src={currentMedia.storage_path}
@@ -410,6 +462,7 @@ export default function ProductDetailsPage() {
                   loop
                   playsInline
                   className="ks-details-img"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', padding: 0 }}
                 />
               ) : currentMedia.storage_path ? (
                 <img
@@ -417,6 +470,7 @@ export default function ProductDetailsPage() {
                   alt={product.name}
                   className="ks-details-img"
                   loading="eager"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', padding: 0 }}
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     const fb = e.currentTarget.parentElement?.querySelector('.ks-card-img-fallback');

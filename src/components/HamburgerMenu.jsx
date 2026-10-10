@@ -60,13 +60,16 @@ export default function HamburgerMenu({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
 
-  // Body scroll locking
+  // Body and documentElement scroll locking
   useEffect(() => {
     if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalDocOverflow = document.documentElement.style.overflow;
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
       return () => {
-        document.body.style.overflow = originalOverflow;
+        document.body.style.overflow = originalBodyOverflow;
+        document.documentElement.style.overflow = originalDocOverflow;
       };
     }
   }, [isOpen]);
@@ -82,8 +85,6 @@ export default function HamburgerMenu({
     { label: 'HOME', path: '/' },
     { label: 'PRODUCTS', path: '/products' },
     { label: 'CATEGORIES', path: '/categories' },
-    { label: 'MY ORDERS', path: '/orders', count: counts.orders },
-    { label: 'CART', path: '/cart', count: counts.cart },
     { label: 'OFFERS', path: '/offers' },
     { label: 'REVIEWS', path: '/reviews' },
     { label: 'ABOUT US', path: '/about' },

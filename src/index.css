@@ -9825,3 +9825,189 @@ a:focus-visible {
   cursor: not-allowed !important;
   text-decoration: line-through !important;
 }
+
+/* =============================================================================
+   21. USER ENHANCEMENTS & BUG FIXES
+   ============================================================================= */
+
+/* 1. Point in light mode: delete shadow completely */
+[data-theme="light"] .ks-curtain-active-dot {
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* 2. Curtain menu: Full-screen coverage without background bleed */
+.ks-curtain-root {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100% !important;
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
+  max-height: 100dvh !important;
+  z-index: 999999 !important;
+  overflow: hidden !important;
+}
+
+.ks-curtain-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100% !important;
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
+  background-color: #050505 !important;
+  z-index: 1 !important;
+}
+
+[data-theme="light"] .ks-curtain-backdrop {
+  background-color: #FFFFFF !important;
+}
+
+.ks-curtain-canvas,
+.ks-curtain-canvas-theme {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100% !important;
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
+  background-color: #050505 !important;
+  color: #FFFFFF !important;
+  z-index: 2 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+[data-theme="light"] .ks-curtain-canvas,
+[data-theme="light"] .ks-curtain-canvas-theme {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+/* 3. Floating Beauty Nav Bar: badge numbers visible ON the buttons */
+.ks-curtain-beauty-icon-btn {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.ks-curtain-beauty-badge {
+  position: absolute !important;
+  top: -4px !important;
+  right: -4px !important;
+  z-index: 30 !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  padding: 0 4px !important;
+  border-radius: 999px !important;
+  background-color: #E10600 !important;
+  color: #FFFFFF !important;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 0.68rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1.5px solid #0E0E0E !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  pointer-events: none !important;
+}
+
+[data-theme="light"] .ks-curtain-beauty-badge {
+  border: 1.5px solid #FFFFFF !important;
+}
+
+/* 4. Product Details: image covers all the card without blank black space */
+.ks-details-viewport {
+  position: relative !important;
+  width: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border-radius: 24px !important;
+  background: transparent !important;
+}
+
+.ks-details-img,
+img.ks-details-img,
+video.ks-details-img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: block !important;
+  border-radius: 24px !important;
+}
+
+/* 5. Official channels / social icons: all 5 in the exact same line */
+.ks-social-icons-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: nowrap !important;
+  gap: 10px !important;
+  max-width: 100% !important;
+}
+
+@media (max-width: 480px) {
+  .ks-social-icons-row {
+    gap: 8px !important;
+  }
+  .ks-social-round-btn {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    flex-shrink: 0 !important;
+  }
+}
+
+/* 6. Centered Loading & Error Messages across all pages */
+.ks-details-loading-wrap,
+.ks-catalog-loading,
+.ks-details-error-wrap,
+.ks-catalog-empty,
+.ks-catalog-empty-state,
+.ks-catalog-error-state {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  min-height: calc(100vh - 160px) !important;
+  min-height: calc(100dvh - 160px) !important;
+  width: 100% !important;
+  padding: 40px 20px !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+}
+
+.ks-loading-spinner {
+  width: 44px !important;
+  height: 44px !important;
+  border: 3px solid rgba(225, 6, 0, 0.15) !important;
+  border-top-color: var(--ks-accent-red, #E10600) !important;
+  border-radius: 50% !important;
+  animation: ksSpinAnim 0.8s linear infinite !important;
+  margin: 0 auto 16px !important;
+}
+
+.ks-loading-text {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: var(--ks-text-muted, #A3A3A3) !important;
+  text-align: center !important;
+  margin: 0 !important;
+}
+
+@keyframes ksSpinAnim {
+  to { transform: rotate(360deg); }
+}
