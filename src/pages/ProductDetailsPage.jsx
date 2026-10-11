@@ -162,26 +162,6 @@ export default function ProductDetailsPage() {
     const availSizes = Array.from(new Set((product.variants || []).map((v) => v.size_value).filter(Boolean)));
     const availColors = Array.from(new Set((product.variants || []).map((v) => v.color_value).filter(Boolean)));
 
-    // Required Size Selection check: if sizes exist, customer MUST select one
-    if (availSizes.length > 0 && !selectedSize) {
-      const msg = 'Please select a size before adding to cart.';
-      setActionError(msg);
-      showToast(msg, 'error');
-      document.querySelector('.ks-sizes-grid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => setActionError(null), 4000);
-      return;
-    }
-
-    // Required Color Selection check: if colors exist, customer MUST select one
-    if (availColors.length > 0 && !selectedColor) {
-      const msg = 'Please select a color before adding to cart.';
-      setActionError(msg);
-      showToast(msg, 'error');
-      document.querySelector('.ks-colors-grid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => setActionError(null), 4000);
-      return;
-    }
-
     // Find matched variant id if variants exist
     let matchedVariant = null;
     if (product.variants && product.variants.length > 0) {
@@ -266,26 +246,6 @@ export default function ProductDetailsPage() {
   const handleOrderNow = () => {
     if (!product) return;
     if (product.stock?.isOutOfStock || product.stock_quantity === 0) return;
-
-    const availSizes = Array.from(new Set((product.variants || []).map((v) => v.size_value).filter(Boolean)));
-    const availColors = Array.from(new Set((product.variants || []).map((v) => v.color_value).filter(Boolean)));
-
-    if (availSizes.length > 0 && !selectedSize) {
-      const msg = 'Please select a size before ordering.';
-      setActionError(msg);
-      showToast(msg, 'error');
-      document.querySelector('.ks-sizes-grid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => setActionError(null), 4000);
-      return;
-    }
-    if (availColors.length > 0 && !selectedColor) {
-      const msg = 'Please select a color before ordering.';
-      setActionError(msg);
-      showToast(msg, 'error');
-      document.querySelector('.ks-colors-grid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => setActionError(null), 4000);
-      return;
-    }
 
     let url = `/checkout?direct=true&productId=${encodeURIComponent(product.id)}&qty=${quantity}`;
     if (selectedSize) url += `&size=${encodeURIComponent(selectedSize)}`;

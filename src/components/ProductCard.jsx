@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Star, Plus, Check, AlertCircle, X } from 'lucide-react';
+import { Heart, Star, Plus, Check, AlertCircle } from 'lucide-react';
 import { productApi } from '../api/productApi';
 import { useSite } from '../context/SiteContext';
 import { launchFootballToCart, launchHeartToFavorites } from '../utils/cartAnimation';
@@ -17,7 +17,6 @@ export default function ProductCard({
   const { isFavorite, toggleFavorite, updateCartCount, counts } = useSite();
   const heartBtnRef = useRef(null);
   const plusBtnRef = useRef(null);
-  const hasLoadedVariantsRef = useRef(false);
 
   // Single truth source: is this product favorited?
   const isFavorited = isFavorite(product?.id || product);
@@ -26,14 +25,6 @@ export default function ProductCard({
   // Cart action state
   const [cartLoading, setCartLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
-
-  // Outside Quick Variant Selection Modal State
-  const [variantModalOpen, setVariantModalOpen] = useState(false);
-  const [modalVariants, setModalVariants] = useState([]);
-  const [selectedModalSize, setSelectedModalSize] = useState('');
-  const [selectedModalColor, setSelectedModalColor] = useState('');
-  const [modalError, setModalError] = useState('');
-  const [buyLoading, setBuyLoading] = useState(false);
 
   const productUrl = `/products/${product?.slug || product?.id || ''}`;
 
@@ -144,80 +135,12 @@ export default function ProductCard({
     }
   };
 
-  // Buy Now: Direct purchase into checkout (or popup if size/color required)
-  const handleBuyNow = async (e) => {
+  // Buy Now: Direct purchase into checkout
+  const handleBuyNow = (e) => {
     e.stopPropagation();
     e.preventDefault();
-
-    if (isOutOfStock || buyLoading) return;
-
-    let variants = product.variants || [];
-    if (variants.length === 0 && !hasLoadedVariantsRef.current) {
-      setBuyLoading(true);
-      try {
-        const res = await productApi.getProduct(product.slug || product.id);
-        if (res?.success && res.product?.variants) {
-          variants = res.product.variants;
-          hasLoadedVariantsRef.current = true;
-        }
-      } catch {
-        // ignore
-      } finally {
-        setBuyLoading(false);
-      }
-    }
-
-    const availSizes = Array.from(new Set(variants.map((v) => v.size_value).filter(Boolean)));
-    const availColors = Array.from(new Set(variants.map((v) => v.color_value).filter(Boolean)));
-
-    if (availSizes.length > 0 || availColors.length > 0) {
-      setModalVariants(variants);
-      setSelectedModalSize(availSizes[0] || '');
-      setSelectedModalColor(availColors[0] || '');
-      setModalError('');
-      setVariantModalOpen(true);
-      return;
-    }
-
-    // Direct buy without modal if no variants
+    if (isOutOfStock) return;
     navigate(`/checkout?direct=true&productId=${encodeURIComponent(product.id)}&qty=1`);
-  };
-
-  const handleConfirmVariantBuyNow = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    const availSizes = Array.from(new Set(modalVariants.map((v) => v.size_value).filter(Boolean)));
-    const availColors = Array.from(new Set(modalVariants.map((v) => v.color_value).filter(Boolean)));
-
-    if (availSizes.length > 0 && !selectedModalSize) {
-      setModalError('Please select a size.');
-      return;
-    }
-    if (availColors.length > 0 && !selectedModalColor) {
-      setModalError('Please select a color.');
-      return;
-    }
-
-    const matched = modalVariants.find((v) => {
-      const matchSize = !availSizes.length || v.size_value === selectedModalSize;
-      const matchColor = !availColors.length || v.color_value === selectedModalColor;
-      return matchSize && matchColor;
-    });
-
-    if (matched && matched.stock_quantity <= 0) {
-      setModalError('Selected option is currently out of stock.');
-      return;
-    }
-
-    setVariantModalOpen(false);
-    navigate(
-      `/checkout?direct=true&productId=${encodeURIComponent(product.id)}` +
-      `${matched ? `&variantId=${encodeURIComponent(matched.id)}` : ''}` +
-      `${selectedModalSize ? `&size=${encodeURIComponent(selectedModalSize)}` : ''}` +
-      `${selectedModalColor ? `&color=${encodeURIComponent(selectedModalColor)}` : ''}` +
-      `&qty=1`
-    );
   };
 
   const currentPrice =
@@ -370,12 +293,12 @@ export default function ProductCard({
           <button
             type="button"
             onClick={handleBuyNow}
-            disabled={isOutOfStock || buyLoading}
+            disabled={isOutOfStock}
             className={`ks-card-btn-buy ${isOutOfStock ? 'is-disabled' : ''}`}
             aria-label={isOutOfStock ? 'Product out of stock' : `Buy ${product.name} now`}
             title={isOutOfStock ? 'Out of Stock' : 'Buy Now'}
           >
-            <span>{isOutOfStock ? 'OUT OF STOCK' : buyLoading ? 'CHECKING...' : 'BUY NOW'}</span>
+            <span>{isOutOfStock ? 'OUT OF STOCK' : 'BUY NOW'}</span>
           </button>
 
           <button
@@ -391,114 +314,6 @@ export default function ProductCard({
           </button>
         </div>
       </div>
-
-      {/* Outside Quick Variant Selection Modal (When Product has Sizes/Colors) */}
-      {variantModalOpen && (
-        <div
-          className="ks-variant-modal-backdrop"
-          onClick={(e) => {
-            e.stopPropagation();
-            setVariantModalOpen(false);
-          }}
-        >
-          <div
-            className="ks-variant-modal-dialog"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Select Options"
-          >
-            <div className="ks-variant-modal-header">
-              <h4 className="ks-variant-modal-title">Select Options</h4>
-              <button
-                type="button"
-                className="ks-variant-modal-close"
-                onClick={() => setVariantModalOpen(false)}
-                aria-label="Close"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="ks-variant-modal-product-summary">
-              {primaryImgSrc && (
-                <img src={primaryImgSrc} alt={product.name} className="ks-variant-modal-thumb" />
-              )}
-              <div className="ks-variant-modal-product-info">
-                <span className="ks-variant-modal-pname">{product.name}</span>
-                <span className="ks-variant-modal-price">${currentPrice.toFixed(2)}</span>
-              </div>
-            </div>
-
-            {/* SIZES */}
-            {Array.from(new Set(modalVariants.map((v) => v.size_value).filter(Boolean))).length > 0 && (
-              <div className="ks-variant-modal-group">
-                <label className="ks-variant-modal-label">
-                  SELECT SIZE: <strong>{selectedModalSize || 'Choose size'}</strong>
-                </label>
-                <div className="ks-variant-modal-pills">
-                  {Array.from(new Set(modalVariants.map((v) => v.size_value).filter(Boolean))).map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => {
-                        setSelectedModalSize(s);
-                        setModalError('');
-                      }}
-                      className={`ks-variant-pill ${selectedModalSize === s ? 'is-active' : ''}`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* COLORS */}
-            {Array.from(new Set(modalVariants.map((v) => v.color_value).filter(Boolean))).length > 0 && (
-              <div className="ks-variant-modal-group">
-                <label className="ks-variant-modal-label">
-                  SELECT COLOR: <strong>{formatColorName(selectedModalColor) || 'Choose color'}</strong>
-                </label>
-                <div className="ks-variant-modal-pills">
-                  {Array.from(new Set(modalVariants.map((v) => v.color_value).filter(Boolean))).map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => {
-                        setSelectedModalColor(c);
-                        setModalError('');
-                      }}
-                      className={`ks-variant-pill ks-variant-color-pill ${selectedModalColor === c ? 'is-active' : ''}`}
-                      title={formatColorName(c)}
-                    >
-                      <span className="ks-color-dot" style={{ backgroundColor: getColorHex(c) }} />
-                      <span>{formatColorName(c)}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {modalError && (
-              <div className="ks-variant-modal-error">
-                <AlertCircle size={14} />
-                <span>{modalError}</span>
-              </div>
-            )}
-
-            <div className="ks-variant-modal-actions">
-              <button
-                type="button"
-                onClick={handleConfirmVariantBuyNow}
-                className="ks-btn-primary ks-variant-modal-submit"
-              >
-                PROCEED TO CHECKOUT
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </article>
   );
 }

@@ -8768,11 +8768,28 @@ textarea,
   color: #0A0A0A !important;
 }
 
-.ks-card-btn-plus:hover:not(:disabled) {
-  background-color: #E10600 !important;
-  border-color: #E10600 !important;
+.ks-card-btn-plus:hover:not(:disabled),
+.ks-card-btn-plus:active,
+.ks-card-btn-plus:focus,
+.ks-card-btn-plus:focus-visible {
+  background-color: #2E2E2E !important;
+  border-color: #4A4A4A !important;
   color: #FFFFFF !important;
-  transform: scale(1.08);
+  box-shadow: none !important;
+  outline: none !important;
+  transform: scale(1.05);
+}
+
+[data-theme="light"] .ks-card-btn-plus:hover:not(:disabled),
+[data-theme="light"] .ks-card-btn-plus:active,
+[data-theme="light"] .ks-card-btn-plus:focus,
+[data-theme="light"] .ks-card-btn-plus:focus-visible {
+  background-color: #E2E2E2 !important;
+  border-color: #BEBEBE !important;
+  color: #0A0A0A !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transform: scale(1.05);
 }
 
 /* 8. LOCATION SECTION (Luxury Athletic Card with 24px Radius) */

@@ -5,7 +5,7 @@ import { productApi } from '../api/productApi';
 import { useSite } from '../context/SiteContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { formatColorName } from '../utils/productUtils';
+import { formatColorName, getColorHex } from '../utils/productUtils';
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -179,6 +179,39 @@ export default function CartPage() {
     }
   };
 
+  const handleSelectOption = (itemId, optionType, value) => {
+    const targetItem = (cart?.items || []).find((it) => it.id === itemId);
+    if (!targetItem) return;
+
+    const availableVars = Array.isArray(targetItem.availableVariants) ? targetItem.availableVariants : [];
+    const currentSize = (targetItem.selectedSize || targetItem.variant?.size || '').replace(/standard/gi, '').trim();
+    const currentColor = (targetItem.selectedColor || targetItem.variant?.color || '').trim();
+
+    const newSize = optionType === 'size' ? value : currentSize;
+    const newColor = optionType === 'color' ? value : currentColor;
+
+    let matched = availableVars.find((v) => {
+      const sVal = (v.size_value || v.size || '').replace(/standard/gi, '').trim();
+      const cVal = (v.color_value || v.color || '').trim();
+      const sMatch = !newSize || sVal === newSize;
+      const cMatch = !newColor || cVal === newColor;
+      return sMatch && cMatch;
+    });
+
+    if (!matched) {
+      matched = availableVars.find((v) => {
+        if (optionType === 'size') {
+          return (v.size_value || v.size || '').replace(/standard/gi, '').trim() === value;
+        }
+        return (v.color_value || v.color || '').trim() === value;
+      });
+    }
+
+    if (matched) {
+      handleSelectVariant(itemId, matched.id);
+    }
+  };
+
   const handleRemoveItem = async (itemId) => {
     if (updatingItemId) return;
     setUpdatingItemId(itemId);
@@ -332,13 +365,24 @@ export default function CartPage() {
                 const colorVal = item.selectedColor || item.variant?.color;
                 const isUpdating = updatingItemId === item.id;
 
-                // Extract available size variants for interactive pills
+                // Extract available variants, distinct sizes and colors
                 const availableVariants = Array.isArray(item.availableVariants) ? item.availableVariants : [];
-                const sizeVariants = availableVariants.filter((v) => {
-                  const s = (v.size_value || v.size || '').replace(/standard/gi, '').trim();
-                  return Boolean(s);
-                });
-                const hasSizes = sizeVariants.length > 0;
+                const distinctSizes = Array.from(
+                  new Set(
+                    availableVariants
+                      .map((v) => (v.size_value || v.size || '').replace(/standard/gi, '').trim())
+                      .filter(Boolean)
+                  )
+                );
+                const distinctColors = Array.from(
+                  new Set(
+                    availableVariants
+                      .map((v) => (v.color_value || v.color || '').trim())
+                      .filter(Boolean)
+                  )
+                );
+                const hasSizes = distinctSizes.length > 0;
+                const hasColors = distinctColors.length > 0;
 
                 return (
                   <div key={item.id} className="ks-cart-item-row" style={{ opacity: isUpdating ? 0.6 : 1 }}>
@@ -364,21 +408,24 @@ export default function CartPage() {
                         <div className="ks-cart-size-picker-wrap">
                           <div className="ks-cart-size-picker-header">
                             <span className="ks-cart-size-title">SIZE:</span>
-                            {item.requiresVariantSelection && (
+                            {item.requiresVariantSelection && !sizeVal && (
                               <span className="ks-cart-size-required-badge">Choose Size</span>
                             )}
                           </div>
                           <div className="ks-cart-size-pills">
-                            {sizeVariants.map((v) => {
-                              const sText = (v.size_value || v.size || '').replace(/standard/gi, '').trim();
-                              const isSelected = item.variantId === v.id || item.selectedVariantId === v.id || item.selectedSize === sText;
-                              const isOutOfStock = v.stock_quantity <= 0;
+                            {distinctSizes.map((sText) => {
+                              const isSelected = sizeVal && sizeVal.toLowerCase() === sText.toLowerCase();
+                              const matching = availableVariants.filter(
+                                (v) => (v.size_value || v.size || '').replace(/standard/gi, '').trim() === sText
+                              );
+                              const isOutOfStock = matching.length > 0 && matching.every((v) => v.stock_quantity <= 0);
+
                               return (
                                 <button
-                                  key={v.id}
+                                  key={sText}
                                   type="button"
                                   disabled={isOutOfStock}
-                                  onClick={() => handleSelectVariant(item.id, v.id)}
+                                  onClick={() => handleSelectOption(item.id, 'size', sText)}
                                   className={`ks-cart-size-pill ${isSelected ? 'active' : ''} ${isOutOfStock ? 'out-of-stock' : ''}`}
                                   title={isOutOfStock ? `${sText} (Out of Stock)` : `Choose Size ${sText}`}
                                 >
@@ -390,12 +437,58 @@ export default function CartPage() {
                         </div>
                       )}
 
-                      {/* Item Meta Details - NO repetitive "size size size" */}
+                      {/* Interactive Color Pill Selector on Card */}
+                      {hasColors && (
+                        <div className="ks-cart-size-picker-wrap" style={{ marginTop: hasSizes ? '8px' : '0' }}>
+                          <div className="ks-cart-size-picker-header">
+                            <span className="ks-cart-size-title">COLOR:</span>
+                            {item.requiresVariantSelection && !colorVal && (
+                              <span className="ks-cart-size-required-badge">Choose Color</span>
+                            )}
+                          </div>
+                          <div className="ks-cart-size-pills">
+                            {distinctColors.map((cText) => {
+                              const isSelected = colorVal && colorVal.toLowerCase() === cText.toLowerCase();
+                              const matching = availableVariants.filter(
+                                (v) => (v.color_value || v.color || '').trim().toLowerCase() === cText.toLowerCase()
+                              );
+                              const isOutOfStock = matching.length > 0 && matching.every((v) => v.stock_quantity <= 0);
+
+                              return (
+                                <button
+                                  key={cText}
+                                  type="button"
+                                  disabled={isOutOfStock}
+                                  onClick={() => handleSelectOption(item.id, 'color', cText)}
+                                  className={`ks-cart-size-pill ${isSelected ? 'active' : ''} ${isOutOfStock ? 'out-of-stock' : ''}`}
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                                  title={isOutOfStock ? `${formatColorName(cText)} (Out of Stock)` : `Choose Color ${formatColorName(cText)}`}
+                                >
+                                  <span
+                                    className="ks-color-dot"
+                                    style={{
+                                      width: '10px',
+                                      height: '10px',
+                                      borderRadius: '50%',
+                                      backgroundColor: getColorHex(cText),
+                                      border: '1px solid rgba(255,255,255,0.2)',
+                                      display: 'inline-block'
+                                    }}
+                                  />
+                                  <span>{formatColorName(cText)}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Item Meta Details - Only show if not covered by interactive pickers */}
                       <div className="ks-cart-item-meta">
                         {!hasSizes && sizeVal && !sizeVal.toLowerCase().includes('standard') && (
                           <span>Size: {sizeVal}</span>
                         )}
-                        {colorVal && <span>Color: {formatColorName(colorVal)}</span>}
+                        {!hasColors && colorVal && <span>Color: {formatColorName(colorVal)}</span>}
                         {item.printedName && <span>Print: {item.printedName} #{item.printedNumber || ''}</span>}
                         {item.badge && <span>Badge: {item.badge}</span>}
                       </div>
@@ -558,11 +651,32 @@ export default function CartPage() {
                 </div>
 
                 {/* Unresolved Variants Warning */}
-                {(cart?.items || []).some((it) => it.requiresVariantSelection) ? (
-                  <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(225,6,0,0.08)', border: '1px solid var(--ks-accent-red)', color: 'var(--ks-accent-red)', fontSize: '13px', fontWeight: 600 }}>
-                    Please select a size for all highlighted items above before checkout.
-                  </div>
-                ) : null}
+                {(cart?.items || []).some((it) => it.requiresVariantSelection) ? (() => {
+                  const unresolvedItems = (cart?.items || []).filter((it) => it.requiresVariantSelection);
+                  const anyNeedsColor = unresolvedItems.some((it) => {
+                    const vars = Array.isArray(it.availableVariants) ? it.availableVariants : [];
+                    return vars.some((v) => v.color_value) && !it.selectedColor;
+                  });
+                  const anyNeedsSize = unresolvedItems.some((it) => {
+                    const vars = Array.isArray(it.availableVariants) ? it.availableVariants : [];
+                    return vars.some((v) => v.size_value) && !it.selectedSize;
+                  });
+
+                  let warningMsg = 'Please select options for all highlighted items above before checkout.';
+                  if (anyNeedsColor && !anyNeedsSize) {
+                    warningMsg = 'Please select a color for all highlighted items above before checkout.';
+                  } else if (anyNeedsSize && !anyNeedsColor) {
+                    warningMsg = 'Please select a size for all highlighted items above before checkout.';
+                  } else if (anyNeedsSize && anyNeedsColor) {
+                    warningMsg = 'Please select a size and color for all highlighted items above before checkout.';
+                  }
+
+                  return (
+                    <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(225,6,0,0.08)', border: '1px solid var(--ks-accent-red)', color: 'var(--ks-accent-red)', fontSize: '13px', fontWeight: 600 }}>
+                      {warningMsg}
+                    </div>
+                  );
+                })() : null}
 
                 <button
                   type="button"

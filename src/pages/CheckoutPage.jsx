@@ -9,7 +9,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { WhatsAppIcon } from '../components/SocialIcons';
 import { useToast } from '../context/ToastContext';
-import { formatColorName, getProductImage } from '../utils/productUtils';
+import { formatColorName, getColorHex, getProductImage } from '../utils/productUtils';
 
 export default function CheckoutPage() {
   const [searchParams] = useSearchParams();
@@ -28,6 +28,8 @@ export default function CheckoutPage() {
   const directBadge = searchParams.get('badge');
 
   const [directProduct, setDirectProduct] = useState(null);
+  const [selectedDirectSize, setSelectedDirectSize] = useState(directSize || null);
+  const [selectedDirectColor, setSelectedDirectColor] = useState(directColor || null);
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -58,7 +60,21 @@ export default function CheckoutPage() {
       .then((orderSourceRes) => {
         if (!isMounted) return;
         if (isDirect && orderSourceRes?.success && orderSourceRes.product) {
-          setDirectProduct(orderSourceRes.product);
+          const prod = orderSourceRes.product;
+          setDirectProduct(prod);
+          const variants = prod.variants || [];
+          const availSizes = Array.from(
+            new Set(variants.map((v) => (v.size_value || '').replace(/standard/gi, '').trim()).filter(Boolean))
+          );
+          const availColors = Array.from(
+            new Set(variants.map((v) => (v.color_value || '').trim()).filter(Boolean))
+          );
+          if (!directSize && availSizes.length === 1) {
+            setSelectedDirectSize(availSizes[0]);
+          }
+          if (!directColor && availColors.length === 1) {
+            setSelectedDirectColor(availColors[0]);
+          }
         } else if (!isDirect && orderSourceRes?.success) {
           const itemsList = Array.isArray(orderSourceRes.items)
             ? orderSourceRes.items
@@ -75,28 +91,134 @@ export default function CheckoutPage() {
     return () => {
       isMounted = false;
     };
-  }, [isDirect, directProductId]);
+  }, [isDirect, directProductId, directSize, directColor]);
+
+  // Variant resolution for direct purchase
+  const directVariants = directProduct?.variants || [];
+  const availableDirectSizes = Array.from(
+    new Set(directVariants.map((v) => (v.size_value || '').replace(/standard/gi, '').trim()).filter(Boolean))
+  );
+  const availableDirectColors = Array.from(
+    new Set(directVariants.map((v) => (v.color_value || '').trim()).filter(Boolean))
+  );
+
+  let matchedDirectVariant = null;
+  if (directVariants.length > 0) {
+    matchedDirectVariant = directVariants.find((v) => {
+      const sVal = (v.size_value || '').replace(/standard/gi, '').trim();
+      const cVal = (v.color_value || '').trim();
+      const sMatch = !selectedDirectSize || sVal.toLowerCase() === selectedDirectSize.toLowerCase();
+      const cMatch = !selectedDirectColor || cVal.toLowerCase() === selectedDirectColor.toLowerCase();
+      return sMatch && cMatch;
+    });
+
+    if (!matchedDirectVariant) {
+      matchedDirectVariant = directVariants.find((v) => {
+        const sVal = (v.size_value || '').replace(/standard/gi, '').trim();
+        const cVal = (v.color_value || '').trim();
+        if (selectedDirectSize && sVal.toLowerCase() === selectedDirectSize.toLowerCase()) return true;
+        if (selectedDirectColor && cVal.toLowerCase() === selectedDirectColor.toLowerCase()) return true;
+        return false;
+      });
+    }
+  }
+
+  const handleSelectDirectOption = (type, value) => {
+    if (type === 'size') {
+      setSelectedDirectSize(value);
+    } else if (type === 'color') {
+      setSelectedDirectColor(value);
+    }
+    if (serverError) setServerError('');
+  };
+
+  const handleSelectCartOption = async (itemId, optionType, value) => {
+    const targetItem = cartItems.find((it) => it.id === itemId);
+    if (!targetItem) return;
+
+    const availableVars = Array.isArray(targetItem.availableVariants) ? targetItem.availableVariants : [];
+    const currentSize = (targetItem.selectedSize || targetItem.variant?.size || '').replace(/standard/gi, '').trim();
+    const currentColor = (targetItem.selectedColor || targetItem.variant?.color || '').trim();
+
+    const newSize = optionType === 'size' ? value : currentSize;
+    const newColor = optionType === 'color' ? value : currentColor;
+
+    let matched = availableVars.find((v) => {
+      const sVal = (v.size_value || v.size || '').replace(/standard/gi, '').trim();
+      const cVal = (v.color_value || v.color || '').trim();
+      const sMatch = !newSize || sVal.toLowerCase() === newSize.toLowerCase();
+      const cMatch = !newColor || cVal.toLowerCase() === newColor.toLowerCase();
+      return sMatch && cMatch;
+    });
+
+    if (!matched) {
+      matched = availableVars.find((v) => {
+        if (optionType === 'size') {
+          return (v.size_value || v.size || '').replace(/standard/gi, '').trim().toLowerCase() === value.toLowerCase();
+        }
+        return (v.color_value || v.color || '').trim().toLowerCase() === value.toLowerCase();
+      });
+    }
+
+    if (matched) {
+      setCartItems((prev) =>
+        prev.map((it) => {
+          if (it.id !== itemId) return it;
+          return {
+            ...it,
+            selectedVariantId: matched.id,
+            variantId: matched.id,
+            selectedSize: matched.size_value || newSize,
+            selectedColor: matched.color_value || newColor,
+            variant: {
+              ...(it.variant || {}),
+              size: matched.size_value || newSize,
+              color: matched.color_value || newColor,
+              price: matched.price || it.unitPrice
+            },
+            requiresVariantSelection: false
+          };
+        })
+      );
+
+      try {
+        await productApi.updateCartItemVariant(itemId, matched.id);
+        if (typeof refreshCounts === 'function') refreshCounts();
+      } catch (err) {
+        console.error('Error updating cart variant at checkout:', err);
+      }
+    }
+    if (serverError) setServerError('');
+  };
 
   // Calculate items summary
   let checkoutItems = [];
   let subtotal = 0;
 
   if (isDirect && directProduct) {
-    const unitPrice = Number(directProduct.pricing?.currentPrice || directProduct.base_price || 0);
+    const basePrice = Number(directProduct.pricing?.currentPrice || directProduct.base_price || 0);
+    const unitPrice = matchedDirectVariant?.price ? Number(matchedDirectVariant.price) : basePrice;
     const lineTotal = unitPrice * directQty;
     subtotal = lineTotal;
     checkoutItems = [
       {
+        id: 'direct',
         productId: directProduct.id,
+        variantId: matchedDirectVariant?.id || null,
         name: directProduct.name,
         quantity: directQty,
         unitPrice,
-        size: directSize,
-        color: directColor,
+        size: selectedDirectSize || null,
+        color: selectedDirectColor || null,
         printedName: directName,
         printedNumber: directNumber,
         badge: directBadge,
-        image: getProductImage(directProduct, null)
+        image: getProductImage(directProduct, null),
+        availableSizes: availableDirectSizes,
+        availableColors: availableDirectColors,
+        requiresSize: availableDirectSizes.length > 0 && !selectedDirectSize,
+        requiresColor: availableDirectColors.length > 0 && !selectedDirectColor,
+        isDirect: true
       }
     ];
   } else if (!isDirect && cartItems.length > 0) {
@@ -107,18 +229,35 @@ export default function CheckoutPage() {
       const unitPrice = Number(item.unitPrice || p.base_price || 0);
       const lineTotal = unitPrice * item.quantity;
       subtotal += lineTotal;
+
+      const availVars = Array.isArray(item.availableVariants) ? item.availableVariants : [];
+      const availSizes = Array.from(
+        new Set(availVars.map((v) => (v.size_value || '').replace(/standard/gi, '').trim()).filter(Boolean))
+      );
+      const availColors = Array.from(
+        new Set(availVars.map((v) => (v.color_value || '').trim()).filter(Boolean))
+      );
+      const chosenSize = (item.selectedSize || item.variant?.size || '').replace(/standard/gi, '').trim() || null;
+      const chosenColor = (item.selectedColor || item.variant?.color || '').trim() || null;
+
       return {
+        id: item.id,
         productId: pId,
         variantId: item.variantId || item.selectedVariantId || null,
         name: pName,
         quantity: item.quantity,
         unitPrice,
-        size: item.selectedSize || item.variant?.size || null,
-        color: item.selectedColor || item.variant?.color || null,
+        size: chosenSize,
+        color: chosenColor,
         printedName: item.printedName || null,
         printedNumber: item.printedNumber || null,
         badge: item.badge || null,
-        image: getProductImage(p, item)
+        image: getProductImage(p, item),
+        availableSizes: availSizes,
+        availableColors: availColors,
+        requiresSize: availSizes.length > 0 && !chosenSize,
+        requiresColor: availColors.length > 0 && !chosenColor,
+        isDirect: false
       };
     });
   }
@@ -183,12 +322,26 @@ export default function CheckoutPage() {
       return;
     }
 
-    const hasUnresolvedVariants = cartItems.some((i) => i.requiresVariantSelection);
-    if (hasUnresolvedVariants) {
-      const msg = 'Please select a size/color for all items in your cart before placing your order.';
-      setServerError(msg);
-      showToast(msg, 'error');
-      return;
+    // Precise per-item variant validation
+    for (const item of checkoutItems) {
+      if (item.requiresSize && item.requiresColor) {
+        const msg = `Please select a size and color for "${item.name}" before completing your order.`;
+        setServerError(msg);
+        showToast(msg, 'error');
+        return;
+      }
+      if (item.requiresSize) {
+        const msg = `Please select a size for "${item.name}" before completing your order.`;
+        setServerError(msg);
+        showToast(msg, 'error');
+        return;
+      }
+      if (item.requiresColor) {
+        const msg = `Please select a color for "${item.name}" before completing your order.`;
+        setServerError(msg);
+        showToast(msg, 'error');
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -645,58 +798,176 @@ Thank you for shopping with Keeper Sports! ⚽`;
               <div className="ks-cart-summary-card">
                 <h3 className="ks-cart-summary-title">Order Items ({checkoutItems.length})</h3>
 
-                <div className="ks-checkout-items-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '320px', overflowY: 'auto', marginBottom: '16px' }}>
-                  {checkoutItems.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="ks-checkout-item-mini"
-                      style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 12px', background: 'var(--ks-bg-card, rgba(255, 255, 255, 0.03))', border: '1px solid var(--ks-border, rgba(255, 255, 255, 0.08))', borderRadius: '10px' }}
-                    >
+                <div className="ks-checkout-items-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '480px', overflowY: 'auto', marginBottom: '16px' }}>
+                  {checkoutItems.map((item, idx) => {
+                    const itemRequiresSelection = item.requiresSize || item.requiresColor;
+                    return (
                       <div
-                        className="ks-checkout-item-thumb"
-                        style={{ width: '58px', height: '58px', minWidth: '58px', maxWidth: '58px', minHeight: '58px', maxHeight: '58px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0, 0, 0, 0.25)', border: '1px solid rgba(255, 255, 255, 0.08)' }}
+                        key={item.id || idx}
+                        className={`ks-checkout-item-mini ${itemRequiresSelection ? 'has-unresolved-variant' : ''}`}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '8px',
+                          padding: '10px 12px',
+                          background: 'var(--ks-bg-card, rgba(255, 255, 255, 0.03))',
+                          border: itemRequiresSelection ? '1.5px solid #E10600' : '1px solid var(--ks-border, rgba(255, 255, 255, 0.08))',
+                          borderRadius: '10px'
+                        }}
                       >
-                        {item.image ? (
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="ks-checkout-thumb-img"
-                            style={{ width: '100%', height: '100%', maxWidth: '58px', maxHeight: '58px', objectFit: 'cover', display: 'block' }}
-                            loading="lazy"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const fallback = e.currentTarget.parentElement?.querySelector('.ks-checkout-thumb-fallback');
-                              if (fallback) fallback.style.display = 'flex';
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div
+                            className="ks-checkout-item-thumb"
+                            style={{
+                              width: '58px',
+                              height: '58px',
+                              minWidth: '58px',
+                              maxWidth: '58px',
+                              minHeight: '58px',
+                              maxHeight: '58px',
+                              borderRadius: '8px',
+                              overflow: 'hidden',
+                              flexShrink: 0,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              background: 'rgba(0, 0, 0, 0.25)',
+                              border: '1px solid rgba(255, 255, 255, 0.08)'
                             }}
-                          />
-                        ) : null}
-                        <div
-                          className="ks-card-img-fallback ks-checkout-thumb-fallback"
-                          style={{
-                            display: item.image ? 'none' : 'flex',
-                            width: '100%',
-                            height: '100%',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '11px',
-                            fontWeight: 800
-                          }}
-                        >
-                          KS
+                          >
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="ks-checkout-thumb-img"
+                                style={{ width: '100%', height: '100%', maxWidth: '58px', maxHeight: '58px', objectFit: 'cover', display: 'block' }}
+                                loading="lazy"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  const fallback = e.currentTarget.parentElement?.querySelector('.ks-checkout-thumb-fallback');
+                                  if (fallback) fallback.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <div
+                              className="ks-card-img-fallback ks-checkout-thumb-fallback"
+                              style={{
+                                display: item.image ? 'none' : 'flex',
+                                width: '100%',
+                                height: '100%',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '11px',
+                                fontWeight: 800
+                              }}
+                            >
+                              KS
+                            </div>
+                          </div>
+                          <div className="ks-checkout-item-info" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                            <span className="ks-checkout-item-name" title={item.name} style={{ fontSize: '0.88rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {item.name}
+                            </span>
+                            <span className="ks-checkout-item-meta" style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--ks-text-muted, #a3a3a3)' }}>
+                              Qty: {item.quantity} · ${(item.unitPrice * item.quantity).toFixed(2)}
+                              {item.size && !item.size.toLowerCase().includes('standard') && ` · Size: ${item.size}`}
+                              {item.color && ` · Color: ${formatColorName(item.color)}`}
+                            </span>
+                          </div>
                         </div>
+
+                        {/* Interactive Size Pill Selector */}
+                        {item.availableSizes && item.availableSizes.length > 0 && (
+                          <div style={{ marginTop: '2px', paddingTop: '6px', borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                            <div style={{ fontSize: '0.74rem', fontWeight: 700, color: item.requiresSize ? '#E10600' : 'var(--ks-text-muted, #999)', marginBottom: '5px' }}>
+                              {item.requiresSize ? '⚠️ Please select a Size:' : 'Size:'}
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                              {item.availableSizes.map((sVal) => {
+                                const isSelected = item.size && item.size.toLowerCase() === sVal.toLowerCase();
+                                return (
+                                  <button
+                                    key={sVal}
+                                    type="button"
+                                    onClick={() => {
+                                      if (item.isDirect) {
+                                        handleSelectDirectOption('size', sVal);
+                                      } else {
+                                        handleSelectCartOption(item.id, 'size', sVal);
+                                      }
+                                    }}
+                                    className={`ks-cart-size-pill ${isSelected ? 'active' : ''}`}
+                                    style={{
+                                      padding: '3px 8px',
+                                      fontSize: '0.74rem',
+                                      fontWeight: 700,
+                                      borderRadius: '6px',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    {sVal}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Interactive Color Pill Selector */}
+                        {item.availableColors && item.availableColors.length > 0 && (
+                          <div style={{ marginTop: '2px', paddingTop: '6px', borderTop: item.availableSizes?.length ? 'none' : '1px solid rgba(255, 255, 255, 0.06)' }}>
+                            <div style={{ fontSize: '0.74rem', fontWeight: 700, color: item.requiresColor ? '#E10600' : 'var(--ks-text-muted, #999)', marginBottom: '5px' }}>
+                              {item.requiresColor ? '⚠️ Please select a Color:' : 'Color:'}
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                              {item.availableColors.map((cVal) => {
+                                const isSelected = item.color && item.color.toLowerCase() === cVal.toLowerCase();
+                                const hex = getColorHex(cVal);
+                                return (
+                                  <button
+                                    key={cVal}
+                                    type="button"
+                                    onClick={() => {
+                                      if (item.isDirect) {
+                                        handleSelectDirectOption('color', cVal);
+                                      } else {
+                                        handleSelectCartOption(item.id, 'color', cVal);
+                                      }
+                                    }}
+                                    className={`ks-cart-size-pill ${isSelected ? 'active' : ''}`}
+                                    style={{
+                                      padding: '3px 8px',
+                                      fontSize: '0.74rem',
+                                      fontWeight: 700,
+                                      borderRadius: '6px',
+                                      cursor: 'pointer',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '5px'
+                                    }}
+                                  >
+                                    {hex && (
+                                      <span
+                                        style={{
+                                          width: '8px',
+                                          height: '8px',
+                                          borderRadius: '50%',
+                                          backgroundColor: hex,
+                                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                                          flexShrink: 0
+                                        }}
+                                      />
+                                    )}
+                                    <span>{formatColorName(cVal)}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="ks-checkout-item-info" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                        <span className="ks-checkout-item-name" title={item.name} style={{ fontSize: '0.88rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {item.name}
-                        </span>
-                        <span className="ks-checkout-item-meta" style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--ks-text-muted, #a3a3a3)' }}>
-                          Qty: {item.quantity} · ${(item.unitPrice * item.quantity).toFixed(2)}
-                          {item.size && ` · ${item.size}`}
-                          {item.color && ` · ${formatColorName(item.color)}`}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="ks-summary-row" style={{ marginTop: '16px' }}>
