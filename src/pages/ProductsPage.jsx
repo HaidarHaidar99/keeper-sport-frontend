@@ -215,11 +215,15 @@ export default function ProductsPage() {
     }
   };
 
+  // When onSaleOnly is true, only show products that genuinely have an active discount/offer
+  const displayedProducts = onSaleOnly
+    ? products.filter((p) => Boolean(p.pricing?.hasDiscount || (p.old_price && Number(p.old_price) > Number(p.base_price))))
+    : products;
+
   const hasActiveFilters = Boolean(
     selectedCategory ||
       searchTerm ||
       inStockOnly ||
-      onSaleOnly ||
       minPrice ||
       maxPrice ||
       (selectedSort && selectedSort !== 'featured')
@@ -242,13 +246,17 @@ export default function ProductsPage() {
         <section className="ks-shop-header-section" aria-label="Shop Header">
           <div className="ks-shop-header-top">
             <div className="ks-shop-header-titles">
-              <span className="ks-shop-eyebrow">EQUIPMENT &amp; APPAREL</span>
-              <h1 className="ks-shop-heading">PRODUCTS</h1>
+              <span className="ks-shop-eyebrow">
+                {onSaleOnly ? 'EXCLUSIVE PROMOTIONS' : 'EQUIPMENT & APPAREL'}
+              </span>
+              <h1 className="ks-shop-heading">
+                {onSaleOnly ? 'SPECIAL OFFERS' : 'PRODUCTS'}
+              </h1>
             </div>
 
             <div className="ks-shop-header-stats">
               <span className="ks-shop-count-badge">
-                {totalProducts} {totalProducts === 1 ? 'PRODUCT' : 'PRODUCTS'}
+                {displayedProducts.length} {displayedProducts.length === 1 ? 'PRODUCT' : 'PRODUCTS'}
               </span>
             </div>
           </div>
@@ -310,7 +318,7 @@ export default function ProductsPage() {
           </div>
 
           {/* Active Filter Chips / Badges */}
-          {hasActiveFilters && (
+          {!onSaleOnly && hasActiveFilters && (
             <div className="ks-active-filters-bar" aria-label="Active filters">
               <span className="ks-active-filters-label">Active:</span>
 
@@ -337,15 +345,6 @@ export default function ProductsPage() {
                 <span className="ks-filter-chip">
                   In Stock Only
                   <button type="button" onClick={() => setInStockOnly(false)} aria-label="Remove in stock filter">
-                    <X size={12} />
-                  </button>
-                </span>
-              )}
-
-              {onSaleOnly && (
-                <span className="ks-filter-chip">
-                  On Sale
-                  <button type="button" onClick={() => setOnSaleOnly(false)} aria-label="Remove on sale filter">
                     <X size={12} />
                   </button>
                 </span>
@@ -379,17 +378,7 @@ export default function ProductsPage() {
           )}
         </section>
 
-        {/* SECTION A: FEATURED / SELECTED PRODUCT RAIL */}
-        {/* On mobile: 1 horizontal row with swipe. On desktop: multi-card row */}
-        <FeaturedRail
-          products={featuredProducts}
-          loading={featuredLoading}
-          onCartUpdated={handleCartUpdated}
-          onFavoriteToggled={handleFavoriteToggled}
-        />
-
-        {/* SECTION B: CATALOG PRODUCTS */}
-        {/* Mobile: EXACTLY 2 COLUMNS vertically continuing. Tablet/Desktop: 2-5 columns */}
+        {/* CATALOG PRODUCTS */}
         <section className="ks-catalog-grid-section" aria-label="Catalog Products">
           {/* Loading State: Clean subtle spinner, NO skeleton cards */}
           {loading ? (
@@ -411,19 +400,21 @@ export default function ProductsPage() {
                 TRY AGAIN
               </button>
             </div>
-          ) : products.length === 0 ? (
+          ) : displayedProducts.length === 0 ? (
             /* Empty State */
             <div className="ks-catalog-empty-state">
               <PackageX size={44} className="ks-state-icon-empty" />
               <h3 className="ks-state-title">
-                {hasActiveFilters ? 'No Products Found' : 'Catalog Coming Soon'}
+                {onSaleOnly ? 'No Current Offers' : hasActiveFilters ? 'No Products Found' : 'Catalog Coming Soon'}
               </h3>
               <p className="ks-state-text">
-                {hasActiveFilters
+                {onSaleOnly
+                  ? 'There are currently no active discounted products. Check back soon for upcoming season deals.'
+                  : hasActiveFilters
                   ? 'No products match your current search and filter criteria.'
                   : 'Products are currently being loaded into the catalog. Check back shortly.'}
               </p>
-              {hasActiveFilters && (
+              {!onSaleOnly && hasActiveFilters && (
                 <button
                   type="button"
                   onClick={handleResetFilters}
@@ -437,7 +428,7 @@ export default function ProductsPage() {
             /* Real Products Catalog Grid */
             <>
               <div className="ks-catalog-grid">
-                {products.map((prod, idx) => (
+                {displayedProducts.map((prod, idx) => (
                   <ProductCard
                     key={prod.id}
                     product={prod}
@@ -451,10 +442,10 @@ export default function ProductsPage() {
               {/* Pagination / Load More Footer */}
               <div className="ks-catalog-pagination-wrap">
                 <div className="ks-catalog-counts-info">
-                  Showing {products.length} of {totalProducts} products
+                  Showing {displayedProducts.length} of {onSaleOnly ? displayedProducts.length : totalProducts} products
                 </div>
 
-                {hasMore && (
+                {!onSaleOnly && hasMore && (
                   <button
                     type="button"
                     onClick={handleLoadMore}
