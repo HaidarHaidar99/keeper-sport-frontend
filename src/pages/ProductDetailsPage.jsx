@@ -31,6 +31,9 @@ export default function ProductDetailsPage() {
   const { siteSettings, categories, isFavorite, toggleFavorite, registerFavorite } = useSite();
   const { showToast } = useToast();
   const heartBtnRef = useRef(null);
+  const thumbsContainerRef = useRef(null);
+  const thumbRefs = useRef([]);
+  const touchStartX = useRef(null);
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -116,6 +119,40 @@ export default function ProductDetailsPage() {
       setGoalCelebration(true);
       setTimeout(() => setGoalCelebration(false), 900);
     }
+  };
+
+  // Automatically sync thumbnail strip scroll so active image is always centered & visible
+  useEffect(() => {
+    const activeEl = thumbRefs.current[activeMediaIndex];
+    if (activeEl) {
+      activeEl.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
+  }, [activeMediaIndex]);
+
+  // Touch swipe support for main gallery
+  const handleTouchStart = (e) => {
+    if (e.touches && e.touches[0]) {
+      touchStartX.current = e.touches[0].clientX;
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    if (e.changedTouches && e.changedTouches[0]) {
+      const diff = touchStartX.current - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 40) {
+        if (diff > 0) {
+          handleMediaChange(activeMediaIndex + 1);
+        } else {
+          handleMediaChange(activeMediaIndex - 1);
+        }
+      }
+    }
+    touchStartX.current = null;
   };
 
   // Preload all gallery images in parallel for ultra-fast flipping
@@ -359,7 +396,12 @@ export default function ProductDetailsPage() {
         <div className="ks-details-grid">
           {/* LEFT: GALLERY AREA */}
           <section className="ks-details-media-col" aria-label="Product Media Gallery">
-            <div className="ks-details-viewport" style={{ padding: 0, overflow: 'hidden' }}>
+            <div
+              className="ks-details-viewport"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              style={{ padding: 0, overflow: 'hidden', touchAction: 'pan-y' }}
+            >
               {currentMedia.media_type === 'video' ? (
                 <video
                   src={currentMedia.storage_path}
@@ -469,10 +511,11 @@ export default function ProductDetailsPage() {
 
             {/* Thumbnail Strip */}
             {mediaList.length > 1 && (
-              <div className="ks-details-thumbs-row">
+              <div ref={thumbsContainerRef} className="ks-details-thumbs-row">
                 {mediaList.map((media, idx) => (
                   <button
                     key={media.id || idx}
+                    ref={(el) => (thumbRefs.current[idx] = el)}
                     type="button"
                     onClick={() => handleMediaChange(idx)}
                     className={`ks-thumb-btn ${idx === activeMediaIndex ? 'is-active' : ''}`}

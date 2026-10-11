@@ -392,7 +392,7 @@ export default function CheckoutPage() {
             lines.push(`   • Size: ${item.size}`);
           }
           if (item.color) {
-            lines.push(`   • Color: ${item.color}`);
+            lines.push(`   • Color: ${formatColorName(item.color)}`);
           }
           if (item.printedName) {
             lines.push(`   • Custom Print: ${item.printedName}${item.printedNumber ? ` #${item.printedNumber}` : ''}`);
