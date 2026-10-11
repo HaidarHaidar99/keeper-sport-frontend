@@ -5,6 +5,7 @@ import { productApi } from '../api/productApi';
 import { useSite } from '../context/SiteContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { formatColorName } from '../utils/productUtils';
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -394,7 +395,7 @@ export default function CartPage() {
                         {!hasSizes && sizeVal && !sizeVal.toLowerCase().includes('standard') && (
                           <span>Size: {sizeVal}</span>
                         )}
-                        {colorVal && <span>Color: {colorVal}</span>}
+                        {colorVal && <span>Color: {formatColorName(colorVal)}</span>}
                         {item.printedName && <span>Print: {item.printedName} #{item.printedNumber || ''}</span>}
                         {item.badge && <span>Badge: {item.badge}</span>}
                       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Heart, ShoppingBag, User, Package } from 'lucide-react';
+import { Search, Heart, ShoppingBag, User, Package, Sun, Moon } from 'lucide-react';
 import { useSite, DEFAULT_LOGO_URL } from '../context/SiteContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -9,7 +9,7 @@ import HamburgerMenu from './HamburgerMenu';
 export default function Navbar({ siteSettings: propSettings, categories: propCategories, counts: propCounts }) {
   const siteCtx = useSite();
   const { user } = useAuth();
-  const { theme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
 
   const siteSettings = (propSettings && Object.keys(propSettings).length > 0) ? propSettings : (siteCtx?.siteSettings || {});
@@ -219,6 +219,17 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
             >
               <User size={18} />
             </Link>
+
+            {/* Desktop Only: Theme Toggle (Dark / Light) */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="ks-navbar-circle-btn ks-desktop-only ks-nav-theme-toggle"
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
 
             {/* Mobile Navigation Button: Clean without badge numbers */}
             <button

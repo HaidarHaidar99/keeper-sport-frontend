@@ -23,6 +23,7 @@ import { isProductFavoritedLocally, addLocalFavoriteId, removeLocalFavoriteId } 
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useToast } from '../context/ToastContext';
+import { formatColorName, getColorHex } from '../utils/productUtils';
 
 export default function ProductDetailsPage() {
   const { slugOrId } = useParams();
@@ -239,11 +240,9 @@ export default function ProductDetailsPage() {
       });
 
       if (res && res.success) {
-        setCartSuccess(true);
         if (typeof res.cartCount === 'number' && typeof updateCartCount === 'function') {
           updateCartCount(res.cartCount);
         }
-        setTimeout(() => setCartSuccess(false), 2000);
       } else {
         // Revert count if addition failed
         if (typeof updateCartCount === 'function') {
@@ -619,7 +618,7 @@ export default function ProductDetailsPage() {
             {availableColors.length > 0 && (
               <div className="ks-details-option-group">
                 <label className="ks-details-option-label">
-                  COLOR: <strong style={{ color: 'var(--ks-text-title)' }}>{selectedColor || 'Choose color'}</strong>
+                  COLOR: <strong style={{ color: 'var(--ks-text-title)' }}>{formatColorName(selectedColor) || 'Choose color'}</strong>
                 </label>
                 <div className="ks-colors-grid">
                   {availableColors.map((color) => (
@@ -628,23 +627,15 @@ export default function ProductDetailsPage() {
                       type="button"
                       onClick={() => setSelectedColor(color)}
                       className={`ks-color-pill ${selectedColor === color ? 'is-active' : ''}`}
-                      title={color}
+                      title={formatColorName(color)}
                     >
                       <span
                         className="ks-color-dot"
                         style={{
-                          backgroundColor:
-                            color.toLowerCase() === 'white' ? '#FFFFFF' :
-                            color.toLowerCase() === 'black' ? '#000000' :
-                            color.toLowerCase() === 'red' ? '#E10600' :
-                            color.toLowerCase() === 'blue' ? '#0047AB' :
-                            color.toLowerCase() === 'green' ? '#1E792C' :
-                            color.toLowerCase() === 'yellow' ? '#FFD700' :
-                            color.toLowerCase() === 'navy' ? '#000080' :
-                            color.toLowerCase() === 'gray' ? '#7A7A7A' : color
+                          backgroundColor: getColorHex(color)
                         }}
                       />
-                      <span className="ks-color-name">{color}</span>
+                      <span className="ks-color-name">{formatColorName(color)}</span>
                     </button>
                   ))}
                 </div>
@@ -749,31 +740,22 @@ export default function ProductDetailsPage() {
               <button
                 type="button"
                 onClick={handleAddToCart}
-                disabled={isOutOfStock || cartLoading}
-                className={`ks-details-btn-cart ${cartSuccess ? 'is-success' : ''}`}
-                aria-label={`Add ${product.name} to cart`}
+                disabled={isOutOfStock}
+                className={`ks-details-btn-cart ${isOutOfStock ? 'is-disabled' : ''}`}
+                aria-label={isOutOfStock ? 'Product out of stock' : `Add ${product.name} to cart`}
               >
-                {cartSuccess ? (
-                  <>
-                    <Check size={18} strokeWidth={2.5} />
-                    <span>ADDED TO CART</span>
-                  </>
-                ) : (
-                  <>
-                    <Plus size={18} strokeWidth={2.5} />
-                    <span>ADD TO CART</span>
-                  </>
-                )}
+                <Plus size={18} strokeWidth={2.5} />
+                <span>{isOutOfStock ? 'OUT OF STOCK' : 'ADD TO CART'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleOrderNow}
                 disabled={isOutOfStock}
-                className="ks-details-btn-order"
-                aria-label={`Order ${product.name} now`}
+                className={`ks-details-btn-order ${isOutOfStock ? 'is-disabled' : ''}`}
+                aria-label={isOutOfStock ? 'Product out of stock' : `Order ${product.name} now`}
               >
-                ORDER NOW
+                {isOutOfStock ? 'OUT OF STOCK' : 'ORDER NOW'}
               </button>
             </div>
 

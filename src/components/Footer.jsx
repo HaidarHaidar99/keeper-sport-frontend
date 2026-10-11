@@ -125,37 +125,37 @@ export default function Footer({ siteSettings: propSettings, loading = false, hi
             <ul className="ks-footer-links-list">
               <li className="ks-footer-link-item">
                 <Link to="/">
-                  <ChevronRight size={14} className="ks-footer-link-chevron" style={{ color: '#E10600' }} />
+                  <ChevronRight size={14} className="ks-footer-link-chevron" />
                   <span>Home</span>
                 </Link>
               </li>
               <li className="ks-footer-link-item">
                 <Link to="/products">
-                  <ChevronRight size={14} className="ks-footer-link-chevron" style={{ color: '#E10600' }} />
+                  <ChevronRight size={14} className="ks-footer-link-chevron" />
                   <span>Products</span>
                 </Link>
               </li>
               <li className="ks-footer-link-item">
                 <Link to="/categories">
-                  <ChevronRight size={14} className="ks-footer-link-chevron" style={{ color: '#E10600' }} />
+                  <ChevronRight size={14} className="ks-footer-link-chevron" />
                   <span>Categories</span>
                 </Link>
               </li>
               <li className="ks-footer-link-item">
                 <Link to="/reviews">
-                  <ChevronRight size={14} className="ks-footer-link-chevron" style={{ color: '#E10600' }} />
+                  <ChevronRight size={14} className="ks-footer-link-chevron" />
                   <span>Reviews</span>
                 </Link>
               </li>
               <li className="ks-footer-link-item">
                 <Link to="/about">
-                  <ChevronRight size={14} className="ks-footer-link-chevron" style={{ color: '#E10600' }} />
+                  <ChevronRight size={14} className="ks-footer-link-chevron" />
                   <span>About Us</span>
                 </Link>
               </li>
               <li className="ks-footer-link-item">
                 <Link to="/contact">
-                  <ChevronRight size={14} className="ks-footer-link-chevron" style={{ color: '#E10600' }} />
+                  <ChevronRight size={14} className="ks-footer-link-chevron" />
                   <span>Contact</span>
                 </Link>
               </li>

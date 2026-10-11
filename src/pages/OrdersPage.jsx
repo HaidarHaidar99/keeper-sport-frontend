@@ -8,6 +8,7 @@ import { getHiddenOrderIds, hideOrderFromHistory } from '../utils/guestIdentity'
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { WhatsAppIcon } from '../components/SocialIcons';
+import { formatColorName } from '../utils/productUtils';
 
 export default function OrdersPage() {
   const { user } = useAuth();
@@ -210,16 +211,34 @@ export default function OrdersPage() {
                             src={item.cover_image_path_snapshot}
                             alt={item.product_name_snapshot}
                             className="ks-order-mini-img"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fallback = e.currentTarget.parentElement?.querySelector('.ks-card-img-fallback');
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
                           />
-                        ) : (
-                          <div className="ks-card-img-fallback">KS</div>
-                        )}
+                        ) : null}
+                        <div
+                          className="ks-card-img-fallback"
+                          style={{
+                            display: item.cover_image_path_snapshot ? 'none' : 'flex',
+                            width: '44px',
+                            height: '44px',
+                            minWidth: '44px',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '11px',
+                            fontWeight: 800
+                          }}
+                        >
+                          KS
+                        </div>
                         <div className="ks-order-mini-info">
                           <span className="ks-order-mini-title">{item.product_name_snapshot}</span>
                           <span className="ks-order-mini-meta">
                             Qty: {item.quantity} · ${Number(item.final_unit_price).toFixed(2)}
                             {item.size_value_snapshot && ` · Size: ${item.size_value_snapshot}`}
-                            {item.color_value_snapshot && ` · Color: ${item.color_value_snapshot}`}
+                            {item.color_value_snapshot && ` · Color: ${formatColorName(item.color_value_snapshot)}`}
                             {item.printed_name && ` · Print: ${item.printed_name} #${item.printed_number}`}
                             {item.badge && ` · Badge: ${item.badge}`}
                           </span>

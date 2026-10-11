@@ -9,6 +9,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { WhatsAppIcon } from '../components/SocialIcons';
 import { useToast } from '../context/ToastContext';
+import { formatColorName, getProductImage } from '../utils/productUtils';
 
 export default function CheckoutPage() {
   const [searchParams] = useSearchParams();
@@ -95,7 +96,7 @@ export default function CheckoutPage() {
         printedName: directName,
         printedNumber: directNumber,
         badge: directBadge,
-        image: directProduct.primaryImage || directProduct.image_url
+        image: getProductImage(directProduct, null)
       }
     ];
   } else if (!isDirect && cartItems.length > 0) {
@@ -117,7 +118,7 @@ export default function CheckoutPage() {
         printedName: item.printedName || null,
         printedNumber: item.printedNumber || null,
         badge: item.badge || null,
-        image: item.coverImage || p.primaryImage || null
+        image: getProductImage(p, item)
       };
     });
   }
@@ -582,17 +583,40 @@ Thank you for shopping with Keeper Sports! ⚽`;
                       </div>
                     </label>
 
-                    <label className="ks-payment-option-label">
+                    <label
+                      className="ks-payment-option-label is-disabled"
+                      style={{ opacity: 0.7, cursor: 'not-allowed' }}
+                      title="Whish Money payment will be added soon once approved by the company"
+                    >
                       <input
                         type="radio"
                         name="payment_method"
                         value="whish_money"
-                        checked={formData.payment_method === 'whish_money'}
-                        onChange={handleChange}
+                        disabled={true}
+                        checked={false}
+                        onChange={() => {}}
                       />
-                      <div>
-                        <strong>Whish Money</strong>
-                        <span>Transfer via Whish app before delivery</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <strong>Whish Money</strong>
+                          <span
+                            style={{
+                              fontSize: '10px',
+                              fontWeight: 700,
+                              textTransform: 'uppercase',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              background: 'rgba(255, 255, 255, 0.08)',
+                              color: 'var(--ks-text-muted, #9ca3af)',
+                              border: '1px solid rgba(255, 255, 255, 0.12)'
+                            }}
+                          >
+                            Coming Soon
+                          </span>
+                        </div>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--ks-text-muted, #9ca3af)', marginTop: '2px', display: 'block' }}>
+                          Whish Money payment will be added soon once approved by the company.
+                        </span>
                       </div>
                     </label>
                   </div>
@@ -639,10 +663,27 @@ Thank you for shopping with Keeper Sports! ⚽`;
                             className="ks-checkout-thumb-img"
                             style={{ width: '100%', height: '100%', maxWidth: '58px', maxHeight: '58px', objectFit: 'cover', display: 'block' }}
                             loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fallback = e.currentTarget.parentElement?.querySelector('.ks-checkout-thumb-fallback');
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
                           />
-                        ) : (
-                          <div className="ks-card-img-fallback ks-checkout-thumb-fallback" style={{ fontSize: '11px', fontWeight: 800 }}>KS</div>
-                        )}
+                        ) : null}
+                        <div
+                          className="ks-card-img-fallback ks-checkout-thumb-fallback"
+                          style={{
+                            display: item.image ? 'none' : 'flex',
+                            width: '100%',
+                            height: '100%',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '11px',
+                            fontWeight: 800
+                          }}
+                        >
+                          KS
+                        </div>
                       </div>
                       <div className="ks-checkout-item-info" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
                         <span className="ks-checkout-item-name" title={item.name} style={{ fontSize: '0.88rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -651,7 +692,7 @@ Thank you for shopping with Keeper Sports! ⚽`;
                         <span className="ks-checkout-item-meta" style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--ks-text-muted, #a3a3a3)' }}>
                           Qty: {item.quantity} · ${(item.unitPrice * item.quantity).toFixed(2)}
                           {item.size && ` · ${item.size}`}
-                          {item.color && ` · ${item.color}`}
+                          {item.color && ` · ${formatColorName(item.color)}`}
                         </span>
                       </div>
                     </div>
