@@ -7,6 +7,7 @@ import { productApi } from '../api/productApi';
 import { getHiddenOrderIds, hideOrderFromHistory } from '../utils/guestIdentity';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { WhatsAppIcon } from '../components/SocialIcons';
 
 export default function OrdersPage() {
   const { user } = useAuth();
@@ -229,7 +230,7 @@ export default function OrdersPage() {
 
                   <div className="ks-order-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px', borderTop: '1px solid var(--ks-border-card)', paddingTop: '12px', marginTop: '12px' }}>
                     {/* Customer Action Area */}
-                    <div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                       {isPending && (
                         <button
                           type="button"
@@ -264,6 +265,35 @@ export default function OrdersPage() {
                           <span>Cancel Order</span>
                         </button>
                       )}
+                      <a
+                        href={`https://wa.me/${(siteSettings?.whatsapp_number || siteSettings?.phone_number || '96170973086').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello Keeper Sports, I have an inquiry about my order #${order.order_number}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          background: 'rgba(37, 211, 102, 0.1)',
+                          border: '1px solid rgba(37, 211, 102, 0.35)',
+                          borderRadius: '6px',
+                          color: '#25D366',
+                          padding: '6px 12px',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          textDecoration: 'none',
+                          transition: 'background-color 0.2s, color 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'rgba(37, 211, 102, 0.2)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'rgba(37, 211, 102, 0.1)';
+                        }}
+                      >
+                        <WhatsAppIcon size={13} style={{ color: '#25D366' }} />
+                        <span>Inquire on WhatsApp</span>
+                      </a>
                     </div>
 
                     {/* Financial totals */}
