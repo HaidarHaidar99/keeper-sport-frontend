@@ -8515,7 +8515,8 @@ textarea,
   margin-top: 32px;
 }
 
-.ks-category-view-all-btn {
+.ks-category-view-all-btn,
+.ks-products-view-all-btn {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -8529,12 +8530,15 @@ textarea,
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-decoration: none;
+  cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.ks-category-view-all-btn:hover {
+.ks-category-view-all-btn:hover,
+.ks-products-view-all-btn:hover {
   border-color: #E10600;
   color: #E10600;
+  transform: translateY(-2px);
 }
 
 /* 7. PRODUCT CARD REDESIGN (24px Radius, No Description, Reviews Top-Right, BUY NOW + '+' Button) */

@@ -95,13 +95,76 @@ export default function HomePage() {
       }
     });
 
-    // Featured Products
-    productApi.getFeaturedProducts(8).then((res) => {
+    // Featured Showcase: 4 products (1 gloves, 1 t-shirts, 1 boots, 1 balls)
+    productApi.getFeaturedProducts(8).then(async (res) => {
+      if (!isMounted) return;
+
+      let list = res?.success && Array.isArray(res.products) ? res.products : [];
+
+      if (list.length < 4) {
+        try {
+          const catRes = await productApi.getProducts({ limit: 50 });
+          const allProds = Array.isArray(catRes?.products) ? catRes.products : [];
+          if (allProds.length > 0) {
+            const picked = [];
+            const pickedIds = new Set();
+
+            const findAndPick = (matchFn) => {
+              const found = allProds.find((p) => !pickedIds.has(p.id) && matchFn(p));
+              if (found) {
+                picked.push(found);
+                pickedIds.add(found.id);
+              }
+            };
+
+            // 1. Gloves
+            findAndPick((p) => {
+              const cSlug = p.category?.slug || '';
+              const name = (p.name || '').toLowerCase();
+              return cSlug.includes('glove') || name.includes('glove');
+            });
+
+            // 2. T-Shirts / Kits
+            findAndPick((p) => {
+              const cSlug = p.category?.slug || '';
+              const name = (p.name || '').toLowerCase();
+              return cSlug.includes('kit') || cSlug.includes('jersey') || name.includes('shirt') || name.includes('t-shirt');
+            });
+
+            // 3. Boots / Shoes
+            findAndPick((p) => {
+              const cSlug = p.category?.slug || '';
+              const name = (p.name || '').toLowerCase();
+              return cSlug.includes('shoe') || cSlug.includes('boot') || name.includes('shoe') || name.includes('boot') || name.includes('vapor') || name.includes('predator');
+            });
+
+            // 4. Balls
+            findAndPick((p) => {
+              const cSlug = p.category?.slug || '';
+              const name = (p.name || '').toLowerCase();
+              return cSlug.includes('ball') || name.includes('ball');
+            });
+
+            for (const p of allProds) {
+              if (picked.length >= 4) break;
+              if (!pickedIds.has(p.id)) {
+                picked.push(p);
+                pickedIds.add(p.id);
+              }
+            }
+
+            list = picked;
+          }
+        } catch (e) {
+          console.warn('Error fetching fallback products for home showcase:', e);
+        }
+      }
+
       if (isMounted) {
-        if (res?.success && Array.isArray(res.products)) {
-          setFeaturedProducts(res.products);
+        if (list.length > 0) {
+          setFeaturedProducts(list);
           try {
-            sessionStorage.setItem('ks_cached_featured_products', JSON.stringify(res.products));
+            sessionStorage.setItem('ks_cached_featured_products', JSON.stringify(list));
           } catch {}
         }
         setFeaturedLoading(false);

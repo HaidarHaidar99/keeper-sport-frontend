@@ -49,7 +49,7 @@ export default function ProductsPreview({
             </div>
 
             {/* View All Products Button Directly Under the Cards */}
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '36px' }}>
               <Link to="/products" className="ks-products-view-all-btn">
                 <span>View All Products</span>
                 <ArrowRight size={16} />
