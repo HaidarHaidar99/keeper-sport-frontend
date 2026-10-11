@@ -5267,13 +5267,25 @@ input:autofill {
 }
 
 /* 7. TOOLBARS & SEARCH */
-.ks-admin-filter-toolbar {
+.ks-admin-filter-toolbar,
+.ks-admin-filter-bar,
+.ks-admin-controls-card,
+.ks-admin-filters-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 28px; /* Dedicated generous space between search bar and filters/actions */
+  margin-bottom: 24px;
   flex-wrap: wrap;
+}
+
+.ks-admin-filters-bar .ks-shop-search-form,
+.ks-admin-filter-bar .ks-shop-search-form,
+.ks-admin-controls-card .ks-shop-search-form,
+.ks-admin-filter-toolbar .ks-shop-search-form {
+  flex: 1;
+  min-width: 260px;
+  max-width: 520px;
 }
 
 .ks-admin-search-wrap {
@@ -5298,7 +5310,8 @@ input:autofill {
 .ks-admin-filter-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 16px; /* Clear spacing between individual filters */
+  flex-wrap: wrap;
 }
 
 /* 8. BUTTONS & FORMS */

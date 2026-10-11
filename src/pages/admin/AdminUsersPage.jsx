@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, Search, ShieldCheck, CheckCircle2, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, Search, ShieldCheck, CheckCircle2, Clock, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 
@@ -140,15 +140,26 @@ export default function AdminUsersPage() {
 
       {/* USERS TOOLBAR */}
       <div className="ks-admin-filter-toolbar">
-        <form onSubmit={handleSearchSubmit} className="ks-admin-search-wrap">
-          <Search size={15} className="ks-admin-search-icon" />
+        <form onSubmit={handleSearchSubmit} className="ks-shop-search-form" role="search">
+          <Search size={16} className="ks-search-icon" aria-hidden="true" />
           <input
             type="search"
             placeholder="Search by full name or email address..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="ks-admin-input is-search"
+            className="ks-shop-search-input"
+            aria-label="Search users"
           />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm('')}
+              className="ks-search-clear-btn"
+              aria-label="Clear search text"
+            >
+              <X size={15} />
+            </button>
+          )}
         </form>
 
         <div className="ks-admin-filter-actions">

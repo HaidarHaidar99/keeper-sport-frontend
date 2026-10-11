@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Package, Clock, CheckCircle2, XCircle, ArrowRight, Loader2, Ban, EyeOff, AlertTriangle, X } from 'lucide-react';
+import { Package, Clock, CheckCircle2, XCircle, ArrowRight, Loader2, Ban, EyeOff, AlertTriangle, X, Trash2, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSite } from '../context/SiteContext';
 import { productApi } from '../api/productApi';
@@ -17,11 +17,16 @@ export default function OrdersPage() {
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Modals state
   const [orderToCancel, setOrderToCancel] = useState(null);
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState(null);
+
+  const [orderToDelete, setOrderToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   const [orderToHide, setOrderToHide] = useState(null);
 
@@ -68,6 +73,27 @@ export default function OrdersPage() {
       setCancelError('Network error while cancelling order.');
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!orderToDelete || deleting) return;
+    setDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const res = await productApi.deleteOrder(orderToDelete.id);
+      if (res?.success) {
+        setOrders((prev) => prev.filter((o) => o.id !== orderToDelete.id));
+        if (typeof refreshCounts === 'function') refreshCounts();
+        setOrderToDelete(null);
+      } else {
+        setDeleteError(res?.message || 'Could not delete order.');
+      }
+    } catch {
+      setDeleteError('Network error while deleting order.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -133,202 +159,307 @@ export default function OrdersPage() {
             )}
           </div>
         ) : (
-          <div className="ks-orders-list">
-            {orders.map((order) => {
-              const orderItems = order.order_items || [];
-              const isPending = order.status === 'pending';
-              const isRejected = order.status === 'rejected';
+          <div>
+            {/* Unified Luxury Search Bar */}
+            <div style={{ marginBottom: '24px', maxWidth: '460px' }}>
+              <form onSubmit={(e) => e.preventDefault()} className="ks-shop-search-form" role="search">
+                <Search size={16} className="ks-search-icon" aria-hidden="true" />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search orders by number, product, or status..."
+                  className="ks-shop-search-input"
+                  aria-label="Search orders"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="ks-search-clear-btn"
+                    aria-label="Clear search text"
+                  >
+                    <X size={15} />
+                  </button>
+                )}
+              </form>
+            </div>
 
-              return (
-                <div key={order.id} className="ks-order-card">
-                  <div className="ks-order-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                    <div>
-                      <span className="ks-order-num">Order #{order.order_number}</span>
-                      <span className="ks-order-date">
-                        Placed on {new Date(order.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
+            {displayedOrders.length === 0 ? (
+              <div className="ks-catalog-empty" style={{ padding: '40px 20px' }}>
+                <Package size={40} style={{ opacity: 0.3, marginBottom: '12px' }} />
+                <h3>No matching orders found</h3>
+                <p>No orders matched your search term "{searchQuery}".</p>
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="ks-btn-secondary"
+                  style={{ marginTop: '14px', padding: '6px 16px', fontSize: '13px' }}
+                >
+                  Clear Search
+                </button>
+              </div>
+            ) : (
+              <div className="ks-orders-list">
+                {displayedOrders.map((order) => {
+                  const orderItems = order.order_items || [];
+                  const isPending = order.status === 'pending';
+                  const isRejected = order.status === 'rejected';
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      {getStatusBadge(order.status)}
-
-                      {/* Remove from View Button */}
-                      <button
-                        type="button"
-                        onClick={() => setOrderToHide(order)}
-                        title="Remove order from view"
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: 'var(--ks-text-muted, #9ca3af)',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          padding: '4px',
-                          fontSize: '11px',
-                          transition: 'color 0.2s'
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--ks-error-red, #dc2626)')}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--ks-text-muted, #9ca3af)')}
-                      >
-                        <EyeOff size={14} />
-                        <span>Hide</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Rejection Reason Notice */}
-                  {isRejected && (
-                    <div
-                      style={{
-                        background: 'rgba(239, 68, 68, 0.08)',
-                        border: '1px solid rgba(239, 68, 68, 0.25)',
-                        borderRadius: '8px',
-                        padding: '10px 14px',
-                        margin: '12px 0 6px',
-                        fontSize: '13px',
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: '8px'
-                      }}
-                    >
-                      <AlertTriangle size={16} style={{ color: 'var(--ks-error-red, #dc2626)', flexShrink: 0, marginTop: '2px' }} />
-                      <div>
-                        <strong style={{ color: 'var(--ks-error-red, #dc2626)' }}>Order Rejected:</strong>{' '}
-                        <span style={{ color: 'var(--ks-text-title, #111317)' }}>
-                          {order.rejection_message || 'Order could not be accepted.'}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="ks-order-items-grid">
-                    {orderItems.map((item) => (
-                      <div key={item.id} className="ks-order-item-mini">
-                        {item.cover_image_path_snapshot ? (
-                          <img
-                            src={item.cover_image_path_snapshot}
-                            alt={item.product_name_snapshot}
-                            className="ks-order-mini-img"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const fallback = e.currentTarget.parentElement?.querySelector('.ks-card-img-fallback');
-                              if (fallback) fallback.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        <div
-                          className="ks-card-img-fallback"
-                          style={{
-                            display: item.cover_image_path_snapshot ? 'none' : 'flex',
-                            width: '44px',
-                            height: '44px',
-                            minWidth: '44px',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '11px',
-                            fontWeight: 800
-                          }}
-                        >
-                          KS
-                        </div>
-                        <div className="ks-order-mini-info">
-                          <span className="ks-order-mini-title">{item.product_name_snapshot}</span>
-                          <span className="ks-order-mini-meta">
-                            Qty: {item.quantity} · ${Number(item.final_unit_price).toFixed(2)}
-                            {item.size_value_snapshot && ` · Size: ${item.size_value_snapshot}`}
-                            {item.color_value_snapshot && ` · Color: ${formatColorName(item.color_value_snapshot)}`}
-                            {item.printed_name && ` · Print: ${item.printed_name} #${item.printed_number}`}
-                            {item.badge && ` · Badge: ${item.badge}`}
+                  return (
+                    <div key={order.id} className="ks-order-card">
+                      <div className="ks-order-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                        <div>
+                          <span className="ks-order-num">Order #{order.order_number}</span>
+                          <span className="ks-order-date">
+                            Placed on {new Date(order.created_at).toLocaleDateString()}
                           </span>
                         </div>
-                      </div>
-                    ))}
-                  </div>
 
-                  <div className="ks-order-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px', borderTop: '1px solid var(--ks-border-card)', paddingTop: '12px', marginTop: '12px' }}>
-                    {/* Customer Action Area */}
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                      {isPending && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCancelError(null);
-                            setOrderToCancel(order);
-                          }}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          {getStatusBadge(order.status)}
+
+                          {/* Delete Order Button in Header */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDeleteError(null);
+                              setOrderToDelete(order);
+                            }}
+                            title="Delete order"
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'var(--ks-text-muted, #9ca3af)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '4px',
+                              fontSize: '11px',
+                              transition: 'color 0.2s'
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--ks-error-red, #dc2626)')}
+                            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--ks-text-muted, #9ca3af)')}
+                          >
+                            <Trash2 size={13} />
+                            <span>Delete</span>
+                          </button>
+
+                          {/* Remove from View Button */}
+                          <button
+                            type="button"
+                            onClick={() => setOrderToHide(order)}
+                            title="Remove order from view"
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'var(--ks-text-muted, #9ca3af)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '4px',
+                              fontSize: '11px',
+                              transition: 'color 0.2s'
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--ks-error-red, #dc2626)')}
+                            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--ks-text-muted, #9ca3af)')}
+                          >
+                            <EyeOff size={14} />
+                            <span>Hide</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Rejection Reason Notice */}
+                      {isRejected && (
+                        <div
                           style={{
-                            background: 'none',
-                            border: '1px solid var(--ks-error-red, #dc2626)',
-                            borderRadius: '6px',
-                            color: 'var(--ks-error-red, #dc2626)',
-                            padding: '6px 12px',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            transition: 'background-color 0.2s, color 0.2s'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = 'var(--ks-error-red, #dc2626)';
-                            e.currentTarget.style.color = '#ffffff';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.color = 'var(--ks-error-red, #dc2626)';
+                            background: 'rgba(239, 68, 68, 0.08)',
+                            border: '1px solid rgba(239, 68, 68, 0.25)',
+                            borderRadius: '8px',
+                            padding: '10px 14px',
+                            margin: '12px 0 6px',
+                            fontSize: '13px',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '8px'
                           }}
                         >
-                          <Ban size={13} />
-                          <span>Cancel Order</span>
-                        </button>
+                          <AlertTriangle size={16} style={{ color: 'var(--ks-error-red, #dc2626)', flexShrink: 0, marginTop: '2px' }} />
+                          <div>
+                            <strong style={{ color: 'var(--ks-error-red, #dc2626)' }}>Order Rejected:</strong>{' '}
+                            <span style={{ color: 'var(--ks-text-title, #111317)' }}>
+                              {order.rejection_message || 'Order could not be accepted.'}
+                            </span>
+                          </div>
+                        </div>
                       )}
-                      <a
-                        href={`https://wa.me/${(siteSettings?.whatsapp_number || siteSettings?.phone_number || '96170973086').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello Keeper Sports, I have an inquiry about my order #${order.order_number}`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          background: 'rgba(37, 211, 102, 0.1)',
-                          border: '1px solid rgba(37, 211, 102, 0.35)',
-                          borderRadius: '6px',
-                          color: '#25D366',
-                          padding: '6px 12px',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          textDecoration: 'none',
-                          transition: 'background-color 0.2s, color 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = 'rgba(37, 211, 102, 0.2)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'rgba(37, 211, 102, 0.1)';
-                        }}
-                      >
-                        <WhatsAppIcon size={13} style={{ color: '#25D366' }} />
-                        <span>Inquire on WhatsApp</span>
-                      </a>
-                    </div>
 
-                    {/* Financial totals */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                      <div style={{ fontSize: '13px', color: 'var(--ks-text-muted)' }}>
-                        Subtotal: ${Number(order.subtotal != null ? order.subtotal : (order.total - (order.delivery_fee || 0))).toFixed(2)} · Delivery: ${Number(order.delivery_fee || 0).toFixed(2)}
+                      <div className="ks-order-items-grid">
+                        {orderItems.map((item) => (
+                          <div key={item.id} className="ks-order-item-mini">
+                            {item.cover_image_path_snapshot ? (
+                              <img
+                                src={item.cover_image_path_snapshot}
+                                alt={item.product_name_snapshot}
+                                className="ks-order-mini-img"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  const fallback = e.currentTarget.parentElement?.querySelector('.ks-card-img-fallback');
+                                  if (fallback) fallback.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <div
+                              className="ks-card-img-fallback"
+                              style={{
+                                display: item.cover_image_path_snapshot ? 'none' : 'flex',
+                                width: '44px',
+                                height: '44px',
+                                minWidth: '44px',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '11px',
+                                fontWeight: 800
+                              }}
+                            >
+                              KS
+                            </div>
+                            <div className="ks-order-mini-info">
+                              <span className="ks-order-mini-title">{item.product_name_snapshot}</span>
+                              <span className="ks-order-mini-meta">
+                                Qty: {item.quantity} · ${Number(item.final_unit_price).toFixed(2)}
+                                {item.size_value_snapshot && ` · Size: ${item.size_value_snapshot}`}
+                                {item.color_value_snapshot && ` · Color: ${formatColorName(item.color_value_snapshot)}`}
+                                {item.printed_name && ` · Print: ${item.printed_name} #${item.printed_number}`}
+                                {item.badge && ` · Badge: ${item.badge}`}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span className="ks-order-total-label">Total Amount:</span>
-                        <span className="ks-order-total-val">${Number(order.total).toFixed(2)}</span>
+
+                      <div className="ks-order-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '12px', borderTop: '1px solid var(--ks-border-card)', paddingTop: '12px', marginTop: '12px' }}>
+                        {/* Customer Action Area */}
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                          {isPending && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCancelError(null);
+                                setOrderToCancel(order);
+                              }}
+                              style={{
+                                background: 'none',
+                                border: '1px solid var(--ks-error-red, #dc2626)',
+                                borderRadius: '6px',
+                                color: 'var(--ks-error-red, #dc2626)',
+                                padding: '6px 12px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                transition: 'background-color 0.2s, color 0.2s'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = 'var(--ks-error-red, #dc2626)';
+                                e.currentTarget.style.color = '#ffffff';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                                e.currentTarget.style.color = 'var(--ks-error-red, #dc2626)';
+                              }}
+                            >
+                              <Ban size={13} />
+                              <span>Cancel Order</span>
+                            </button>
+                          )}
+
+                          {/* Delete Order Action Button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDeleteError(null);
+                              setOrderToDelete(order);
+                            }}
+                            style={{
+                              background: 'rgba(239, 68, 68, 0.08)',
+                              border: '1px solid rgba(239, 68, 68, 0.3)',
+                              borderRadius: '6px',
+                              color: 'var(--ks-error-red, #dc2626)',
+                              padding: '6px 12px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              transition: 'background-color 0.2s, color 0.2s'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = 'var(--ks-error-red, #dc2626)';
+                              e.currentTarget.style.color = '#ffffff';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.08)';
+                              e.currentTarget.style.color = 'var(--ks-error-red, #dc2626)';
+                            }}
+                          >
+                            <Trash2 size={13} />
+                            <span>Delete Order</span>
+                          </button>
+
+                          <a
+                            href={`https://wa.me/${(siteSettings?.whatsapp_number || siteSettings?.phone_number || '96170973086').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello Keeper Sports, I have an inquiry about my order #${order.order_number}`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              background: 'rgba(37, 211, 102, 0.1)',
+                              border: '1px solid rgba(37, 211, 102, 0.35)',
+                              borderRadius: '6px',
+                              color: '#25D366',
+                              padding: '6px 12px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              textDecoration: 'none',
+                              transition: 'background-color 0.2s, color 0.2s'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = 'rgba(37, 211, 102, 0.2)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'rgba(37, 211, 102, 0.1)';
+                            }}
+                          >
+                            <WhatsAppIcon size={13} style={{ color: '#25D366' }} />
+                            <span>Inquire on WhatsApp</span>
+                          </a>
+                        </div>
+
+                        {/* Financial totals */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                          <div style={{ fontSize: '13px', color: 'var(--ks-text-muted)' }}>
+                            Subtotal: ${Number(order.subtotal != null ? order.subtotal : (order.total - (order.delivery_fee || 0))).toFixed(2)} · Delivery: ${Number(order.delivery_fee || 0).toFixed(2)}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span className="ks-order-total-label">Total Amount:</span>
+                            <span className="ks-order-total-val">${Number(order.total).toFixed(2)}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </main>
@@ -424,6 +555,103 @@ export default function OrdersPage() {
               >
                 {cancelling ? <Loader2 size={14} className="ks-spin-icon" /> : <Ban size={14} />}
                 <span>Confirm Cancellation</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE ORDER PERMANENTLY CONFIRMATION MODAL */}
+      {orderToDelete && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-order-title"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(3px)',
+            padding: '16px'
+          }}
+          onClick={() => {
+            if (!deleting) setOrderToDelete(null);
+          }}
+        >
+          <div
+            style={{
+              background: 'var(--ks-bg-card, #1c1d22)',
+              border: '1px solid var(--ks-border-card, #2b2e38)',
+              borderRadius: '12px',
+              maxWidth: '460px',
+              width: '100%',
+              padding: '24px',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
+              color: 'var(--ks-text-title, #ffffff)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ks-error-red, #dc2626)', flexShrink: 0 }}>
+                <Trash2 size={20} />
+              </div>
+              <h3 id="delete-order-title" style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>
+                Delete Order #{orderToDelete.order_number}?
+              </h3>
+            </div>
+
+            <p style={{ fontSize: '14px', color: 'var(--ks-text-subtitle, #4b5563)', margin: '0 0 16px', lineHeight: 1.5 }}>
+              Are you sure you want to delete this order permanently? All associated items and records for Order #{orderToDelete.order_number} will be deleted. This action cannot be undone.
+            </p>
+
+            {deleteError && (
+              <div style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--ks-error-red, #dc2626)', padding: '10px 12px', borderRadius: '6px', fontSize: '13px', marginBottom: '16px' }}>
+                {deleteError}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => setOrderToDelete(null)}
+                disabled={deleting}
+                style={{
+                  background: 'none',
+                  border: '1px solid var(--ks-border-card, #d1d5db)',
+                  borderRadius: '8px',
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'var(--ks-text-title, #111317)',
+                  cursor: 'pointer'
+                }}
+              >
+                Keep Order
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+                style={{
+                  background: 'var(--ks-error-red, #dc2626)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '8px 18px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                {deleting && <Loader2 size={14} className="ks-spin-icon" />}
+                <span>Delete Order</span>
               </button>
             </div>
           </div>

@@ -13,9 +13,11 @@ import {
   AlertTriangle,
   Loader2,
   Check,
-  Ban
+  Ban,
+  Trash2
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
+import ConfirmModal from '../../components/admin/ConfirmModal';
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -37,6 +39,10 @@ export default function AdminOrdersPage() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [rejectError, setRejectError] = useState(null);
   const [isSubmittingReject, setIsSubmittingReject] = useState(false);
+
+  // Deletion modal
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, orderNumber: '' });
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Action loading per order
   const [actionLoadingId, setActionLoadingId] = useState(null);
@@ -142,6 +148,29 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleConfirmDelete = async () => {
+    if (!deleteModal.id || deleteLoading) return;
+    setDeleteLoading(true);
+    try {
+      const res = await adminApi.deleteOrder(deleteModal.id);
+      if (res && res.success) {
+        showToast(`Order #${deleteModal.orderNumber} deleted permanently.`);
+        if (viewingOrder && viewingOrder.id === deleteModal.id) {
+          setViewingOrder(null);
+        }
+        setDeleteModal({ isOpen: false, id: null, orderNumber: '' });
+        fetchOrders(page);
+      } else {
+        showToast(res?.message || 'Failed to delete order.');
+      }
+    } catch (err) {
+      console.error('Error deleting order:', err);
+      showToast('Error deleting order.');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   return (
     <div className="ks-admin-page-container">
       {/* Toast */}
@@ -205,15 +234,28 @@ export default function AdminOrdersPage() {
 
       {/* FILTER & SEARCH BAR */}
       <div className="ks-admin-filter-bar">
-        <form onSubmit={handleSearchSubmit} className="ks-admin-search-form">
-          <Search size={16} className="ks-search-icon" />
+        <form onSubmit={handleSearchSubmit} className="ks-shop-search-form" role="search">
+          <Search size={16} className="ks-search-icon" aria-hidden="true" />
           <input
             type="search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by customer name, phone, email..."
-            className="ks-admin-search-input"
+            className="ks-shop-search-input"
+            aria-label="Search orders"
           />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTerm('');
+              }}
+              className="ks-search-clear-btn"
+              aria-label="Clear search text"
+            >
+              <X size={15} />
+            </button>
+          )}
         </form>
 
         <div className="ks-admin-filter-group">
@@ -423,14 +465,31 @@ export default function AdminOrdersPage() {
                         </td>
                         <td>{new Date(ord.created_at).toLocaleDateString()}</td>
                         <td>
-                          <button
-                            type="button"
-                            onClick={() => setViewingOrder(ord)}
-                            className="ks-table-icon-btn"
-                            title="View Order Details"
-                          >
-                            <Eye size={15} />
-                          </button>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <button
+                              type="button"
+                              onClick={() => setViewingOrder(ord)}
+                              className="ks-table-icon-btn"
+                              title="View Order Details"
+                            >
+                              <Eye size={15} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setDeleteModal({
+                                  isOpen: true,
+                                  id: ord.id,
+                                  orderNumber: ord.order_number
+                                })
+                              }
+                              className="ks-table-icon-btn"
+                              style={{ color: 'var(--ks-error-red, #dc2626)' }}
+                              title="Delete Order"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -634,13 +693,38 @@ export default function AdminOrdersPage() {
                   </div>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => setViewingOrder(null)}
-                className="ks-admin-btn-secondary"
-              >
-                Close
-              </button>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const toDelete = viewingOrder;
+                    setDeleteModal({
+                      isOpen: true,
+                      id: toDelete.id,
+                      orderNumber: toDelete.order_number
+                    });
+                  }}
+                  className="ks-admin-btn-danger"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 14px',
+                    fontSize: '12px',
+                    fontWeight: 700
+                  }}
+                >
+                  <Trash2 size={14} />
+                  <span>Delete Order</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewingOrder(null)}
+                  className="ks-admin-btn-secondary"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -764,6 +848,18 @@ export default function AdminOrdersPage() {
           </div>
         </div>
       )}
+
+      {/* CONFIRM DELETE MODAL */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        title="Delete Order Permanently"
+        message={`Are you sure you want to permanently delete Order #${deleteModal.orderNumber}? All order items snapshot records and status history will be removed. This action cannot be undone.`}
+        confirmLabel="Delete Order"
+        isDestructive={true}
+        loading={deleteLoading}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteModal({ isOpen: false, id: null, orderNumber: '' })}
+      />
     </div>
   );
 }

@@ -309,6 +309,12 @@ export const adminApi = {
     });
   },
 
+  async deleteOrder(id) {
+    return adminRequest(`${API_BASE}/orders/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
   // 8. Users Management
   async getUsers(params = {}) {
     const qs = new URLSearchParams();

@@ -281,5 +281,14 @@ export const productApi = {
    */
   async getOrder(orderId) {
     return safeRequest(`${API_BASE}/orders/${orderId}`);
+  },
+
+  /**
+   * Permanently delete order (customer or guest)
+   */
+  async deleteOrder(orderId) {
+    return safeRequest(`${API_BASE}/orders/${orderId}`, {
+      method: 'DELETE'
+    });
   }
 };

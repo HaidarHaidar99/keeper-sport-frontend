@@ -184,26 +184,27 @@ export default function AdminFormsPage() {
 
       {/* CONTROLS: SEARCH & FILTER */}
       <div className="ks-admin-controls-card">
-        <div className="ks-admin-search-wrap">
-          <Search size={18} className="ks-admin-search-icon" />
+        <form onSubmit={(e) => e.preventDefault()} className="ks-shop-search-form" role="search">
+          <Search size={16} className="ks-search-icon" aria-hidden="true" />
           <input
-            type="text"
+            type="search"
             placeholder="Search by customer name, email, phone, or message..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="ks-admin-search-input"
+            className="ks-shop-search-input"
+            aria-label="Search contact inquiries"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch('')}
-              className="ks-admin-search-clear"
-              aria-label="Clear search"
+              className="ks-search-clear-btn"
+              aria-label="Clear search text"
             >
-              <X size={16} />
+              <X size={15} />
             </button>
           )}
-        </div>
+        </form>
 
         <div className="ks-admin-filter-group">
           <div className="ks-admin-filter-pills" role="tablist">

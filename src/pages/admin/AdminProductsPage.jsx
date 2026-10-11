@@ -640,15 +640,26 @@ export default function AdminProductsPage() {
 
       {/* SEARCH AND FILTER BAR */}
       <div className="ks-admin-filters-bar">
-        <form onSubmit={handleSearchSubmit} className="ks-admin-search-wrap">
-          <Search size={15} className="ks-admin-search-icon" />
+        <form onSubmit={handleSearchSubmit} className="ks-shop-search-form" role="search">
+          <Search size={16} className="ks-search-icon" aria-hidden="true" />
           <input
             type="search"
             placeholder="Search products by title, brand, or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="ks-admin-input is-search"
+            className="ks-shop-search-input"
+            aria-label="Search products"
           />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm('')}
+              className="ks-search-clear-btn"
+              aria-label="Clear search text"
+            >
+              <X size={15} />
+            </button>
+          )}
         </form>
 
         <div className="ks-admin-filter-actions">
