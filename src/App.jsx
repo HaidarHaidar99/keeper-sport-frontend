@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { SiteProvider } from './context/SiteContext';
+import { ToastProvider } from './context/ToastContext';
 import ErrorBoundary from './components/ErrorBoundary';
 
 if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
@@ -96,7 +97,8 @@ export default function App() {
         <AuthProvider>
           <AdminAuthProvider>
             <SiteProvider>
-              <BrowserRouter>
+              <ToastProvider>
+                <BrowserRouter>
                 <ScrollToTop />
                 <Suspense fallback={<PageFallback />}>
                   <Routes>
@@ -154,6 +156,7 @@ export default function App() {
                   </Routes>
                 </Suspense>
               </BrowserRouter>
+              </ToastProvider>
             </SiteProvider>
           </AdminAuthProvider>
         </AuthProvider>

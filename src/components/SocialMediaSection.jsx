@@ -311,7 +311,7 @@ export default function SocialMediaSection({ siteSettings = {} }) {
               {/* Email / Gmail */}
               <a
                 href={`mailto:${emailAddress}`}
-                className="ks-social-round-btn"
+                className="ks-social-round-btn is-email"
                 aria-label="Email Us"
                 title="Email Us"
               >
@@ -323,7 +323,7 @@ export default function SocialMediaSection({ siteSettings = {} }) {
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="ks-social-round-btn"
+                className="ks-social-round-btn is-whatsapp"
                 aria-label="WhatsApp Chat"
                 title="WhatsApp Chat"
               >
@@ -333,7 +333,7 @@ export default function SocialMediaSection({ siteSettings = {} }) {
               {/* Phone */}
               <a
                 href={`tel:${phoneNumber}`}
-                className="ks-social-round-btn"
+                className="ks-social-round-btn is-phone"
                 aria-label="Call Us"
                 title="Call Us"
               >
@@ -345,7 +345,7 @@ export default function SocialMediaSection({ siteSettings = {} }) {
                 href={tiktokUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="ks-social-round-btn"
+                className="ks-social-round-btn is-tiktok"
                 aria-label="TikTok"
                 title="TikTok"
               >
@@ -357,7 +357,7 @@ export default function SocialMediaSection({ siteSettings = {} }) {
                 href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="ks-social-round-btn"
+                className="ks-social-round-btn is-instagram"
                 aria-label="Instagram"
                 title="Instagram"
               >
@@ -370,7 +370,7 @@ export default function SocialMediaSection({ siteSettings = {} }) {
                   href={youtubeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ks-social-round-btn"
+                  className="ks-social-round-btn is-youtube"
                   aria-label="YouTube"
                   title="YouTube"
                 >
@@ -384,7 +384,7 @@ export default function SocialMediaSection({ siteSettings = {} }) {
                   href={facebookUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ks-social-round-btn"
+                  className="ks-social-round-btn is-facebook"
                   aria-label="Facebook"
                   title="Facebook"
                 >

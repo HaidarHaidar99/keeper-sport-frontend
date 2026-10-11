@@ -4,9 +4,11 @@ import { useSite } from '../context/SiteContext';
 import { contentApi } from '../api/contentApi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { useToast } from '../context/ToastContext';
 
 export default function ContactPage() {
   const { siteSettings, categories } = useSite();
+  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     full_name: '',
@@ -47,6 +49,7 @@ export default function ContactPage() {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      showToast('Please fill in all required fields.', 'error');
       return;
     }
 
@@ -55,13 +58,19 @@ export default function ContactPage() {
     try {
       const res = await contentApi.submitContact(formData);
       if (res && res.success) {
-        setServerSuccess(res.message || 'Your inquiry has been submitted successfully.');
+        const msg = res.message || 'Your inquiry has been submitted successfully.';
+        setServerSuccess(msg);
+        showToast(msg, 'success');
         setFormData({ full_name: '', email: '', phone: '', message: '' });
       } else {
-        setServerError(res.message || 'Failed to send inquiry. Please try again.');
+        const msg = res.message || 'Failed to send inquiry. Please try again.';
+        setServerError(msg);
+        showToast(msg, 'error');
       }
     } catch {
-      setServerError('Network error submitting inquiry.');
+      const msg = 'Network error submitting inquiry.';
+      setServerError(msg);
+      showToast(msg, 'error');
     } finally {
       setIsSubmitting(false);
     }

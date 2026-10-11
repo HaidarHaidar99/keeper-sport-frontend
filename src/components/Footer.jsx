@@ -96,7 +96,7 @@ export default function Footer({ siteSettings: propSettings, loading = false, hi
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="ks-footer-social-btn"
+                    className={`ks-footer-social-btn is-${key}`}
                     aria-label={label}
                     title={label}
                   >
@@ -105,13 +105,13 @@ export default function Footer({ siteSettings: propSettings, loading = false, hi
                 ))
               ) : (
                 <>
-                  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="ks-footer-social-btn" aria-label="Instagram">
+                  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="ks-footer-social-btn is-instagram" aria-label="Instagram">
                     <InstagramIcon size={16} />
                   </a>
-                  <a href={`https://wa.me/${cleanWhatsApp}`} target="_blank" rel="noopener noreferrer" className="ks-footer-social-btn" aria-label="WhatsApp">
+                  <a href={`https://wa.me/${cleanWhatsApp}`} target="_blank" rel="noopener noreferrer" className="ks-footer-social-btn is-whatsapp" aria-label="WhatsApp">
                     <WhatsAppIcon size={16} />
                   </a>
-                  <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" className="ks-footer-social-btn" aria-label="TikTok">
+                  <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" className="ks-footer-social-btn is-tiktok" aria-label="TikTok">
                     <TikTokIcon size={16} />
                   </a>
                 </>
@@ -171,11 +171,11 @@ export default function Footer({ siteSettings: propSettings, loading = false, hi
                 <a href={`tel:${phoneNumber}`}>{phoneNumber}</a>
               </li>
               <li className="ks-footer-contact-item">
-                <Mail size={15} className="ks-footer-contact-icon" style={{ color: '#E10600' }} />
+                <Mail size={15} className="ks-footer-contact-icon" style={{ color: '#EA4335' }} />
                 <a href={`mailto:${emailAddress}`}>{emailAddress}</a>
               </li>
               <li className="ks-footer-contact-item">
-                <WhatsAppIcon size={15} className="ks-footer-contact-icon" style={{ color: '#E10600' }} />
+                <WhatsAppIcon size={15} className="ks-footer-contact-icon" style={{ color: '#25D366' }} />
                 <a
                   href={`https://wa.me/${cleanWhatsApp}`}
                   target="_blank"

@@ -523,7 +523,7 @@ input:autofill {
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* -----------------------------------------------------------------------------
@@ -6073,27 +6073,38 @@ input:autofill {
   font-weight: 700;
 }
 
-.ks-details-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 48px;
-  align-items: start;
+.ks-details-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 28px 24px 60px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-@media (max-width: 960px) {
-  .ks-details-grid {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
+.ks-details-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(340px, 1.15fr);
+  gap: 48px;
+  align-items: start;
+  width: 100%;
+}
+
+.ks-details-media-col {
+  position: sticky;
+  top: 90px;
+  width: 100%;
 }
 
 .ks-details-viewport {
   position: relative;
   width: 100%;
+  max-width: 500px;
+  max-height: 480px;
   aspect-ratio: 1 / 1;
-  background: var(--ks-bg-card);
-  border: 1px solid var(--ks-border-card);
-  border-radius: var(--ks-radius-lg, 14px);
+  margin: 0 auto;
+  background: var(--ks-bg-card, #141414);
+  border: 1px solid var(--ks-border-card, #262626);
+  border-radius: 20px;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -6103,8 +6114,9 @@ input:autofill {
 .ks-details-img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  padding: 20px;
+  object-fit: cover;
+  display: block;
+  padding: 0;
 }
 
 .ks-gallery-arrow {
@@ -6219,20 +6231,25 @@ input:autofill {
 
 .ks-details-thumbs-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   overflow-x: auto;
-  padding: 6px 2px;
+  padding: 10px 2px;
+  max-width: 500px;
+  margin: 0 auto;
+  scrollbar-width: thin;
 }
 
 .ks-thumb-btn {
-  width: 72px;
-  height: 72px;
-  border-radius: var(--ks-radius-md, 10px);
+  width: 60px;
+  height: 60px;
+  min-width: 60px;
+  border-radius: 12px;
   border: 2px solid var(--ks-border-card);
   background: var(--ks-bg-card);
-  padding: 4px;
+  padding: 2px;
   cursor: pointer;
   flex-shrink: 0;
+  overflow: hidden;
   transition: all 0.18s ease;
 }
 
@@ -6243,7 +6260,8 @@ input:autofill {
 .ks-thumb-img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
 /* Details Info Column */
@@ -6564,6 +6582,124 @@ input:autofill {
 .ks-perk-item span {
   font-size: 0.74rem;
   color: var(--ks-text-muted);
+}
+
+/* Responsive Product Details (Tablet & Mobile Screens) */
+@media (max-width: 960px) {
+  .ks-details-container {
+    padding: 20px 16px 48px;
+  }
+
+  .ks-details-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .ks-details-media-col {
+    position: static;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .ks-details-viewport {
+    max-height: 400px;
+    max-width: 420px;
+    border-radius: 18px;
+  }
+
+  .ks-details-thumbs-row {
+    max-width: 420px;
+    gap: 8px;
+  }
+
+  .ks-thumb-btn {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+  }
+
+  .ks-details-title {
+    font-size: 1.55rem;
+  }
+
+  .ks-details-price-current {
+    font-size: 1.6rem;
+  }
+
+  .ks-details-actions-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .ks-details-container {
+    padding: 14px 12px 36px;
+  }
+
+  .ks-details-viewport {
+    max-height: 320px;
+    max-width: 320px;
+    border-radius: 16px;
+  }
+
+  .ks-details-thumbs-row {
+    max-width: 320px;
+    gap: 6px;
+    padding: 8px 2px;
+  }
+
+  .ks-thumb-btn {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    border-radius: 10px;
+  }
+
+  .ks-details-title {
+    font-size: 1.35rem;
+  }
+
+  .ks-details-price-current {
+    font-size: 1.45rem;
+  }
+
+  .ks-sizes-grid {
+    gap: 6px;
+  }
+
+  .ks-size-pill {
+    min-width: 38px;
+    height: 36px;
+    padding: 0 10px;
+    font-size: 0.82rem;
+  }
+
+  .ks-colors-grid {
+    gap: 8px;
+  }
+
+  .ks-color-pill {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+  }
+
+  .ks-printing-fields {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .ks-details-actions-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .ks-details-btn-cart,
+  .ks-details-btn-order {
+    width: 100%;
+    height: 46px;
+    font-size: 0.82rem;
+  }
 }
 
 /* =============================================================================
@@ -8961,13 +9097,105 @@ textarea,
 [data-theme="light"] .ks-footer-social-btn {
   background-color: #FFFFFF;
   border: 1px solid #E0E0E0;
-  color: #1A1A1A;
 }
 
-[data-theme="light"] .ks-footer-social-btn:hover {
-  background-color: #E10600;
-  border-color: #E10600;
-  color: #FFFFFF;
+/* Authentic Social Brand Colors — Vibrant in both Light and Dark Mode */
+.ks-footer-social-btn.is-whatsapp,
+.ks-social-round-btn.is-whatsapp {
+  color: #25D366 !important;
+  background-color: rgba(37, 211, 102, 0.1) !important;
+  border-color: rgba(37, 211, 102, 0.35) !important;
+}
+.ks-footer-social-btn.is-whatsapp:hover,
+.ks-social-round-btn.is-whatsapp:hover {
+  background-color: #25D366 !important;
+  border-color: #25D366 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.4) !important;
+}
+
+.ks-footer-social-btn.is-instagram,
+.ks-social-round-btn.is-instagram {
+  color: #E1306C !important;
+  background-color: rgba(225, 48, 108, 0.1) !important;
+  border-color: rgba(225, 48, 108, 0.35) !important;
+}
+.ks-footer-social-btn.is-instagram:hover,
+.ks-social-round-btn.is-instagram:hover {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) !important;
+  border-color: transparent !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 14px rgba(220, 39, 67, 0.4) !important;
+}
+
+.ks-footer-social-btn.is-tiktok,
+.ks-social-round-btn.is-tiktok {
+  color: #FE2C55 !important;
+  background-color: rgba(254, 44, 85, 0.1) !important;
+  border-color: rgba(254, 44, 85, 0.35) !important;
+}
+.ks-footer-social-btn.is-tiktok:hover,
+.ks-social-round-btn.is-tiktok:hover {
+  background-color: #000000 !important;
+  border-color: #FE2C55 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 14px rgba(254, 44, 85, 0.4) !important;
+}
+
+.ks-footer-social-btn.is-phone,
+.ks-social-round-btn.is-phone {
+  color: #E10600 !important;
+  background-color: rgba(225, 6, 0, 0.1) !important;
+  border-color: rgba(225, 6, 0, 0.35) !important;
+}
+.ks-footer-social-btn.is-phone:hover,
+.ks-social-round-btn.is-phone:hover {
+  background-color: #E10600 !important;
+  border-color: #E10600 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 14px rgba(225, 6, 0, 0.4) !important;
+}
+
+.ks-footer-social-btn.is-email,
+.ks-social-round-btn.is-email {
+  color: #EA4335 !important;
+  background-color: rgba(234, 67, 53, 0.1) !important;
+  border-color: rgba(234, 67, 53, 0.35) !important;
+}
+.ks-footer-social-btn.is-email:hover,
+.ks-social-round-btn.is-email:hover {
+  background-color: #EA4335 !important;
+  border-color: #EA4335 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 14px rgba(234, 67, 53, 0.4) !important;
+}
+
+.ks-footer-social-btn.is-youtube,
+.ks-social-round-btn.is-youtube {
+  color: #FF0000 !important;
+  background-color: rgba(255, 0, 0, 0.1) !important;
+  border-color: rgba(255, 0, 0, 0.35) !important;
+}
+.ks-footer-social-btn.is-youtube:hover,
+.ks-social-round-btn.is-youtube:hover {
+  background-color: #FF0000 !important;
+  border-color: #FF0000 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 14px rgba(255, 0, 0, 0.4) !important;
+}
+
+.ks-footer-social-btn.is-facebook,
+.ks-social-round-btn.is-facebook {
+  color: #1877F2 !important;
+  background-color: rgba(24, 119, 242, 0.1) !important;
+  border-color: rgba(24, 119, 242, 0.35) !important;
+}
+.ks-footer-social-btn.is-facebook:hover,
+.ks-social-round-btn.is-facebook:hover {
+  background-color: #1877F2 !important;
+  border-color: #1877F2 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 14px rgba(24, 119, 242, 0.4) !important;
 }
 
 [data-theme="light"] .ks-footer-col-title {

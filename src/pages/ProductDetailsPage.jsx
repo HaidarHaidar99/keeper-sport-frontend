@@ -22,11 +22,13 @@ import { launchHeartToFavorites } from '../utils/favoriteAnimation';
 import { isProductFavoritedLocally, addLocalFavoriteId, removeLocalFavoriteId } from '../utils/guestIdentity';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { useToast } from '../context/ToastContext';
 
 export default function ProductDetailsPage() {
   const { slugOrId } = useParams();
   const navigate = useNavigate();
   const { siteSettings, categories, isFavorite, toggleFavorite, registerFavorite } = useSite();
+  const { showToast } = useToast();
   const heartBtnRef = useRef(null);
 
   const [product, setProduct] = useState(null);
@@ -161,14 +163,20 @@ export default function ProductDetailsPage() {
 
     // Required Size Selection check: if sizes exist, customer MUST select one
     if (availSizes.length > 0 && !selectedSize) {
-      setActionError('Please select a size.');
+      const msg = 'Please select a size before adding to cart.';
+      setActionError(msg);
+      showToast(msg, 'error');
+      document.querySelector('.ks-sizes-grid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setTimeout(() => setActionError(null), 4000);
       return;
     }
 
     // Required Color Selection check: if colors exist, customer MUST select one
     if (availColors.length > 0 && !selectedColor) {
-      setActionError('Please select a color.');
+      const msg = 'Please select a color before adding to cart.';
+      setActionError(msg);
+      showToast(msg, 'error');
+      document.querySelector('.ks-colors-grid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setTimeout(() => setActionError(null), 4000);
       return;
     }
@@ -264,12 +272,18 @@ export default function ProductDetailsPage() {
     const availColors = Array.from(new Set((product.variants || []).map((v) => v.color_value).filter(Boolean)));
 
     if (availSizes.length > 0 && !selectedSize) {
-      setActionError('Please select a size.');
+      const msg = 'Please select a size before ordering.';
+      setActionError(msg);
+      showToast(msg, 'error');
+      document.querySelector('.ks-sizes-grid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setTimeout(() => setActionError(null), 4000);
       return;
     }
     if (availColors.length > 0 && !selectedColor) {
-      setActionError('Please select a color.');
+      const msg = 'Please select a color before ordering.';
+      setActionError(msg);
+      showToast(msg, 'error');
+      document.querySelector('.ks-colors-grid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setTimeout(() => setActionError(null), 4000);
       return;
     }

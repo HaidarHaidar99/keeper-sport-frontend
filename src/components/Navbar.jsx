@@ -51,14 +51,14 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
         window.requestAnimationFrame(() => {
           const currentScrollY = getScrollTop();
 
-          if (currentScrollY <= 80) {
+          if (currentScrollY <= 60) {
             setNavVisible(true);
           } else {
             const diff = currentScrollY - lastScrollY;
             if (diff > 6) {
               // Scrolling down
               setNavVisible(false);
-            } else if (diff < -2) {
+            } else if (diff < -1) {
               // Scrolling up even slightly -> instantly reveal!
               setNavVisible(true);
             }

@@ -8,12 +8,14 @@ import { saveGuestOrder, saveGuestOrderToken } from '../utils/guestIdentity';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { WhatsAppIcon } from '../components/SocialIcons';
+import { useToast } from '../context/ToastContext';
 
 export default function CheckoutPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { siteSettings, categories, deliveryFee, refreshCounts } = useSite();
+  const { showToast } = useToast();
 
   const isDirect = searchParams.get('direct') === 'true';
   const directProductId = searchParams.get('productId');
@@ -145,17 +147,46 @@ export default function CheckoutPage() {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+
+      const missingLabels = [];
+      if (validationErrors.customer_full_name) missingLabels.push('Full Name');
+      if (validationErrors.customer_phone) missingLabels.push('Phone Number');
+      if (validationErrors.area) missingLabels.push('City / Area');
+      if (validationErrors.address) missingLabels.push('Street Address');
+
+      const msg = missingLabels.length > 0
+        ? `Please fill in: ${missingLabels.join(', ')}`
+        : 'Please complete all required fields.';
+      showToast(msg, 'error');
+
+      // Automatically scroll smoothly to the first missing field
+      const firstKey = Object.keys(validationErrors)[0];
+      const fieldIdMap = {
+        customer_full_name: 'chk-name',
+        customer_phone: 'chk-phone',
+        area: 'chk-area',
+        address: 'chk-address'
+      };
+      const targetEl = document.getElementById(fieldIdMap[firstKey]);
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        targetEl.focus();
+      }
       return;
     }
 
     if (checkoutItems.length === 0) {
-      setServerError('No items found in this order.');
+      const msg = 'No items found in this order.';
+      setServerError(msg);
+      showToast(msg, 'error');
       return;
     }
 
     const hasUnresolvedVariants = cartItems.some((i) => i.requiresVariantSelection);
     if (hasUnresolvedVariants) {
-      setServerError('Please select a size/color for all items in your cart before placing your order.');
+      const msg = 'Please select a size/color for all items in your cart before placing your order.';
+      setServerError(msg);
+      showToast(msg, 'error');
       return;
     }
 
@@ -271,10 +302,14 @@ Thank you for shopping with Keeper Sports! ⚽`;
           window.location.href = whatsappUrl;
         }
       } else {
-        setServerError(res.message || 'Could not complete order. Please try again.');
+        const errorMsg = res.message || 'Could not complete order. Please try again.';
+        setServerError(errorMsg);
+        showToast(errorMsg, 'error');
       }
     } catch {
-      setServerError('Network error placing order.');
+      const errorMsg = 'Network error placing order. Please check your connection and try again.';
+      setServerError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setIsSubmitting(false);
     }

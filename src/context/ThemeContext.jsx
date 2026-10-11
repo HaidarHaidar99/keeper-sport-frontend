@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const ThemeContext = createContext();
-const THEME_STORAGE_KEY = 'keeper_theme';
+const THEME_STORAGE_KEY = 'keeper_theme_v2';
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
