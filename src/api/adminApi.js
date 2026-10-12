@@ -374,6 +374,19 @@ export const adminApi = {
     });
   },
 
+  async sendBroadcastNotification(data) {
+    return adminRequest(`${API_BASE}/notifications/broadcast`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async deleteNotification(id) {
+    return adminRequest(`${API_BASE}/notifications/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
   // 11. Contact Forms Management
   async getForms(params = {}) {
     const qs = new URLSearchParams();

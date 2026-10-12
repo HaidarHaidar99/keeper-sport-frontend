@@ -19,11 +19,13 @@ const API_BASE = getApiBase();
 async function safeRequest(url, options = {}) {
   const guestId = getOrCreateGuestId();
   const guestTokens = getGuestOrderTokens();
+  const token = localStorage.getItem('ks_customer_token');
 
   const headers = {
     'Content-Type': 'application/json',
     'x-guest-identifier': guestId,
     'x-guest-order-tokens': JSON.stringify(guestTokens),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers || {})
   };
 
@@ -141,6 +143,12 @@ export const contentApi = {
   async markAllNotificationsRead() {
     return safeRequest(`${API_BASE}/notifications/mark-all-read`, {
       method: 'POST'
+    });
+  },
+
+  async deleteNotification(id) {
+    return safeRequest(`${API_BASE}/notifications/${id}`, {
+      method: 'DELETE'
     });
   },
 
