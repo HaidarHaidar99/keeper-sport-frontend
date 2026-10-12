@@ -54,6 +54,10 @@ export default function ProfilePage() {
   // Handle Profile Update
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
+    if (user?.auth_provider === 'google') {
+      showToast('Name cannot be modified for Google authentication accounts.');
+      return;
+    }
     const cleanName = fullName.trim();
     if (!cleanName || cleanName.length < 2) {
       showToast('Full name must be at least 2 characters.');
@@ -539,71 +543,148 @@ export default function ProfilePage() {
               Update your display name across orders and reviews.
             </p>
 
-            <form onSubmit={handleUpdateProfile}>
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', color: '#888' }}>
-                  FULL NAME *
-                </label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g. Ali Haidar"
-                  required
+            {user.auth_provider === 'google' ? (
+              <div>
+                <div
                   style={{
-                    width: '100%',
-                    padding: '14px 16px',
-                    borderRadius: '12px',
-                    backgroundColor: 'rgba(255,255,255,0.04)',
-                    border: '1px solid var(--ks-border-card, #333)',
-                    color: 'inherit',
-                    fontSize: '0.95rem',
-                    boxSizing: 'border-box'
+                    padding: '20px',
+                    borderRadius: '14px',
+                    backgroundColor: 'rgba(255,255,255,0.03)',
+                    border: '1px solid var(--ks-border-card, #2c2c2c)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '14px',
+                    marginBottom: '24px'
                   }}
-                />
-              </div>
+                >
+                  <ShieldCheck size={28} style={{ color: '#22c55e', flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontWeight: 800, marginBottom: '4px', color: 'var(--ks-text-title, #fff)' }}>
+                      Managed via Google Authentication
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#888', lineHeight: '1.5' }}>
+                      Your profile identity and name are synchronized with your Google account and cannot be modified here.
+                    </div>
+                  </div>
+                </div>
 
-              <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', color: '#888' }}>
-                  EMAIL ADDRESS (PRIMARY)
-                </label>
-                <input
-                  type="email"
-                  value={user.email}
-                  disabled
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', color: '#888' }}>
+                    FULL NAME (LOCKED)
+                  </label>
+                  <input
+                    type="text"
+                    value={user.full_name || ''}
+                    disabled
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      backgroundColor: 'rgba(255,255,255,0.02)',
+                      border: '1px solid var(--ks-border-card, #242424)',
+                      color: '#777',
+                      fontSize: '0.95rem',
+                      boxSizing: 'border-box',
+                      cursor: 'not-allowed'
+                    }}
+                  />
+                  <span style={{ display: 'block', marginTop: '6px', fontSize: '0.78rem', color: '#666' }}>
+                    Name is managed and verified by your Google account.
+                  </span>
+                </div>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', color: '#888' }}>
+                    EMAIL ADDRESS (PRIMARY)
+                  </label>
+                  <input
+                    type="email"
+                    value={user.email}
+                    disabled
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      backgroundColor: 'rgba(255,255,255,0.02)',
+                      border: '1px solid var(--ks-border-card, #242424)',
+                      color: '#777',
+                      fontSize: '0.95rem',
+                      boxSizing: 'border-box',
+                      cursor: 'not-allowed'
+                    }}
+                  />
+                  <span style={{ display: 'block', marginTop: '6px', fontSize: '0.78rem', color: '#666' }}>
+                    Email address is locked to your Google account.
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleUpdateProfile}>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', color: '#888' }}>
+                    FULL NAME *
+                  </label>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="e.g. Ali Haidar"
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      backgroundColor: 'rgba(255,255,255,0.04)',
+                      border: '1px solid var(--ks-border-card, #333)',
+                      color: 'inherit',
+                      fontSize: '0.95rem',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', color: '#888' }}>
+                    EMAIL ADDRESS (PRIMARY)
+                  </label>
+                  <input
+                    type="email"
+                    value={user.email}
+                    disabled
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      backgroundColor: 'rgba(255,255,255,0.02)',
+                      border: '1px solid var(--ks-border-card, #242424)',
+                      color: '#777',
+                      fontSize: '0.95rem',
+                      boxSizing: 'border-box',
+                      cursor: 'not-allowed'
+                    }}
+                  />
+                  <span style={{ display: 'block', marginTop: '6px', fontSize: '0.78rem', color: '#666' }}>
+                    Email address is locked to your account identity.
+                  </span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={savingProfile}
+                  className="ks-btn-primary"
                   style={{
-                    width: '100%',
-                    padding: '14px 16px',
-                    borderRadius: '12px',
-                    backgroundColor: 'rgba(255,255,255,0.02)',
-                    border: '1px solid var(--ks-border-card, #242424)',
-                    color: '#777',
-                    fontSize: '0.95rem',
-                    boxSizing: 'border-box',
-                    cursor: 'not-allowed'
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '14px 28px',
+                    cursor: savingProfile ? 'not-allowed' : 'pointer'
                   }}
-                />
-                <span style={{ display: 'block', marginTop: '6px', fontSize: '0.78rem', color: '#666' }}>
-                  Email address is locked to your account identity.
-                </span>
-              </div>
-
-              <button
-                type="submit"
-                disabled={savingProfile}
-                className="ks-btn-primary"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '14px 28px',
-                  cursor: savingProfile ? 'not-allowed' : 'pointer'
-                }}
-              >
-                <Save size={16} />
-                <span>{savingProfile ? 'SAVING...' : 'SAVE CHANGES'}</span>
-              </button>
-            </form>
+                >
+                  <Save size={16} />
+                  <span>{savingProfile ? 'SAVING...' : 'SAVE CHANGES'}</span>
+                </button>
+              </form>
+            )}
           </div>
         )}
 
