@@ -15,8 +15,10 @@ const getApiBase = () => {
 const API_BASE = getApiBase();
 
 async function safeRequest(url, options = {}) {
+  const token = localStorage.getItem('ks_customer_token');
   const headers = {
     'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers || {})
   };
 

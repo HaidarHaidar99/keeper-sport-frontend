@@ -29,10 +29,12 @@ async function safeRequest(url, options = {}) {
   const guestId = getOrCreateGuestId();
   const guestTokens = getGuestOrderTokens();
 
+  const token = localStorage.getItem('ks_customer_token');
   const headers = {
     'Content-Type': 'application/json',
     'x-guest-identifier': guestId,
     'x-guest-order-tokens': JSON.stringify(guestTokens),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers || {})
   };
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { ShieldCheck, Sparkles, Truck } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -17,7 +18,7 @@ export default function AboutPage() {
           <div className="ks-catalog-header-badge">
             <span>OUR STORE</span>
           </div>
-          <h1 className="ks-catalog-title">PROCESS INTERNATIONAL</h1>
+          <h1 className="ks-catalog-title">ABOUT US</h1>
           <p className="ks-catalog-subtitle">
             KEEPER SPORTS — YOUR EXCLUSIVE DESTINATION FOR AUTHENTIC FOOTBALL GEAR
           </p>
@@ -26,10 +27,10 @@ export default function AboutPage() {
         {/* Storefront Feature Card */}
         <div className="ks-about-content-card" style={{ maxWidth: '980px', margin: '0 auto 60px', padding: '0', overflow: 'hidden', border: '1px solid var(--ks-border-card, #222222)', borderRadius: '24px', backgroundColor: 'var(--ks-bg-card, #0e0e0e)' }}>
           {/* Storefront Image */}
-          <div style={{ position: 'relative', width: '100%', maxHeight: '560px', overflow: 'hidden', backgroundColor: '#000' }}>
+          <div style={{ position: 'relative', width: '100%', minHeight: '380px', maxHeight: '560px', overflow: 'hidden', backgroundColor: '#000' }}>
             <img
               src="/images1/11.jpeg"
-              alt="Keeper Sports Storefront - Process International"
+              alt="Keeper Sports Storefront"
               style={{
                 width: '100%',
                 height: '100%',
@@ -42,85 +43,34 @@ export default function AboutPage() {
                 e.currentTarget.src = '/images1/11.jpeg';
               }}
             />
+            {/* Image Overlay with KEEPER SPORT in red, address, and intro text */}
             <div
               style={{
                 position: 'absolute',
                 bottom: 0,
                 left: 0,
                 right: 0,
-                padding: '30px 24px 20px',
-                background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.4) 70%, transparent 100%)',
+                padding: '36px 28px 24px',
+                background: 'linear-gradient(to top, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.8) 65%, transparent 100%)',
                 color: '#fff'
               }}
             >
-              <div style={{ display: 'inline-block', backgroundColor: '#E10600', color: '#fff', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.12em', padding: '4px 12px', borderRadius: '4px', marginBottom: '8px' }}>
-                KS FLAGSHIP STORE
+              <div style={{ color: '#E10600', fontSize: 'clamp(1.5rem, 3.2vw, 2.2rem)', fontWeight: 900, fontFamily: 'Outfit, sans-serif', letterSpacing: '0.04em', marginBottom: '4px' }}>
+                KEEPER SPORT
               </div>
-              <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 'clamp(1.5rem, 3vw, 2.2rem)', fontWeight: 900, margin: '0 0 6px', letterSpacing: '0.04em' }}>
-                PROCESS INTERNATIONAL
-              </h2>
-              <p style={{ margin: 0, fontSize: '0.95rem', opacity: 0.9, color: '#f3f4f6' }}>
+              <p style={{ margin: '0 0 10px', fontSize: '0.98rem', fontWeight: 600, color: '#f3f4f6', opacity: 0.95 }}>
                 Hanaway Main Street, Tyre, South Lebanon
+              </p>
+              <p style={{ margin: 0, fontSize: '0.92rem', lineHeight: '1.65', color: '#e5e7eb', maxWidth: '840px' }}>
+                Welcome to Keeper Sport. Located in Tyre, South Lebanon, our storefront is dedicated to footballers, athletes, and passionate supporters seeking genuine sports apparel, football boots, and official match kits.
               </p>
             </div>
           </div>
 
-          {/* Storefront Sign Text & Details (Strictly Without Icons) */}
+          {/* Storefront Details Body */}
           <div style={{ padding: '36px 32px' }}>
-            {/* Sign Text Banner */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '16px',
-                padding: '24px',
-                backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid var(--ks-border-card, #222222)',
-                borderRadius: '16px',
-                marginBottom: '32px'
-              }}
-            >
-              <div>
-                <span style={{ display: 'block', fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#888888', marginBottom: '4px' }}>
-                  STORE BANNER
-                </span>
-                <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#E10600', letterSpacing: '0.05em' }}>
-                  PROCESS INTERNATIONAL
-                </span>
-              </div>
-
-              <div>
-                <span style={{ display: 'block', fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#888888', marginBottom: '4px' }}>
-                  INSTAGRAM HANDLE
-                </span>
-                <a
-                  href="https://www.instagram.com/keepersportlb"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--ks-text-title, #FFFFFF)', textDecoration: 'none' }}
-                >
-                  @keepersportlb
-                </a>
-              </div>
-
-              <div>
-                <span style={{ display: 'block', fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#888888', marginBottom: '4px' }}>
-                  DIRECT CONTACT
-                </span>
-                <a
-                  href="tel:+96181107426"
-                  style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--ks-text-title, #FFFFFF)', textDecoration: 'none' }}
-                >
-                  81-10 74 26
-                </a>
-              </div>
-            </div>
-
             {/* About Text Body */}
-            <div style={{ fontSize: '1rem', lineHeight: '1.75', color: 'var(--ks-text-secondary, #cccccc)', marginBottom: '32px' }}>
-              <p style={{ marginBottom: '16px' }}>
-                Welcome to <strong>Keeper Sports (KS) — Process International</strong>. Located in Tyre, South Lebanon, our physical storefront is dedicated to footballers, athletes, and passionate supporters seeking genuine sports apparel, football boots, and official match kits.
-              </p>
+            <div style={{ fontSize: '1rem', lineHeight: '1.75', color: 'var(--ks-text-secondary, #cccccc)', marginBottom: '36px' }}>
               <p style={{ marginBottom: '16px' }}>
                 Inside our store, you will find an extensive collection of elite brands, specialized footwear, performance apparel, and customized jerseys with official player names and numbers. Every single product in our catalog is guaranteed 100% authentic.
               </p>
@@ -129,7 +79,7 @@ export default function AboutPage() {
               </p>
             </div>
 
-            {/* Clean Value Pillars Without Icons */}
+            {/* 3 Value Pillars With God-Tier Amazing Icons */}
             <div
               style={{
                 display: 'grid',
@@ -138,38 +88,50 @@ export default function AboutPage() {
                 marginBottom: '36px'
               }}
             >
-              <div style={{ padding: '20px', borderRadius: '12px', border: '1px solid var(--ks-border-card, #222222)', backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
-                <div style={{ color: '#E10600', fontWeight: 900, fontSize: '0.8rem', letterSpacing: '0.1em', marginBottom: '6px' }}>
+              {/* Card 1: Authenticity */}
+              <div style={{ padding: '24px 20px', borderRadius: '16px', border: '1px solid var(--ks-border-card, #222222)', backgroundColor: 'rgba(255, 255, 255, 0.02)', transition: 'border-color 0.2s ease' }}>
+                <div style={{ width: 48, height: 48, borderRadius: '14px', backgroundColor: 'rgba(225, 6, 0, 0.12)', border: '1px solid rgba(225, 6, 0, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', boxShadow: '0 0 20px rgba(225, 6, 0, 0.15)' }}>
+                  <ShieldCheck size={26} style={{ color: '#E10600' }} />
+                </div>
+                <div style={{ color: '#E10600', fontWeight: 900, fontSize: '0.78rem', letterSpacing: '0.1em', marginBottom: '6px' }}>
                   01. AUTHENTICITY
                 </div>
-                <div style={{ fontWeight: 800, color: 'var(--ks-text-title, #fff)', marginBottom: '6px' }}>
+                <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--ks-text-title, #fff)', marginBottom: '8px' }}>
                   Guaranteed Genuine Gear
                 </div>
-                <div style={{ fontSize: '0.9rem', color: '#888888', lineHeight: '1.5' }}>
+                <div style={{ fontSize: '0.9rem', color: '#888888', lineHeight: '1.55' }}>
                   Directly sourced authentic football boots, club shirts, and athletic apparel.
                 </div>
               </div>
 
-              <div style={{ padding: '20px', borderRadius: '12px', border: '1px solid var(--ks-border-card, #222222)', backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
-                <div style={{ color: '#E10600', fontWeight: 900, fontSize: '0.8rem', letterSpacing: '0.1em', marginBottom: '6px' }}>
+              {/* Card 2: Customization */}
+              <div style={{ padding: '24px 20px', borderRadius: '16px', border: '1px solid var(--ks-border-card, #222222)', backgroundColor: 'rgba(255, 255, 255, 0.02)', transition: 'border-color 0.2s ease' }}>
+                <div style={{ width: 48, height: 48, borderRadius: '14px', backgroundColor: 'rgba(225, 6, 0, 0.12)', border: '1px solid rgba(225, 6, 0, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', boxShadow: '0 0 20px rgba(225, 6, 0, 0.15)' }}>
+                  <Sparkles size={26} style={{ color: '#E10600' }} />
+                </div>
+                <div style={{ color: '#E10600', fontWeight: 900, fontSize: '0.78rem', letterSpacing: '0.1em', marginBottom: '6px' }}>
                   02. CUSTOMIZATION
                 </div>
-                <div style={{ fontWeight: 800, color: 'var(--ks-text-title, #fff)', marginBottom: '6px' }}>
+                <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--ks-text-title, #fff)', marginBottom: '8px' }}>
                   Official Matchday Lettering
                 </div>
-                <div style={{ fontSize: '0.9rem', color: '#888888', lineHeight: '1.5' }}>
+                <div style={{ fontSize: '0.9rem', color: '#888888', lineHeight: '1.55' }}>
                   Professional player names and numbering according to official league standards.
                 </div>
               </div>
 
-              <div style={{ padding: '20px', borderRadius: '12px', border: '1px solid var(--ks-border-card, #222222)', backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
-                <div style={{ color: '#E10600', fontWeight: 900, fontSize: '0.8rem', letterSpacing: '0.1em', marginBottom: '6px' }}>
+              {/* Card 3: Lebanon Delivery */}
+              <div style={{ padding: '24px 20px', borderRadius: '16px', border: '1px solid var(--ks-border-card, #222222)', backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
+                <div style={{ width: 48, height: 48, borderRadius: '14px', backgroundColor: 'rgba(225, 6, 0, 0.12)', border: '1px solid rgba(225, 6, 0, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', boxShadow: '0 0 20px rgba(225, 6, 0, 0.15)' }}>
+                  <Truck size={26} style={{ color: '#E10600' }} />
+                </div>
+                <div style={{ color: '#E10600', fontWeight: 900, fontSize: '0.78rem', letterSpacing: '0.1em', marginBottom: '6px' }}>
                   03. LEBANON DELIVERY
                 </div>
-                <div style={{ fontWeight: 800, color: 'var(--ks-text-title, #fff)', marginBottom: '6px' }}>
+                <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--ks-text-title, #fff)', marginBottom: '8px' }}>
                   Fast Nationwide Shipping
                 </div>
-                <div style={{ fontSize: '0.9rem', color: '#888888', lineHeight: '1.5' }}>
+                <div style={{ fontSize: '0.9rem', color: '#888888', lineHeight: '1.55' }}>
                   Reliable door-to-door delivery throughout Beirut, Tyre, Sidon, and all regions.
                 </div>
               </div>

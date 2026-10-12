@@ -19,6 +19,17 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const displayedOrders = orders.filter((order) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const orderNum = String(order.order_number || '').toLowerCase();
+    const status = String(order.status || '').toLowerCase();
+    const hasProduct = (order.order_items || []).some((item) =>
+      String(item.product_title || item.title || '').toLowerCase().includes(q)
+    );
+    return orderNum.includes(q) || status.includes(q) || hasProduct;
+  });
+
   // Modals state
   const [orderToCancel, setOrderToCancel] = useState(null);
   const [cancelling, setCancelling] = useState(false);

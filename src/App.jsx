@@ -44,24 +44,22 @@ function ScrollToTop() {
   return null;
 }
 
-// Core Public Storefront Pages (Bundled with entry for fast initial navigation)
+// Storefront Pages (Directly bundled for instant, 0ms page transitions across all routes)
 import HomePage from './pages/HomePage';
 import ProductsPage from './pages/ProductsPage';
 import ProductDetailsPage from './pages/ProductDetailsPage';
 import CategoriesPage from './pages/CategoriesPage';
 import CartPage from './pages/CartPage';
 import FavoritesPage from './pages/FavoritesPage';
-
-// Secondary Public Storefront Pages (Code-split)
-const OffersPage = lazy(() => import('./pages/OffersPage'));
-const ReviewsPage = lazy(() => import('./pages/ReviewsPage'));
-const AboutPage = lazy(() => import('./pages/AboutPage'));
-const ContactPage = lazy(() => import('./pages/ContactPage'));
-const OrdersPage = lazy(() => import('./pages/OrdersPage'));
-const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
-const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
-const ProfilePage = lazy(() => import('./pages/ProfilePage'));
-const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+import OffersPage from './pages/OffersPage';
+import ReviewsPage from './pages/ReviewsPage';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
+import OrdersPage from './pages/OrdersPage';
+import NotificationsPage from './pages/NotificationsPage';
+import CheckoutPage from './pages/CheckoutPage';
+import ProfilePage from './pages/ProfilePage';
+import NotFoundPage from './pages/NotFoundPage';
 
 // Customer Authentication Pages (Code-split)
 const LoginPage = lazy(() => import('./pages/LoginPage'));

@@ -27,14 +27,20 @@ export default function HamburgerMenu({
   const [isClosing, setIsClosing] = useState(false);
   const closeBtnRef = useRef(null);
 
-  // Close smoothly with curtain retreat animation
+  // Close smoothly on backdrop or close button
   const handleClose = () => {
     if (isClosing) return;
     setIsClosing(true);
     setTimeout(() => {
       setIsClosing(false);
       onClose();
-    }, 400);
+    }, 180);
+  };
+
+  // Instant zero-delay close when clicking a page link or icon
+  const handleNavClick = () => {
+    setIsClosing(false);
+    onClose();
   };
 
   // Close on route change
@@ -151,7 +157,7 @@ export default function HamburgerMenu({
                   <Link
                     to={item.path}
                     className={`ks-curtain-left-link ${active ? 'is-active' : ''}`}
-                    onClick={handleClose}
+                    onClick={handleNavClick}
                   >
                     {/* Small Red Dot Indicator to know which page we are on */}
                     {active && <span className="ks-curtain-active-dot" aria-hidden="true" />}
@@ -173,7 +179,7 @@ export default function HamburgerMenu({
             <Link
               to="/cart"
               className="ks-curtain-beauty-icon-btn"
-              onClick={handleClose}
+              onClick={handleNavClick}
               aria-label="Shopping Cart"
               title="Cart"
             >
@@ -187,7 +193,7 @@ export default function HamburgerMenu({
             <Link
               to="/favorites"
               className="ks-curtain-beauty-icon-btn"
-              onClick={handleClose}
+              onClick={handleNavClick}
               aria-label="Favorites"
               title="Favorites"
             >
@@ -201,7 +207,7 @@ export default function HamburgerMenu({
             <Link
               to="/orders"
               className="ks-curtain-beauty-icon-btn"
-              onClick={handleClose}
+              onClick={handleNavClick}
               aria-label="My Orders"
               title="Orders"
             >
@@ -215,7 +221,7 @@ export default function HamburgerMenu({
             <Link
               to="/notifications"
               className="ks-curtain-beauty-icon-btn"
-              onClick={handleClose}
+              onClick={handleNavClick}
               aria-label="Notifications"
               title="Notifications"
             >
@@ -229,7 +235,7 @@ export default function HamburgerMenu({
             <Link
               to={user ? '/profile' : '/login'}
               className="ks-curtain-beauty-icon-btn"
-              onClick={handleClose}
+              onClick={handleNavClick}
               aria-label={user ? 'My Profile' : 'Sign In'}
               title={user ? 'My Profile' : 'Sign In'}
             >

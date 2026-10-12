@@ -49,23 +49,26 @@ export default function ProfilePage() {
     if (user?.full_name) {
       setFullName(user.full_name);
     }
-  }, [user]);
+  }, [user?.full_name]);
 
   // Handle Profile Update
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
-    if (!fullName.trim() || fullName.trim().length < 2) {
+    const cleanName = fullName.trim();
+    if (!cleanName || cleanName.length < 2) {
       showToast('Full name must be at least 2 characters.');
       return;
     }
 
     setSavingProfile(true);
     try {
-      const res = await authApi.updateProfile({ full_name: fullName.trim() });
+      const res = await authApi.updateProfile({ full_name: cleanName });
       if (res?.success) {
         showToast(res.message || 'Profile updated successfully!');
         if (res.user) {
           updateUser(res.user);
+        } else {
+          updateUser({ full_name: cleanName });
         }
       } else {
         showToast(res?.message || 'Failed to update profile.');

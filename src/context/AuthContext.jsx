@@ -34,6 +34,9 @@ export function AuthProvider({ children }) {
   const login = async (credentials) => {
     const data = await authApi.login(credentials);
     if (data.user) {
+      if (data.token) {
+        localStorage.setItem('ks_customer_token', data.token);
+      }
       localStorage.setItem('ks_customer_logged_in', '1');
       setUser(data.user);
     }
@@ -47,6 +50,9 @@ export function AuthProvider({ children }) {
   const googleLogin = async (credential) => {
     const data = await authApi.googleAuth(credential);
     if (data.user) {
+      if (data.token) {
+        localStorage.setItem('ks_customer_token', data.token);
+      }
       localStorage.setItem('ks_customer_logged_in', '1');
       setUser(data.user);
     }
@@ -57,6 +63,7 @@ export function AuthProvider({ children }) {
     try {
       await authApi.logout();
     } finally {
+      localStorage.removeItem('ks_customer_token');
       localStorage.removeItem('ks_customer_logged_in');
       setUser(null);
     }
