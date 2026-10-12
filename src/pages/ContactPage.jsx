@@ -224,12 +224,20 @@ export default function ContactPage() {
                 <textarea
                   id="contact-message"
                   name="message"
-                  rows={4}
+                  rows={5}
                   placeholder="How can we assist you?"
                   className={`ks-input ks-textarea ${errors.message ? 'has-error' : ''}`}
                   value={formData.message}
                   onChange={handleChange}
                   disabled={isSubmitting}
+                  style={{
+                    padding: '16px 20px',
+                    minHeight: '130px',
+                    lineHeight: '1.6',
+                    borderRadius: '16px',
+                    height: 'auto',
+                    boxSizing: 'border-box'
+                  }}
                 />
                 {errors.message && <div className="ks-field-error">{errors.message}</div>}
               </div>
@@ -246,10 +254,7 @@ export default function ContactPage() {
                     <span>SENDING MESSAGE...</span>
                   </>
                 ) : (
-                  <>
-                    <Send size={16} style={{ marginRight: '6px' }} />
-                    <span>SEND MESSAGE</span>
-                  </>
+                  <span>SEND MESSAGE</span>
                 )}
               </button>
             </form>

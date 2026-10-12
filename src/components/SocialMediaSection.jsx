@@ -233,11 +233,21 @@ export default function SocialMediaSection({ siteSettings = {} }) {
               >
                 <Mail size={18} />
               </div>
-              <div style={{ overflow: 'hidden' }}>
+              <div style={{ minWidth: 0, overflow: 'hidden' }}>
                 <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 800, color: '#E10600', textTransform: 'uppercase' }}>
                   E-MAIL
                 </span>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--ks-text-title, #FFFFFF)', wordBreak: 'break-all' }}>
+                <span
+                  style={{
+                    display: 'block',
+                    fontSize: 'clamp(0.72rem, 3vw, 0.85rem)',
+                    fontWeight: 700,
+                    color: 'var(--ks-text-title, #FFFFFF)',
+                    whiteSpace: 'nowrap',
+                    letterSpacing: '-0.015em'
+                  }}
+                  title={emailAddress}
+                >
                   {emailAddress}
                 </span>
               </div>

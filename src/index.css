@@ -5423,8 +5423,7 @@ input:autofill {
   color: var(--ks-text-muted);
 }
 
-.ks-admin-input,
-.ks-admin-select {
+.ks-admin-input {
   height: 40px;
   padding: 0 12px;
   background: var(--ks-bg-input);
@@ -5436,9 +5435,48 @@ input:autofill {
   transition: border-color 0.2s ease;
 }
 
-.ks-admin-input:focus,
-.ks-admin-select:focus {
+.ks-admin-input:focus {
   border-color: var(--ks-border-input-focus);
+}
+
+.ks-admin-select,
+.ks-admin-filter-select {
+  height: 42px;
+  padding: 0 38px 0 14px;
+  background-color: var(--ks-bg-input);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 14px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--ks-border-input);
+  color: var(--ks-text-input);
+  font-size: 0.86rem;
+  font-weight: 500;
+  border-radius: var(--ks-radius-md, 10px);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ks-admin-select:focus,
+.ks-admin-filter-select:focus {
+  border-color: var(--ks-border-input-focus);
+  box-shadow: 0 0 0 2px rgba(225, 6, 0, 0.15);
+}
+
+.ks-admin-select option,
+.ks-admin-filter-select option {
+  background-color: #1a1a1a;
+  color: #f0f0f0;
+  padding: 8px 12px;
+}
+
+[data-theme="light"] .ks-admin-select option,
+[data-theme="light"] .ks-admin-filter-select option {
+  background-color: #ffffff;
+  color: #111111;
 }
 
 .ks-admin-upload-field {
@@ -7482,6 +7520,15 @@ select,
 textarea,
 .ks-input {
   border-radius: 24px !important;
+}
+
+textarea.ks-textarea,
+.ks-textarea {
+  height: auto !important;
+  min-height: 120px !important;
+  padding: 16px 20px !important;
+  line-height: 1.6 !important;
+  border-radius: 16px !important;
 }
 
 /* Rounded buttons, badges, and pills */

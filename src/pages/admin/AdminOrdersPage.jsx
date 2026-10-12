@@ -233,7 +233,7 @@ export default function AdminOrdersPage() {
       </div>
 
       {/* FILTER & SEARCH BAR */}
-      <div className="ks-admin-filter-bar">
+      <div className="ks-admin-filters-bar">
         <form onSubmit={handleSearchSubmit} className="ks-shop-search-form" role="search">
           <Search size={16} className="ks-search-icon" aria-hidden="true" />
           <input
@@ -258,11 +258,12 @@ export default function AdminOrdersPage() {
           )}
         </form>
 
-        <div className="ks-admin-filter-group">
+        <div className="ks-admin-filter-actions">
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="ks-admin-filter-select"
+            className="ks-admin-select"
+            aria-label="Filter orders by status"
           >
             <option value="">All Statuses</option>
             <option value="pending">Pending</option>
