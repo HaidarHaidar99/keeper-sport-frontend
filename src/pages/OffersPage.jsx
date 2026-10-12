@@ -71,12 +71,36 @@ export default function OffersPage() {
                 {offer.description && (
                   <p className="ks-offer-card-desc">{offer.description}</p>
                 )}
+                {offer.offer_categories && offer.offer_categories.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                    {offer.offer_categories.map((oc) => (
+                      <span key={oc.category_id} style={{ fontSize: '0.75rem', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', backgroundColor: 'rgba(225, 6, 0, 0.1)', color: '#E10600', border: '1px solid rgba(225, 6, 0, 0.25)' }}>
+                        {oc.categories?.name || 'Category'}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {offer.offer_products && offer.offer_products.length > 0 && (
+                  <div style={{ fontSize: '0.8rem', color: '#999', marginBottom: '12px' }}>
+                    Includes: {offer.offer_products.slice(0, 3).map((op) => op.products?.name).filter(Boolean).join(', ')}
+                    {offer.offer_products.length > 3 ? ` +${offer.offer_products.length - 3} more` : ''}
+                  </div>
+                )}
                 {offer.free_delivery && (
                   <div className="ks-offer-badge-free">FREE LEBANON DELIVERY</div>
                 )}
                 <div className="ks-offer-card-footer">
-                  <Link to="/products?on_sale=true" className="ks-btn-primary">
-                    <span>SHOP SALE NOW</span>
+                  <Link
+                    to={
+                      offer.offer_categories?.length === 1
+                        ? `/products?category=${offer.offer_categories[0].categories?.slug || ''}`
+                        : offer.offer_products?.length === 1
+                        ? `/products/${offer.offer_products[0].products?.slug || offer.offer_products[0].product_id}`
+                        : '/products?on_sale=true'
+                    }
+                    className="ks-btn-primary"
+                  >
+                    <span>SHOP THIS OFFER</span>
                     <ArrowRight size={16} />
                   </Link>
                 </div>

@@ -72,6 +72,9 @@ export default function AdminHomePage() {
   const [storeOffers, setStoreOffers] = useState([]);
   const [storeOfferModalOpen, setStoreOfferModalOpen] = useState(false);
   const [editingStoreOffer, setEditingStoreOffer] = useState(null);
+  const [availableCategories, setAvailableCategories] = useState([]);
+  const [availableProducts, setAvailableProducts] = useState([]);
+  const [offerProductSearch, setOfferProductSearch] = useState('');
   const [storeOfferFormData, setStoreOfferFormData] = useState({
     title: '',
     description: '',
@@ -80,7 +83,9 @@ export default function AdminHomePage() {
     free_delivery: false,
     starts_at: '',
     ends_at: '',
-    is_visible: true
+    is_visible: true,
+    product_ids: [],
+    category_ids: []
   });
   const [storeOfferSaving, setStoreOfferSaving] = useState(false);
 
@@ -106,12 +111,14 @@ export default function AdminHomePage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [overviewRes, slidesRes, offersRes, storyRes, storeOffersRes] = await Promise.all([
+      const [overviewRes, slidesRes, offersRes, storyRes, storeOffersRes, catRes, prodRes] = await Promise.all([
         adminApi.getHomeOverview(),
         adminApi.getHeroSlides(),
         adminApi.getOfferBars(),
         adminApi.getHomepageStory().catch(() => null),
-        adminApi.getOffers().catch(() => null)
+        adminApi.getOffers().catch(() => null),
+        adminApi.getCategories().catch(() => null),
+        adminApi.getProducts({ limit: 200 }).catch(() => null)
       ]);
 
       if (overviewRes?.success) setStats(overviewRes.stats);
@@ -119,6 +126,8 @@ export default function AdminHomePage() {
       if (offersRes?.success) setOffers(offersRes.offers);
       if (storyRes?.success && storyRes.story) setStoryData(storyRes.story);
       if (storeOffersRes?.success && Array.isArray(storeOffersRes.offers)) setStoreOffers(storeOffersRes.offers);
+      if (catRes?.success && Array.isArray(catRes.categories)) setAvailableCategories(catRes.categories);
+      if (prodRes?.success && Array.isArray(prodRes.products)) setAvailableProducts(prodRes.products);
     } catch (err) {
       console.error('Error loading home data:', err);
     } finally {
@@ -364,7 +373,10 @@ export default function AdminHomePage() {
   // Store Offer Handlers
   const openStoreOfferModal = (offer = null) => {
     setEditingStoreOffer(offer);
+    setOfferProductSearch('');
     if (offer) {
+      const pIds = (offer.offer_products || []).map((op) => op.product_id).filter(Boolean);
+      const cIds = (offer.offer_categories || []).map((oc) => oc.category_id).filter(Boolean);
       setStoreOfferFormData({
         title: offer.title || '',
         description: offer.description || '',
@@ -373,7 +385,9 @@ export default function AdminHomePage() {
         free_delivery: Boolean(offer.free_delivery),
         starts_at: offer.starts_at || '',
         ends_at: offer.ends_at || '',
-        is_visible: offer.is_visible !== false
+        is_visible: offer.is_visible !== false,
+        product_ids: pIds,
+        category_ids: cIds
       });
     } else {
       setStoreOfferFormData({
@@ -384,7 +398,9 @@ export default function AdminHomePage() {
         free_delivery: false,
         starts_at: '',
         ends_at: '',
-        is_visible: true
+        is_visible: true,
+        product_ids: [],
+        category_ids: []
       });
     }
     setStoreOfferModalOpen(true);
@@ -870,6 +886,7 @@ export default function AdminHomePage() {
                   <tr>
                     <th>Title &amp; Description</th>
                     <th>Discount</th>
+                    <th>Applies To</th>
                     <th>Free Delivery</th>
                     <th>Visibility</th>
                     <th>Controls</th>
@@ -886,6 +903,27 @@ export default function AdminHomePage() {
                         <span className="ks-badge ks-badge-sale">
                           {o.discount_type === 'percentage' ? `${o.discount_value}% OFF` : `$${o.discount_value} OFF`}
                         </span>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {o.offer_categories && o.offer_categories.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                              {o.offer_categories.map((oc) => (
+                                <span key={oc.category_id} className="ks-badge ks-badge-category" style={{ fontSize: '0.72rem' }}>
+                                  {oc.categories?.name || 'Category'}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {o.offer_products && o.offer_products.length > 0 && (
+                            <span className="ks-badge" style={{ fontSize: '0.72rem', alignSelf: 'flex-start' }}>
+                              {o.offer_products.length} Product{o.offer_products.length > 1 ? 's' : ''}
+                            </span>
+                          )}
+                          {(!o.offer_categories || o.offer_categories.length === 0) && (!o.offer_products || o.offer_products.length === 0) && (
+                            <span style={{ fontSize: '0.8rem', color: '#888' }}>Storewide</span>
+                          )}
+                        </div>
                       </td>
                       <td>{o.free_delivery ? 'Yes' : 'No'}</td>
                       <td>
@@ -1275,6 +1313,116 @@ export default function AdminHomePage() {
                       className="ks-admin-input"
                       required
                     />
+                  </div>
+                </div>
+
+                {/* APPLIED CATEGORIES SELECTOR */}
+                <div className="ks-form-group" style={{ marginBottom: '20px' }}>
+                  <label className="ks-form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Eligible Categories</span>
+                    <span style={{ fontSize: '0.78rem', color: '#888', fontWeight: 'normal' }}>
+                      {storeOfferFormData.category_ids.length > 0
+                        ? `${storeOfferFormData.category_ids.length} selected`
+                        : 'Applies to all categories if empty'}
+                    </span>
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', maxHeight: '140px', overflowY: 'auto', padding: '8px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '10px', border: '1px solid var(--ks-border-card, #2b2b2b)' }}>
+                    {availableCategories.map((cat) => {
+                      const isSelected = storeOfferFormData.category_ids.includes(cat.id);
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => {
+                            const next = isSelected
+                              ? storeOfferFormData.category_ids.filter((id) => id !== cat.id)
+                              : [...storeOfferFormData.category_ids, cat.id];
+                            setStoreOfferFormData({ ...storeOfferFormData, category_ids: next });
+                          }}
+                          style={{
+                            padding: '6px 14px',
+                            borderRadius: '20px',
+                            border: `1px solid ${isSelected ? '#E10600' : 'rgba(255,255,255,0.15)'}`,
+                            backgroundColor: isSelected ? 'rgba(225, 6, 0, 0.15)' : 'transparent',
+                            color: isSelected ? '#E10600' : 'inherit',
+                            fontSize: '0.82rem',
+                            fontWeight: isSelected ? 800 : 500,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          {isSelected && <span>✓</span>}
+                          <span>{cat.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* APPLIED PRODUCTS SELECTOR */}
+                <div className="ks-form-group" style={{ marginBottom: '20px' }}>
+                  <label className="ks-form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Eligible Products</span>
+                    <span style={{ fontSize: '0.78rem', color: '#888', fontWeight: 'normal' }}>
+                      {storeOfferFormData.product_ids.length > 0
+                        ? `${storeOfferFormData.product_ids.length} selected`
+                        : 'Applies to all products if empty'}
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Search products to attach..."
+                    value={offerProductSearch}
+                    onChange={(e) => setOfferProductSearch(e.target.value)}
+                    className="ks-admin-input"
+                    style={{ marginBottom: '8px', padding: '8px 12px', fontSize: '0.85rem' }}
+                  />
+                  <div style={{ maxHeight: '180px', overflowY: 'auto', padding: '6px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '10px', border: '1px solid var(--ks-border-card, #2b2b2b)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {availableProducts
+                      .filter((p) => !offerProductSearch || p.name?.toLowerCase().includes(offerProductSearch.toLowerCase()))
+                      .map((p) => {
+                        const isSelected = storeOfferFormData.product_ids.includes(p.id);
+                        return (
+                          <div
+                            key={p.id}
+                            onClick={() => {
+                              const next = isSelected
+                                ? storeOfferFormData.product_ids.filter((id) => id !== p.id)
+                                : [...storeOfferFormData.product_ids, p.id];
+                              setStoreOfferFormData({ ...storeOfferFormData, product_ids: next });
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '8px 10px',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              backgroundColor: isSelected ? 'rgba(225, 6, 0, 0.12)' : 'transparent',
+                              border: `1px solid ${isSelected ? 'rgba(225, 6, 0, 0.4)' : 'transparent'}`,
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => {}}
+                                style={{ pointerEvents: 'none' }}
+                              />
+                              <span style={{ fontSize: '0.85rem', fontWeight: isSelected ? 700 : 500 }}>
+                                {p.name}
+                              </span>
+                            </div>
+                            <span style={{ fontSize: '0.8rem', color: '#888' }}>
+                              ${parseFloat(p.base_price || 0).toFixed(2)}
+                            </span>
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
 

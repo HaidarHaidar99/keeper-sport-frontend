@@ -13,6 +13,7 @@ import {
   YouTubeIcon,
   WhatsAppIcon
 } from './SocialIcons';
+import { normalizeSocialUrl } from '../utils/urlUtils';
 
 export default function SocialMediaSection({ siteSettings = {} }) {
   const rawSocial = siteSettings?.social_media || {};
@@ -27,11 +28,11 @@ export default function SocialMediaSection({ siteSettings = {} }) {
     ? siteSettings.email
     : 'keepersportlb@gmail.com';
 
-  const instagramUrl = rawSocial.instagram?.url || siteSettings?.instagram_url || 'https://instagram.com/keepersportlb';
-  const tiktokUrl = rawSocial.tiktok?.url || siteSettings?.tiktok_url || 'https://tiktok.com/@keepersportlb';
-  const youtubeUrl = rawSocial.youtube?.url || siteSettings?.youtube_url;
-  const facebookUrl = rawSocial.facebook?.url || siteSettings?.facebook_url;
-  const whatsappUrl = rawSocial.whatsapp?.url || `https://wa.me/${cleanWhatsApp}`;
+  const instagramUrl = normalizeSocialUrl('instagram', rawSocial.instagram?.url || siteSettings?.instagram_url || 'https://instagram.com/keepersportlb');
+  const tiktokUrl = normalizeSocialUrl('tiktok', rawSocial.tiktok?.url || siteSettings?.tiktok_url || 'https://tiktok.com/@keepersportlb');
+  const youtubeUrl = normalizeSocialUrl('youtube', rawSocial.youtube?.url || siteSettings?.youtube_url);
+  const facebookUrl = normalizeSocialUrl('facebook', rawSocial.facebook?.url || siteSettings?.facebook_url);
+  const whatsappUrl = normalizeSocialUrl('whatsapp', rawSocial.whatsapp?.url || cleanWhatsApp);
 
   return (
     <section className="ks-getintouch-section" aria-label="Get in Touch">

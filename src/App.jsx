@@ -60,6 +60,7 @@ const ContactPage = lazy(() => import('./pages/ContactPage'));
 const OrdersPage = lazy(() => import('./pages/OrdersPage'));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 // Customer Authentication Pages (Code-split)
@@ -117,6 +118,7 @@ export default function App() {
                     <Route path="/orders" element={<OrdersPage />} />
                     <Route path="/notifications" element={<NotificationsPage />} />
                     <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
                     
                     {/* Dedicated Admin Login */}
                     <Route path="/admin/login" element={<AdminLoginPage />} />

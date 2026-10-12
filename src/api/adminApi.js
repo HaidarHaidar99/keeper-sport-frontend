@@ -396,5 +396,30 @@ export const adminApi = {
     return adminRequest(`${API_BASE}/forms/${id}`, {
       method: 'DELETE'
     });
+  },
+
+  // 12. Offers Management (Linked to products/categories)
+  async getOffers() {
+    return adminRequest(`${API_BASE}/offers`);
+  },
+
+  async createOffer(data) {
+    return adminRequest(`${API_BASE}/offers`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async updateOffer(id, data) {
+    return adminRequest(`${API_BASE}/offers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async deleteOffer(id) {
+    return adminRequest(`${API_BASE}/offers/${id}`, {
+      method: 'DELETE'
+    });
   }
 };

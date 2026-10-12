@@ -103,6 +103,20 @@ export const authApi = {
     });
   },
 
+  async updateProfile({ full_name }) {
+    return safeRequest(`${API_BASE}/auth/profile`, {
+      method: 'PUT',
+      body: JSON.stringify({ full_name })
+    });
+  },
+
+  async changePassword({ current_password, new_password, confirm_password }) {
+    return safeRequest(`${API_BASE}/auth/change-password`, {
+      method: 'POST',
+      body: JSON.stringify({ current_password, new_password, confirm_password })
+    });
+  },
+
   async verifyEmail(token) {
     return safeRequest(`${API_BASE}/auth/verify-email`, {
       method: 'POST',

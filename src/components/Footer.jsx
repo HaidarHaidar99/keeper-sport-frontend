@@ -16,6 +16,7 @@ import {
 } from './SocialIcons';
 import { useSite, DEFAULT_LOGO_URL } from '../context/SiteContext';
 import { useTheme } from '../context/ThemeContext';
+import { normalizeSocialUrl } from '../utils/urlUtils';
 
 export default function Footer({ siteSettings: propSettings, loading = false, hidden = false }) {
   const { theme } = useTheme();
@@ -37,12 +38,12 @@ export default function Footer({ siteSettings: propSettings, loading = false, hi
   const rawSocial = siteSettings?.social_media || {};
 
   const socialLinks = [
-    { key: 'instagram', url: rawSocial.instagram?.url || siteSettings?.instagram_url, label: 'Instagram', icon: InstagramIcon },
-    { key: 'whatsapp', url: rawSocial.whatsapp?.url || `https://wa.me/${cleanWhatsApp}`, label: 'WhatsApp', icon: WhatsAppIcon },
-    { key: 'tiktok', url: rawSocial.tiktok?.url || siteSettings?.tiktok_url, label: 'TikTok', icon: TikTokIcon },
-    { key: 'youtube', url: rawSocial.youtube?.url || siteSettings?.youtube_url, label: 'YouTube', icon: YouTubeIcon },
-    { key: 'facebook', url: rawSocial.facebook?.url || siteSettings?.facebook_url, label: 'Facebook', icon: FacebookIcon },
-    { key: 'x', url: rawSocial.x?.url || siteSettings?.x_url, label: 'X', icon: TwitterXIcon }
+    { key: 'instagram', url: normalizeSocialUrl('instagram', rawSocial.instagram?.url || siteSettings?.instagram_url), label: 'Instagram', icon: InstagramIcon },
+    { key: 'whatsapp', url: normalizeSocialUrl('whatsapp', rawSocial.whatsapp?.url || cleanWhatsApp), label: 'WhatsApp', icon: WhatsAppIcon },
+    { key: 'tiktok', url: normalizeSocialUrl('tiktok', rawSocial.tiktok?.url || siteSettings?.tiktok_url), label: 'TikTok', icon: TikTokIcon },
+    { key: 'youtube', url: normalizeSocialUrl('youtube', rawSocial.youtube?.url || siteSettings?.youtube_url), label: 'YouTube', icon: YouTubeIcon },
+    { key: 'facebook', url: normalizeSocialUrl('facebook', rawSocial.facebook?.url || siteSettings?.facebook_url), label: 'Facebook', icon: FacebookIcon },
+    { key: 'x', url: normalizeSocialUrl('x', rawSocial.x?.url || siteSettings?.x_url), label: 'X', icon: TwitterXIcon }
   ].filter((s) => Boolean(s.url));
 
   // Authoritative real data from Admin Panel with real Tyre store location

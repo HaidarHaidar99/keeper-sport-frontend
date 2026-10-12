@@ -12,11 +12,15 @@ import {
   RotateCcw,
   ChevronLeft,
   ChevronRight,
-  ArrowLeft
+  ArrowLeft,
+  MessageSquare,
+  Send,
+  X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSite } from '../context/SiteContext';
 import { productApi } from '../api/productApi';
+import { contentApi } from '../api/contentApi';
 import { launchFootballToCart } from '../utils/cartAnimation';
 import { launchHeartToFavorites } from '../utils/favoriteAnimation';
 import { isProductFavoritedLocally, addLocalFavoriteId, removeLocalFavoriteId } from '../utils/guestIdentity';
@@ -60,6 +64,14 @@ export default function ProductDetailsPage() {
   const [cartSuccess, setCartSuccess] = useState(false);
   const [actionError, setActionError] = useState(null);
 
+  // Reviews state
+  const { user } = useAuth();
+  const [productReviews, setProductReviews] = useState([]);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [newRating, setNewRating] = useState(5);
+  const [newReviewText, setNewReviewText] = useState('');
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
   // Ensure the page always opens at the top
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -88,6 +100,7 @@ export default function ProductDetailsPage() {
         if (prodRes && prodRes.success && prodRes.product) {
           const p = prodRes.product;
           setProduct(p);
+          setProductReviews(p.reviews || []);
           if (p.isFavorited && typeof registerFavorite === 'function') {
             registerFavorite(p.id);
           }
@@ -788,6 +801,273 @@ export default function ProductDetailsPage() {
             </div>
           </section>
         </div>
+
+        {/* CUSTOMER REVIEWS SECTION FOR THIS PRODUCT */}
+        <div style={{ maxWidth: '1240px', margin: '48px auto 0', padding: '0 20px' }}>
+          <div
+            style={{
+              backgroundColor: 'var(--ks-bg-card, #101010)',
+              border: '1px solid var(--ks-border-card, #222222)',
+              borderRadius: '20px',
+              padding: '32px 28px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
+              <div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#E10600', letterSpacing: '0.12em', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
+                  VERIFIED FEEDBACK
+                </span>
+                <h3 style={{ margin: 0, fontFamily: 'Outfit, sans-serif', fontSize: '1.6rem', fontWeight: 900, color: 'var(--ks-text-title, #fff)' }}>
+                  Customer Reviews ({productReviews.length})
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setReviewModalOpen(true)}
+                className="ks-btn-primary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+              >
+                <Plus size={16} />
+                <span>WRITE A REVIEW</span>
+              </button>
+            </div>
+
+            {productReviews.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '36px 16px', color: '#888' }}>
+                <MessageSquare size={36} style={{ opacity: 0.3, marginBottom: '12px' }} />
+                <p style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>No reviews yet for this gear.</p>
+                <p style={{ margin: '6px 0 16px', fontSize: '0.88rem' }}>Be the first verified customer to share your experience!</p>
+                <button
+                  type="button"
+                  onClick={() => setReviewModalOpen(true)}
+                  className="ks-btn-primary"
+                  style={{ display: 'inline-flex', padding: '10px 20px' }}
+                >
+                  Write Review
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+                {productReviews.map((rev) => (
+                  <div
+                    key={rev.id}
+                    style={{
+                      padding: '20px',
+                      borderRadius: '14px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px solid var(--ks-border-card, #262626)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                      <div style={{ display: 'flex', gap: '2px', color: '#E10600' }}>
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            size={14}
+                            fill={s <= Math.round(rev.rating) ? '#E10600' : 'none'}
+                            stroke={s <= Math.round(rev.rating) ? '#E10600' : '#555'}
+                          />
+                        ))}
+                      </div>
+                      <span style={{ fontSize: '0.78rem', color: '#888' }}>
+                        {rev.created_at ? new Date(rev.created_at).toLocaleDateString() : 'Recent'}
+                      </span>
+                    </div>
+
+                    <p style={{ margin: '0 0 12px', fontSize: '0.92rem', color: 'var(--ks-text-secondary, #ddd)', lineHeight: '1.5' }}>
+                      "{rev.review_text}"
+                    </p>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#16a34a', fontWeight: 700 }}>
+                      <ShieldCheck size={14} />
+                      <span>{rev.author || 'Verified Buyer'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* WRITE PRODUCT REVIEW MODAL */}
+        {reviewModalOpen && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0,0,0,0.8)',
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '16px'
+            }}
+            onClick={() => setReviewModalOpen(false)}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div
+              style={{
+                width: '100%',
+                maxWidth: '500px',
+                backgroundColor: 'var(--ks-bg-card, #121212)',
+                border: '1px solid var(--ks-border-card, #2b2b2b)',
+                borderRadius: '20px',
+                padding: '28px',
+                color: 'var(--ks-text-primary, #ffffff)',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, fontFamily: 'Outfit, sans-serif' }}>
+                  Review {product.name}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setReviewModalOpen(false)}
+                  style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', padding: 4 }}
+                  aria-label="Close"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {!user ? (
+                <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                  <ShieldCheck size={40} style={{ opacity: 0.4, marginBottom: '12px', color: '#E10600' }} />
+                  <h4 style={{ margin: '0 0 8px', fontSize: '1.1rem' }}>Sign In to Review</h4>
+                  <p style={{ color: '#888', fontSize: '0.9rem', marginBottom: '20px' }}>
+                    Only registered customers can leave verified product reviews.
+                  </p>
+                  <Link
+                    to="/login"
+                    className="ks-btn-primary"
+                    style={{ display: 'inline-flex', padding: '10px 24px' }}
+                    onClick={() => setReviewModalOpen(false)}
+                  >
+                    <span>SIGN IN</span>
+                  </Link>
+                </div>
+              ) : (
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!newReviewText.trim()) {
+                      showToast('Please enter your review.');
+                      return;
+                    }
+                    setReviewSubmitting(true);
+                    try {
+                      const res = await contentApi.submitReview({
+                        rating: newRating,
+                        review_text: newReviewText.trim(),
+                        product_id: product.id,
+                        product_name: product.name
+                      });
+                      if (res?.success) {
+                        showToast(res.message || 'Review submitted successfully!');
+                        if (res.review) {
+                          setProductReviews((prev) => [res.review, ...prev.filter((r) => r.id !== res.review.id)]);
+                        }
+                        setReviewModalOpen(false);
+                        setNewReviewText('');
+                      } else {
+                        showToast(res?.message || 'Failed to submit review.');
+                      }
+                    } catch (err) {
+                      showToast(err.message || 'Error submitting review.');
+                    } finally {
+                      setReviewSubmitting(false);
+                    }
+                  }}
+                >
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px', color: '#888' }}>
+                      RATING *
+                    </label>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setNewRating(s)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                        >
+                          <Star
+                            size={26}
+                            fill={s <= newRating ? '#E10600' : 'none'}
+                            stroke={s <= newRating ? '#E10600' : '#666'}
+                          />
+                        </button>
+                      ))}
+                      <span style={{ marginLeft: 8, fontWeight: 800, color: '#E10600' }}>
+                        {newRating} / 5
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '24px' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px', color: '#888' }}>
+                      YOUR REVIEW *
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={newReviewText}
+                      onChange={(e) => setNewReviewText(e.target.value)}
+                      placeholder="How is the sizing, quality, and fit of this item?"
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '12px 14px',
+                        backgroundColor: 'rgba(255,255,255,0.05)',
+                        border: '1px solid var(--ks-border-card, #333)',
+                        borderRadius: '10px',
+                        color: 'inherit',
+                        fontSize: '0.95rem',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                    <button
+                      type="button"
+                      onClick={() => setReviewModalOpen(false)}
+                      style={{
+                        padding: '12px 20px',
+                        backgroundColor: 'transparent',
+                        border: '1px solid var(--ks-border-card, #444)',
+                        color: 'inherit',
+                        borderRadius: '10px',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={reviewSubmitting}
+                      className="ks-btn-primary"
+                      style={{
+                        padding: '12px 24px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        cursor: reviewSubmitting ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      <Send size={15} />
+                      <span>{reviewSubmitting ? 'Submitting...' : 'Post Review'}</span>
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
       </main>
 
       <Footer siteSettings={siteSettings} categories={categories} />

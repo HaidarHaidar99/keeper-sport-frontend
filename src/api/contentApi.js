@@ -114,6 +114,13 @@ export const contentApi = {
     return safeRequest(`${API_BASE}/reviews`);
   },
 
+  async submitReview(reviewData) {
+    return safeRequest(`${API_BASE}/reviews`, {
+      method: 'POST',
+      body: JSON.stringify(reviewData)
+    });
+  },
+
   async submitContact(formData) {
     return safeRequest(`${API_BASE}/contact`, {
       method: 'POST',

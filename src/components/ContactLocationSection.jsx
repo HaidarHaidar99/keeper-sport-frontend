@@ -13,6 +13,7 @@ import {
   TikTokIcon,
   TwitterXIcon
 } from './SocialIcons';
+import { normalizeSocialUrl } from '../utils/urlUtils';
 
 export default function ContactLocationSection({ siteSettings = {} }) {
   const hasPhone = Boolean(siteSettings?.phone_number);
@@ -22,10 +23,10 @@ export default function ContactLocationSection({ siteSettings = {} }) {
   const hasMapLink = Boolean(siteSettings?.location_url);
 
   const socialLinks = [
-    { key: 'instagram', url: siteSettings?.instagram_url, label: 'Instagram', icon: InstagramIcon },
-    { key: 'facebook', url: siteSettings?.facebook_url, label: 'Facebook', icon: FacebookIcon },
-    { key: 'tiktok', url: siteSettings?.tiktok_url, label: 'TikTok', icon: TikTokIcon },
-    { key: 'x', url: siteSettings?.x_url, label: 'X', icon: TwitterXIcon },
+    { key: 'instagram', url: normalizeSocialUrl('instagram', siteSettings?.instagram_url), label: 'Instagram', icon: InstagramIcon },
+    { key: 'facebook', url: normalizeSocialUrl('facebook', siteSettings?.facebook_url), label: 'Facebook', icon: FacebookIcon },
+    { key: 'tiktok', url: normalizeSocialUrl('tiktok', siteSettings?.tiktok_url), label: 'TikTok', icon: TikTokIcon },
+    { key: 'x', url: normalizeSocialUrl('x', siteSettings?.x_url), label: 'X', icon: TwitterXIcon },
   ].filter((s) => Boolean(s.url));
 
   const cleanWhatsApp = siteSettings?.whatsapp_number

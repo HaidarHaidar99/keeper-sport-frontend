@@ -30,7 +30,13 @@ export default function OffersSection({ offers = [] }) {
               ? 'FREE DELIVERY'
               : 'SPECIAL OFFER';
 
-            const targetUrl = offer.route || '/products?on_sale=true';
+            const targetUrl = offer.route || (
+              offer.offer_categories?.length === 1
+                ? `/products?category=${offer.offer_categories[0].categories?.slug || ''}`
+                : offer.offer_products?.length === 1
+                ? `/products/${offer.offer_products[0].products?.slug || offer.offer_products[0].product_id}`
+                : '/products?on_sale=true'
+            );
 
             return (
               <div key={offer.id} className="ks-offer-card">
@@ -43,6 +49,16 @@ export default function OffersSection({ offers = [] }) {
 
                 {offer.description && (
                   <p className="ks-offer-desc">{offer.description}</p>
+                )}
+
+                {offer.offer_categories && offer.offer_categories.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', margin: '8px 0 12px' }}>
+                    {offer.offer_categories.map((oc) => (
+                      <span key={oc.category_id} style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', backgroundColor: 'rgba(225, 6, 0, 0.1)', color: '#E10600', border: '1px solid rgba(225, 6, 0, 0.25)' }}>
+                        {oc.categories?.name || 'Category'}
+                      </span>
+                    ))}
+                  </div>
                 )}
 
                 {offer.ends_at && (
