@@ -4,6 +4,8 @@ import { useTheme } from '../context/ThemeContext';
 import { authApi } from '../api/authApi';
 import { AlertCircle, CheckCircle2, Loader2, Sun, Moon } from 'lucide-react';
 
+const EXACT_PRIVACY_MESSAGE = "If an account exists with this email address, we'll send you a password reset link. Please check your inbox and spam folder.";
+
 export default function ForgotPasswordPage() {
   const { theme, toggleTheme } = useTheme();
   const [searchParams] = useSearchParams();
@@ -34,9 +36,14 @@ export default function ForgotPasswordPage() {
 
     try {
       const response = await authApi.forgotPassword(email.trim().toLowerCase());
-      setSuccessMessage(response.message || 'If an account exists for this email, a password reset link has been sent.');
+      setSuccessMessage(response.message || EXACT_PRIVACY_MESSAGE);
     } catch (err) {
-      setError(err.message || 'Unable to request password reset. Please try again.');
+      if (err.status === 429) {
+        setError(err.message || 'Too many requests from this network. Please try again later.');
+      } else {
+        // Under enumeration protection, any unexpected non-429 error shows the privacy message
+        setSuccessMessage(EXACT_PRIVACY_MESSAGE);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -63,7 +70,7 @@ export default function ForgotPasswordPage() {
 
         {/* Error Alert */}
         {error && (
-          <div className="ks-alert ks-alert-error" role="alert">
+          <div className="ks-alert ks-alert-error" role="alert" style={{ marginBottom: '18px' }}>
             <AlertCircle size={15} style={{ flexShrink: 0 }} />
             <div>{error}</div>
           </div>
@@ -71,7 +78,7 @@ export default function ForgotPasswordPage() {
 
         {/* Success Alert */}
         {successMessage && (
-          <div className="ks-alert ks-alert-success" role="status">
+          <div className="ks-alert ks-alert-success" role="status" style={{ marginBottom: '18px' }}>
             <CheckCircle2 size={15} style={{ flexShrink: 0 }} />
             <div>{successMessage}</div>
           </div>

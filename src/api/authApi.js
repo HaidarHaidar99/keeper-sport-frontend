@@ -40,7 +40,12 @@ async function safeRequest(url, options = {}) {
   }
 
   if (!res.ok) {
-    throw new Error(data.message || `Request failed with status ${res.status}`);
+    const error = new Error(data?.message || `Request failed with status ${res.status}`);
+    if (data && typeof data === 'object') {
+      Object.assign(error, data);
+    }
+    error.status = res.status;
+    throw error;
   }
 
   return data;

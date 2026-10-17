@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { authApi } from '../api/authApi';
-import { CheckCircle2, AlertCircle, Loader2, Sun, Moon } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Clock, Loader2, Sun, Moon } from 'lucide-react';
 
 export default function VerifyEmailPage() {
   const { theme, toggleTheme } = useTheme();
@@ -10,7 +10,8 @@ export default function VerifyEmailPage() {
   const token = searchParams.get('token') || '';
 
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'error'
+  // status: 'verifying' | 'success' | 'expired' | 'invalid'
+  const [status, setStatus] = useState('verifying');
   const [message, setMessage] = useState('');
 
   // Resend form state
@@ -21,8 +22,8 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     if (!token) {
-      setStatus('error');
-      setMessage('Missing email verification token.');
+      setStatus('invalid');
+      setMessage('Missing email verification token. Please use the link sent to your email.');
       setLoading(false);
       return;
     }
@@ -33,8 +34,16 @@ export default function VerifyEmailPage() {
         setMessage(data.message || 'Email verified successfully! You can now sign in.');
       })
       .catch((err) => {
-        setStatus('error');
-        setMessage(err.message || 'Invalid or expired verification link.');
+        if (err.expired) {
+          setStatus('expired');
+          setMessage(err.message || 'This verification link has expired (5-minute limit). Please request a fresh one below.');
+          if (err.email) {
+            setResendEmail(err.email);
+          }
+        } else {
+          setStatus('invalid');
+          setMessage(err.message || 'Invalid or already used verification link. Please request a new one below.');
+        }
       })
       .finally(() => {
         setLoading(false);
@@ -65,7 +74,7 @@ export default function VerifyEmailPage() {
 
   return (
     <div className="ks-auth-canvas">
-      {/* Theme Toggle Button (Square) */}
+      {/* Theme Toggle Button */}
       <button
         type="button"
         className="ks-theme-toggle"
@@ -93,13 +102,13 @@ export default function VerifyEmailPage() {
               <div style={{
                 width: '52px',
                 height: '52px',
-                backgroundColor: 'var(--ks-success-bg)',
-                border: '1px solid var(--ks-success-border)',
+                backgroundColor: 'var(--ks-success-bg, rgba(34,197,94,0.1))',
+                border: '1px solid var(--ks-success-border, rgba(34,197,94,0.3))',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: '16px',
-                color: 'var(--ks-success-green)'
+                color: 'var(--ks-success-green, #22c55e)'
               }}>
                 <CheckCircle2 size={28} />
               </div>
@@ -115,24 +124,114 @@ export default function VerifyEmailPage() {
               SIGN IN TO YOUR ACCOUNT
             </Link>
           </div>
+        ) : status === 'expired' ? (
+          <div>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{
+                width: '52px',
+                height: '52px',
+                backgroundColor: 'rgba(234, 179, 8, 0.1)',
+                border: '1px solid rgba(234, 179, 8, 0.3)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '16px',
+                color: '#eab308'
+              }}>
+                <Clock size={28} />
+              </div>
+              <h1 className="ks-auth-title" style={{ fontSize: '1.8rem', marginBottom: '8px' }}>
+                Verification Link Expired
+              </h1>
+              <p className="ks-auth-subtitle" style={{ marginBottom: '16px' }}>
+                {message}
+              </p>
+            </div>
+
+            {/* Resend Form */}
+            <div style={{
+              borderTop: '1px solid var(--ks-divider-line, rgba(255,255,255,0.08))',
+              paddingTop: '20px',
+              marginTop: '10px'
+            }}>
+              <p style={{
+                fontSize: '0.8rem',
+                color: 'var(--ks-text-subtitle)',
+                marginBottom: '14px',
+                fontWeight: 600,
+                textTransform: 'uppercase'
+              }}>
+                Request a Fresh Verification Link
+              </p>
+
+              {resendError && (
+                <div className="ks-alert ks-alert-error" role="alert" style={{ marginBottom: '14px' }}>
+                  <AlertCircle size={15} style={{ flexShrink: 0 }} />
+                  <div>{resendError}</div>
+                </div>
+              )}
+
+              {resendMessage && (
+                <div className="ks-alert ks-alert-success" role="status" style={{ marginBottom: '14px' }}>
+                  <CheckCircle2 size={15} style={{ flexShrink: 0 }} />
+                  <div>{resendMessage}</div>
+                </div>
+              )}
+
+              {!resendMessage && (
+                <form onSubmit={handleResend} noValidate>
+                  <div className="ks-form-group" style={{ marginBottom: '14px' }}>
+                    <input
+                      type="email"
+                      placeholder="your.email@example.com"
+                      className="ks-input"
+                      value={resendEmail}
+                      onChange={(e) => setResendEmail(e.target.value)}
+                      disabled={resendLoading}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="ks-btn-primary"
+                    disabled={resendLoading}
+                  >
+                    {resendLoading ? (
+                      <>
+                        <Loader2 size={16} className="ks-spinner-icon" />
+                        <span>SENDING LINK...</span>
+                      </>
+                    ) : (
+                      <span>RESEND VERIFICATION EMAIL</span>
+                    )}
+                  </button>
+                </form>
+              )}
+            </div>
+
+            <div className="ks-switch-text" style={{ marginTop: '22px', marginBottom: 0 }}>
+              <Link to="/login" className="ks-switch-link">
+                Back to Sign In
+              </Link>
+            </div>
+          </div>
         ) : (
           <div>
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
               <div style={{
                 width: '52px',
                 height: '52px',
-                backgroundColor: 'var(--ks-error-bg)',
-                border: '1px solid var(--ks-error-border)',
+                backgroundColor: 'var(--ks-error-bg, rgba(225,6,0,0.1))',
+                border: '1px solid var(--ks-error-border, rgba(225,6,0,0.3))',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: '16px',
-                color: 'var(--ks-error-red)'
+                color: 'var(--ks-error-red, #e10600)'
               }}>
                 <AlertCircle size={28} />
               </div>
               <h1 className="ks-auth-title" style={{ fontSize: '1.8rem', marginBottom: '8px' }}>
-                Verification Failed
+                Invalid or Used Link
               </h1>
               <p className="ks-auth-subtitle" style={{ marginBottom: '20px' }}>
                 {message}
@@ -141,7 +240,7 @@ export default function VerifyEmailPage() {
 
             {/* Resend Form */}
             <div style={{
-              borderTop: '1px solid var(--ks-divider-line)',
+              borderTop: '1px solid var(--ks-divider-line, rgba(255,255,255,0.08))',
               paddingTop: '20px',
               marginTop: '10px'
             }}>
@@ -149,20 +248,21 @@ export default function VerifyEmailPage() {
                 fontSize: '0.8rem',
                 color: 'var(--ks-text-subtitle)',
                 marginBottom: '14px',
-                fontWeight: 600
+                fontWeight: 600,
+                textTransform: 'uppercase'
               }}>
-                NEED A NEW VERIFICATION LINK?
+                Need a New Verification Link?
               </p>
 
               {resendError && (
-                <div className="ks-alert ks-alert-error" role="alert">
+                <div className="ks-alert ks-alert-error" role="alert" style={{ marginBottom: '14px' }}>
                   <AlertCircle size={15} style={{ flexShrink: 0 }} />
                   <div>{resendError}</div>
                 </div>
               )}
 
               {resendMessage && (
-                <div className="ks-alert ks-alert-success" role="status">
+                <div className="ks-alert ks-alert-success" role="status" style={{ marginBottom: '14px' }}>
                   <CheckCircle2 size={15} style={{ flexShrink: 0 }} />
                   <div>{resendMessage}</div>
                 </div>
