@@ -63,7 +63,7 @@ export default function ProductCard({
     navigate(productUrl);
   };
 
-  // Favorite toggle: Instant optimistic update + Flying Heart animation
+    // Favorite toggle: Instant optimistic update + Flying Heart animation
   const handleFavoriteClick = async (e) => {
     e.stopPropagation();
     e.preventDefault();
@@ -77,14 +77,17 @@ export default function ProductCard({
 
     setTimeout(() => setFavAnimating(false), 400);
 
-    const res = await toggleFavorite(product.id);
+    // Synchronous immediate callback so unfavorited items disappear at the same second
     if (onFavoriteToggled) {
-      onFavoriteToggled(product.id, res.isFavorited);
+      onFavoriteToggled(product.id, willBeFavorited);
     }
-    if (!res.success && res.message) {
-      setErrorMessage(res.message);
-      setTimeout(() => setErrorMessage(null), 3000);
-    }
+
+    toggleFavorite(product.id).then((res) => {
+      if (!res?.success && res?.message) {
+        setErrorMessage(res.message);
+        setTimeout(() => setErrorMessage(null), 3000);
+      }
+    }).catch(() => {});
   };
 
   // Add to Cart with flying football animation and direct instant navbar count update

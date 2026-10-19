@@ -9,7 +9,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function FavoritesPage() {
-  const { siteSettings, categories, refreshCounts, clearAllFavorites } = useSite();
+  const { siteSettings, categories, refreshCounts, clearAllFavorites, favoriteIds } = useSite();
   const [favoriteProducts, setFavoriteProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showClearModal, setShowClearModal] = useState(false);
@@ -41,6 +41,14 @@ export default function FavoritesPage() {
           .filter((p) => mergedIds.includes(String(p.id)) || mergedIds.includes(Number(p.id)))
           .map((p) => ({ ...p, isFavorited: true }));
 
+        // Reconcile phantom IDs: only existing products should count
+        if (allProds.length > 0) {
+          const validIds = matched.map((p) => String(p.id));
+          if (validIds.length !== mergedIds.length) {
+            syncLocalFavoriteIds(validIds);
+          }
+        }
+
         setFavoriteProducts(matched);
       })
       .finally(() => {
@@ -52,37 +60,53 @@ export default function FavoritesPage() {
     };
   }, []);
 
+  // Listen for real-time favorites updates across other components
+  useEffect(() => {
+    const handleFavsChanged = (e) => {
+      const ids = e.detail?.favoriteIds;
+      if (Array.isArray(ids)) {
+        const idSet = new Set(ids.map(String));
+        setFavoriteProducts((prev) => prev.filter((p) => idSet.has(String(p.id))));
+      }
+    };
+    window.addEventListener('ks:favorites_updated', handleFavsChanged);
+    return () => window.removeEventListener('ks:favorites_updated', handleFavsChanged);
+  }, []);
+
+  // Synchronous zero-latency removal when heart is untoggled
   const handleFavoriteToggled = (productId, isFav) => {
     if (!isFav) {
       removeLocalFavoriteId(productId);
-      setFavoriteProducts((prev) => prev.filter((p) => p.id !== productId));
+      setFavoriteProducts((prev) => prev.filter((p) => String(p.id) !== String(productId)));
       if (typeof refreshCounts === 'function') refreshCounts();
     }
   };
 
+  // Instant zero-latency Clear All Favorites
   const handleClearFavorites = async () => {
     if (clearingFavorites) return;
     setClearingFavorites(true);
 
+    // 1. Instant zero-latency UI clear
+    setFavoriteProducts([]);
+    clearLocalFavorites();
+    if (typeof clearAllFavorites === 'function') {
+      clearAllFavorites();
+    }
+    setShowClearModal(false);
+
+    // 2. Background server clear
     try {
-      if (typeof clearAllFavorites === 'function') {
-        clearAllFavorites();
-      } else {
-        clearLocalFavorites();
-      }
-      const res = await productApi.clearFavorites();
-      if (res?.success || true) {
-        setFavoriteProducts([]);
-        if (typeof refreshCounts === 'function') refreshCounts();
-      }
+      await productApi.clearFavorites();
+      if (typeof refreshCounts === 'function') refreshCounts();
     } catch (err) {
-      console.warn("Failed to clear favorites:", err);
-      setFavoriteProducts([]);
+      console.warn("Failed to clear favorites on server:", err);
     } finally {
       setClearingFavorites(false);
-      setShowClearModal(false);
     }
   };
+
+  const hasAnyFavorites = favoriteProducts.length > 0 || (favoriteIds && favoriteIds.length > 0);
 
   return (
     <div className="ks-page-canvas">
@@ -96,7 +120,7 @@ export default function FavoritesPage() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <h1 className="ks-catalog-title" style={{ margin: 0 }}>My Favorites</h1>
-            {favoriteProducts.length > 0 && (
+            {hasAnyFavorites && (
               <button
                 type="button"
                 onClick={() => setShowClearModal(true)}
@@ -147,11 +171,13 @@ export default function FavoritesPage() {
             </Link>
           </div>
         ) : (
-          <div className="ks-products-grid">
-            {favoriteProducts.map((prod) => (
+          /* Real Products Catalog Grid: standard normal-sized cards matching catalog */
+          <div className="ks-catalog-grid">
+            {favoriteProducts.map((prod, idx) => (
               <ProductCard
                 key={prod.id}
                 product={prod}
+                index={idx}
                 onFavoriteToggled={handleFavoriteToggled}
                 onCartUpdated={() => {
                   if (typeof refreshCounts === 'function') refreshCounts();
@@ -204,7 +230,7 @@ export default function FavoritesPage() {
             </div>
 
             <p style={{ fontSize: '14px', color: 'var(--ks-text-subtitle, #4b5563)', margin: '0 0 20px', lineHeight: 1.5 }}>
-              Are you sure you want to clear your favorites? All {favoriteProducts.length} saved items will be removed from your list.
+              Are you sure you want to clear your favorites? All saved items will be removed from your list.
             </p>
 
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>

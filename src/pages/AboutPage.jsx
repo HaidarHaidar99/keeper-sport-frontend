@@ -124,110 +124,117 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* Under Image: Authenticity & Others in 1 Horizontal Line (Icon + Title Only) */}
+          {/* Under Image: Authenticity & Others stacked under each other on the SAME start line */}
           <div
             style={{
+              padding: '36px 24px 28px',
+              borderBottom: '1px solid var(--ks-border-card, #1f222a)',
               display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 'clamp(16px, 3.5vw, 36px)',
-              flexWrap: 'wrap',
-              padding: '32px 24px 24px',
-              borderBottom: '1px solid var(--ks-border-card, #1f222a)'
+              justifyContent: 'center'
             }}
           >
-            {/* Authenticity */}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '12px',
-                  backgroundColor: 'rgba(225, 6, 0, 0.12)',
-                  border: '1px solid rgba(225, 6, 0, 0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 0 16px rgba(225, 6, 0, 0.15)',
-                  flexShrink: 0
-                }}
-              >
-                <ShieldCheck size={22} style={{ color: '#E10600' }} />
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: '18px',
+                width: '100%',
+                maxWidth: '360px'
+              }}
+            >
+              {/* Authenticity */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', width: '100%' }}>
+                <div
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(225, 6, 0, 0.12)',
+                    border: '1px solid rgba(225, 6, 0, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 0 16px rgba(225, 6, 0, 0.15)',
+                    flexShrink: 0
+                  }}
+                >
+                  <ShieldCheck size={22} style={{ color: '#E10600' }} />
+                </div>
+                <span
+                  style={{
+                    fontWeight: 800,
+                    fontSize: '1.05rem',
+                    color: 'var(--ks-text-title, #ffffff)',
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  Authenticity
+                </span>
               </div>
-              <span
-                style={{
-                  fontWeight: 800,
-                  fontSize: '0.98rem',
-                  color: 'var(--ks-text-title, #ffffff)',
-                  letterSpacing: '0.04em',
-                  textTransform: 'uppercase'
-                }}
-              >
-                Authenticity
-              </span>
-            </div>
 
-            {/* Customization */}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '12px',
-                  backgroundColor: 'rgba(225, 6, 0, 0.12)',
-                  border: '1px solid rgba(225, 6, 0, 0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 0 16px rgba(225, 6, 0, 0.15)',
-                  flexShrink: 0
-                }}
-              >
-                <Sparkles size={22} style={{ color: '#E10600' }} />
+              {/* Customization */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', width: '100%' }}>
+                <div
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(225, 6, 0, 0.12)',
+                    border: '1px solid rgba(225, 6, 0, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 0 16px rgba(225, 6, 0, 0.15)',
+                    flexShrink: 0
+                  }}
+                >
+                  <Sparkles size={22} style={{ color: '#E10600' }} />
+                </div>
+                <span
+                  style={{
+                    fontWeight: 800,
+                    fontSize: '1.05rem',
+                    color: 'var(--ks-text-title, #ffffff)',
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  Customization
+                </span>
               </div>
-              <span
-                style={{
-                  fontWeight: 800,
-                  fontSize: '0.98rem',
-                  color: 'var(--ks-text-title, #ffffff)',
-                  letterSpacing: '0.04em',
-                  textTransform: 'uppercase'
-                }}
-              >
-                Customization
-              </span>
-            </div>
 
-            {/* Lebanon Delivery */}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '12px',
-                  backgroundColor: 'rgba(225, 6, 0, 0.12)',
-                  border: '1px solid rgba(225, 6, 0, 0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 0 16px rgba(225, 6, 0, 0.15)',
-                  flexShrink: 0
-                }}
-              >
-                <Truck size={22} style={{ color: '#E10600' }} />
+              {/* Lebanon Delivery */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', width: '100%' }}>
+                <div
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(225, 6, 0, 0.12)',
+                    border: '1px solid rgba(225, 6, 0, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 0 16px rgba(225, 6, 0, 0.15)',
+                    flexShrink: 0
+                  }}
+                >
+                  <Truck size={22} style={{ color: '#E10600' }} />
+                </div>
+                <span
+                  style={{
+                    fontWeight: 800,
+                    fontSize: '1.05rem',
+                    color: 'var(--ks-text-title, #ffffff)',
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  Lebanon Delivery
+                </span>
               </div>
-              <span
-                style={{
-                  fontWeight: 800,
-                  fontSize: '0.98rem',
-                  color: 'var(--ks-text-title, #ffffff)',
-                  letterSpacing: '0.04em',
-                  textTransform: 'uppercase'
-                }}
-              >
-                Lebanon Delivery
-              </span>
             </div>
           </div>
 

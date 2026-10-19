@@ -79,11 +79,14 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
     };
   }, []);
 
+  const { favoriteIds } = siteCtx || {};
+  const favCount = favoriteIds ? favoriteIds.length : (Number(counts.favorites) || 0);
+
   const navLinks = [
     { label: 'Home', path: '/' },
     { label: 'Products', path: '/products' },
     { label: 'Categories', path: '/categories' },
-    { label: 'Offers', path: '/offers' },
+    { label: 'My Orders', path: '/orders' },
     { label: 'Reviews', path: '/reviews' },
     { label: 'About Us', path: '/about' },
     { label: 'Contact', path: '/contact' }
@@ -178,12 +181,12 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
               title="Favorites"
             >
               <Heart size={18} />
-              {Number(counts.favorites) > 0 && (
-                <span className="ks-navbar-badge-pill">{counts.favorites}</span>
+              {favCount > 0 && (
+                <span className="ks-navbar-badge-pill">{favCount}</span>
               )}
             </Link>
 
-            {/* Cart Icon (Visible on Both Mobile & Desktop) */}
+            {/* Cart Icon (Visible on Both Mobile & Desktop Outside Menu) */}
             <Link
               to="/cart"
               className="ks-navbar-circle-btn ks-nav-cart-btn"
@@ -194,19 +197,6 @@ export default function Navbar({ siteSettings: propSettings, categories: propCat
               <ShoppingBag size={19} />
               {Number(counts.cart) > 0 && (
                 <span className="ks-navbar-badge-pill">{counts.cart}</span>
-              )}
-            </Link>
-
-            {/* Desktop Only: Orders */}
-            <Link
-              to="/orders"
-              className="ks-navbar-circle-btn ks-desktop-only"
-              aria-label="My Orders"
-              title="Orders"
-            >
-              <Package size={18} />
-              {Number(counts.orders) > 0 && (
-                <span className="ks-navbar-badge-pill">{counts.orders}</span>
               )}
             </Link>
 

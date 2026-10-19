@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { DEFAULT_LOGO_URL } from '../context/SiteContext';
+import { useSite, DEFAULT_LOGO_URL } from '../context/SiteContext';
 
 export default function HamburgerMenu({
   isOpen,
@@ -22,6 +22,8 @@ export default function HamburgerMenu({
 }) {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { favoriteIds } = useSite() || {};
+  const favCount = favoriteIds ? favoriteIds.length : (Number(counts.favorites) || 0);
   const location = useLocation();
 
   const [isClosing, setIsClosing] = useState(false);
@@ -91,7 +93,7 @@ export default function HamburgerMenu({
     { label: 'HOME', path: '/' },
     { label: 'PRODUCTS', path: '/products' },
     { label: 'CATEGORIES', path: '/categories' },
-    { label: 'OFFERS', path: '/offers' },
+    { label: 'MY ORDERS', path: '/orders' },
     { label: 'REVIEWS', path: '/reviews' },
     { label: 'ABOUT US', path: '/about' },
     { label: 'CONTACT', path: '/contact' }
@@ -173,22 +175,8 @@ export default function HamburgerMenu({
             })}
           </nav>
 
-          {/* Central Beauty Card: Small Circular Icons beside each other */}
+          {/* Central Beauty Card: Small Circular Icons beside each other (Cart removed from inside drawer) */}
           <div className="ks-curtain-beauty-card ks-curtain-beauty-card-left">
-            {/* Cart Icon */}
-            <Link
-              to="/cart"
-              className="ks-curtain-beauty-icon-btn"
-              onClick={handleNavClick}
-              aria-label="Shopping Cart"
-              title="Cart"
-            >
-              <ShoppingBag size={18} />
-              {Number(counts.cart) > 0 && (
-                <span className="ks-curtain-beauty-badge">{counts.cart}</span>
-              )}
-            </Link>
-
             {/* Favorites Icon */}
             <Link
               to="/favorites"
@@ -198,22 +186,8 @@ export default function HamburgerMenu({
               title="Favorites"
             >
               <Heart size={18} />
-              {Number(counts.favorites) > 0 && (
-                <span className="ks-curtain-beauty-badge">{counts.favorites}</span>
-              )}
-            </Link>
-
-            {/* Orders Icon */}
-            <Link
-              to="/orders"
-              className="ks-curtain-beauty-icon-btn"
-              onClick={handleNavClick}
-              aria-label="My Orders"
-              title="Orders"
-            >
-              <Package size={18} />
-              {Number(counts.orders) > 0 && (
-                <span className="ks-curtain-beauty-badge">{counts.orders}</span>
+              {favCount > 0 && (
+                <span className="ks-curtain-beauty-badge">{favCount}</span>
               )}
             </Link>
 

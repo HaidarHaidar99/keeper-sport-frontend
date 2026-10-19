@@ -134,9 +134,7 @@ export function SiteProvider({ children }) {
             updated.orders = localOrders.length;
           }
           const localFavs = getLocalFavoriteIds();
-          if (localFavs.length > (updated.favorites || 0)) {
-            updated.favorites = localFavs.length;
-          }
+          updated.favorites = localFavs.length;
         } catch {}
         setCounts(updated);
         try {
@@ -219,10 +217,15 @@ export function SiteProvider({ children }) {
     [updateFavoritesCount]
   );
 
-  const clearAllFavorites = useCallback(() => {
+  const clearAllFavorites = useCallback(async () => {
     setFavoriteIds([]);
     clearLocalFavorites();
     updateFavoritesCount(0);
+    try {
+      await productApi.clearFavorites();
+    } catch (e) {
+      console.warn('Could not clear favorites on backend:', e);
+    }
   }, [updateFavoritesCount]);
 
   const toggleFavorite = useCallback(
