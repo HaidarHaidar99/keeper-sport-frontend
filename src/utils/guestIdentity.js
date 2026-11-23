@@ -186,17 +186,23 @@ export function removeLocalFavoriteId(productId) {
   }
 }
 
-export function syncLocalFavoriteIds(serverIds = []) {
+export function setLocalFavoriteIds(ids = [], { notify = false } = {}) {
   try {
-    const local = getLocalFavoriteIds().map(String);
-    const server = Array.isArray(serverIds) ? serverIds.map(String) : [];
-    const merged = Array.from(new Set([...local, ...server]));
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(merged));
-    notifyFavoritesChanged(merged);
-    return merged;
+    const normalized = Array.from(
+      new Set((Array.isArray(ids) ? ids : []).filter((id) => id != null && id !== '').map(String))
+    );
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(normalized));
+    if (notify) {
+      notifyFavoritesChanged(normalized);
+    }
+    return normalized;
   } catch {
-    return serverIds;
+    return Array.isArray(ids) ? ids.map(String) : [];
   }
+}
+
+export function syncLocalFavoriteIds(serverIds = []) {
+  return setLocalFavoriteIds(serverIds, { notify: true });
 }
 
 export function clearLocalFavorites() {

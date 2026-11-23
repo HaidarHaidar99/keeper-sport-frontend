@@ -42,7 +42,9 @@ export default function AdminDashboardPage() {
   const stats = data?.stats || {};
   const recentOrders = data?.recentOrders || [];
   const recentUsers = data?.recentUsers || [];
-  const lowStockItems = data?.lowStockItems || [];
+  const outOfStockItems = (data?.outOfStockItems || data?.lowStockItems || []).filter(
+    (item) => Number(item.stock_quantity) <= 0
+  );
   const recentNotifications = data?.recentNotifications || [];
 
   return (
@@ -110,18 +112,18 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Low Stock Products */}
-        <div className={`ks-admin-stat-card ${stats.lowStockProducts > 0 ? 'is-warning' : ''}`}>
+        {/* Out of Stock Products */}
+        <div className={`ks-admin-stat-card ${stats.outOfStockProducts > 0 ? 'is-warning' : ''}`}>
           <div className="ks-stat-card-icon-wrap is-danger">
             <AlertTriangle size={20} />
           </div>
           <div className="ks-stat-card-content">
-            <span className="ks-stat-card-label">LOW STOCK</span>
+            <span className="ks-stat-card-label">OUT OF STOCK</span>
             <div className="ks-stat-card-value is-red">
-              {loading ? '—' : stats.lowStockProducts ?? 0}
+              {loading ? '—' : stats.outOfStockProducts ?? 0}
             </div>
             <div className="ks-stat-card-subtext">
-              Threshold: ≤ {stats.lowStockThreshold ?? 5} units
+              Quantity: 0 units
             </div>
           </div>
         </div>
@@ -154,16 +156,16 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* DASHBOARD 2-COLUMN SECTION: Low Stock & Recent Orders */}
+      {/* DASHBOARD 2-COLUMN SECTION: Out of Stock & Recent Orders */}
       <div className="ks-admin-dashboard-split">
-        {/* Left: Inventory Alert (Low Stock) */}
-        <section className="ks-admin-panel" aria-label="Low Stock Alerts">
+        {/* Left: Inventory Alert (Out of Stock) */}
+        <section className="ks-admin-panel" aria-label="Out of Stock Alerts">
           <div className="ks-admin-panel-header">
             <div className="ks-panel-title-wrap">
               <AlertTriangle size={17} className="ks-warn-icon-title" />
-              <h2 className="ks-admin-panel-title">Low Stock Inventory</h2>
+              <h2 className="ks-admin-panel-title">Out of Stock Inventory</h2>
             </div>
-            <Link to="/admin/products?status=low_stock" className="ks-panel-link">
+            <Link to="/admin/products?status=out_of_stock" className="ks-panel-link">
               <span>View Products</span>
               <ArrowRight size={14} />
             </Link>
@@ -172,13 +174,13 @@ export default function AdminDashboardPage() {
           <div className="ks-admin-panel-body">
             {loading ? (
               <div className="ks-admin-table-loading">Loading inventory data...</div>
-            ) : lowStockItems.length === 0 ? (
+            ) : outOfStockItems.length === 0 ? (
               <div className="ks-admin-empty-notice">
-                <span>All product inventory levels are currently sufficient.</span>
+                <span>All products are currently in stock.</span>
               </div>
             ) : (
               <div className="ks-admin-mini-list">
-                {lowStockItems.map((item) => (
+                {outOfStockItems.map((item) => (
                   <div key={item.id} className="ks-mini-item-row">
                     <div className="ks-mini-item-info">
                       <Link to={`/admin/products`} className="ks-mini-item-name">
@@ -186,8 +188,8 @@ export default function AdminDashboardPage() {
                       </Link>
                       <span className="ks-mini-item-meta">${parseFloat(item.base_price).toFixed(2)}</span>
                     </div>
-                    <span className={`ks-stock-pill ${item.stock_quantity <= 0 ? 'is-out' : 'is-low'}`}>
-                      {item.stock_quantity <= 0 ? 'OUT OF STOCK' : `${item.stock_quantity} left`}
+                    <span className="ks-stock-pill is-out">
+                      OUT OF STOCK
                     </span>
                   </div>
                 ))}

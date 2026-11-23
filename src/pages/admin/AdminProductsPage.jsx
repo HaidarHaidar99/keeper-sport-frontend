@@ -601,19 +601,6 @@ export default function AdminProductsPage() {
         </div>
 
         <div className="ks-admin-stat-card">
-          <div className="ks-stat-card-icon-wrap is-warning">
-            <AlertTriangle size={20} />
-          </div>
-          <div className="ks-stat-card-content">
-            <span className="ks-stat-card-label">LOW STOCK WARNING</span>
-            <div className="ks-stat-card-value" style={{ color: stats.lowStock > 0 ? '#F59E0B' : undefined }}>
-              {loading ? '—' : stats.lowStock}
-            </div>
-            <div className="ks-stat-card-subtext">Threshold ≤ {stats.lowStockThreshold} units</div>
-          </div>
-        </div>
-
-        <div className="ks-admin-stat-card">
           <div className="ks-stat-card-icon-wrap is-danger">
             <Package size={20} />
           </div>
@@ -622,7 +609,7 @@ export default function AdminProductsPage() {
             <div className="ks-stat-card-value" style={{ color: stats.outOfStock > 0 ? 'var(--ks-accent-red)' : undefined }}>
               {loading ? '—' : stats.outOfStock}
             </div>
-            <div className="ks-stat-card-subtext">Requires replenishment</div>
+            <div className="ks-stat-card-subtext">Quantity = 0 units</div>
           </div>
         </div>
 
@@ -688,7 +675,6 @@ export default function AdminProductsPage() {
             <option value="all">All Statuses</option>
             <option value="active">Active Only</option>
             <option value="inactive">Inactive Only</option>
-            <option value="low_stock">Low Stock Only</option>
             <option value="out_of_stock">Out of Stock Only</option>
             <option value="featured">Featured Rail Only</option>
           </select>
@@ -743,11 +729,9 @@ export default function AdminProductsPage() {
                         )}
                       </td>
                       <td>
-                        <span className={`ks-stock-pill ${prod.stock_quantity <= 0 ? 'is-out' : prod.isLowStock ? 'is-low' : 'is-in'}`}>
+                        <span className={`ks-stock-pill ${prod.stock_quantity <= 0 ? 'is-out' : 'is-in'}`}>
                           {prod.stock_quantity <= 0
                             ? 'OUT OF STOCK'
-                            : prod.isLowStock
-                            ? `LOW (${prod.stock_quantity})`
                             : `${prod.stock_quantity} in stock`}
                         </span>
                       </td>

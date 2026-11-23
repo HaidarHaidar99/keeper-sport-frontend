@@ -23,7 +23,6 @@ import { productApi } from '../api/productApi';
 import { contentApi } from '../api/contentApi';
 import { launchFootballToCart } from '../utils/cartAnimation';
 import { launchHeartToFavorites } from '../utils/favoriteAnimation';
-import { isProductFavoritedLocally, addLocalFavoriteId, removeLocalFavoriteId } from '../utils/guestIdentity';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useToast } from '../context/ToastContext';
@@ -32,7 +31,7 @@ import { formatColorName, getColorHex } from '../utils/productUtils';
 export default function ProductDetailsPage() {
   const { slugOrId } = useParams();
   const navigate = useNavigate();
-  const { siteSettings, categories, isFavorite, toggleFavorite, registerFavorite } = useSite();
+  const { siteSettings, categories, isFavorite, toggleFavorite, updateCartCount, counts } = useSite();
   const { showToast } = useToast();
   const heartBtnRef = useRef(null);
   const thumbsContainerRef = useRef(null);
@@ -101,9 +100,6 @@ export default function ProductDetailsPage() {
           const p = prodRes.product;
           setProduct(p);
           setProductReviews(p.reviews || []);
-          if (p.isFavorited && typeof registerFavorite === 'function') {
-            registerFavorite(p.id);
-          }
         } else {
           setError(prodRes?.message || 'Product not found.');
         }
@@ -345,11 +341,8 @@ export default function ProductDetailsPage() {
     media_type: 'image'
   };
 
-  const isOutOfStock = Boolean(product.stock?.isOutOfStock || product.stock_quantity === 0);
-  const isLowStock = Boolean(
-    (product.stock?.isLowStock || (product.stock_quantity > 0 && product.stock_quantity <= 5)) &&
-    !isOutOfStock
-  );
+  const stockQty = product.stock?.quantity ?? product.stock_quantity;
+  const isOutOfStock = stockQty != null ? Number(stockQty) <= 0 : Boolean(product.stock?.isOutOfStock);
   const hasDiscount = Boolean(
     product.pricing?.hasDiscount ||
     (product.old_price && Number(product.old_price) > Number(product.base_price || product.price))
@@ -595,8 +588,6 @@ export default function ProductDetailsPage() {
             <div className="ks-details-stock-status">
               {isOutOfStock ? (
                 <span className="ks-stock-pill is-out">OUT OF STOCK</span>
-              ) : isLowStock ? (
-                <span className="ks-stock-pill is-low">LOW STOCK — ORDER SOON</span>
               ) : (
                 <span className="ks-stock-pill is-in">IN STOCK &amp; READY TO SHIP</span>
               )}

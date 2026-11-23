@@ -4,7 +4,6 @@ import { Heart, Star, Plus, Check, AlertCircle } from 'lucide-react';
 import { productApi } from '../api/productApi';
 import { useSite } from '../context/SiteContext';
 import { launchFootballToCart, launchHeartToFavorites } from '../utils/cartAnimation';
-import { isProductFavoritedLocally, addLocalFavoriteId, removeLocalFavoriteId } from '../utils/guestIdentity';
 import { formatColorName, getColorHex, getProductImage } from '../utils/productUtils';
 
 export default function ProductCard({
@@ -28,12 +27,9 @@ export default function ProductCard({
 
   const productUrl = `/products/${product?.slug || product?.id || ''}`;
 
-  // Real stock/sale status
-  const isOutOfStock = Boolean(product.stock?.isOutOfStock || product.stock_quantity === 0);
-  const isLowStock = Boolean(
-    (product.stock?.isLowStock || (product.stock_quantity > 0 && product.stock_quantity <= 5)) &&
-    !isOutOfStock
-  );
+  // Real stock/sale status (only Out of Stock when quantity is 0; no Low Stock badge)
+  const stockQty = product.stock?.quantity ?? product.stock_quantity;
+  const isOutOfStock = stockQty != null ? Number(stockQty) <= 0 : Boolean(product.stock?.isOutOfStock);
   const hasDiscount = Boolean(
     product.pricing?.hasDiscount ||
     (product.old_price && Number(product.old_price) > Number(product.base_price || product.price))
@@ -42,8 +38,6 @@ export default function ProductCard({
   const realBadges = [];
   if (isOutOfStock) {
     realBadges.push({ type: 'out-of-stock', label: 'OUT OF STOCK' });
-  } else if (isLowStock) {
-    realBadges.push({ type: 'low-stock', label: 'LOW STOCK' });
   }
   if (hasDiscount) {
     realBadges.push({
@@ -77,17 +71,18 @@ export default function ProductCard({
 
     setTimeout(() => setFavAnimating(false), 400);
 
-    // Synchronous immediate callback so unfavorited items disappear at the same second
-    if (onFavoriteToggled) {
-      onFavoriteToggled(product.id, willBeFavorited);
-    }
-
+    // Call SiteContext.toggleFavorite FIRST (performs synchronous optimistic update before network request)
     toggleFavorite(product.id).then((res) => {
       if (!res?.success && res?.message) {
         setErrorMessage(res.message);
         setTimeout(() => setErrorMessage(null), 3000);
       }
     }).catch(() => {});
+
+    // Notify parent component for any local list update
+    if (onFavoriteToggled) {
+      onFavoriteToggled(product.id, willBeFavorited);
+    }
   };
 
   // Add to Cart with flying football animation and direct instant navbar count update

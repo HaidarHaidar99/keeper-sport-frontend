@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Loader2, Trash2, AlertTriangle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { useSite } from '../context/SiteContext';
 import { productApi } from '../api/productApi';
-import { getLocalFavoriteIds, removeLocalFavoriteId, clearLocalFavorites, syncLocalFavoriteIds } from '../utils/guestIdentity';
 import ProductCard from '../components/ProductCard';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function FavoritesPage() {
-  const { siteSettings, categories, refreshCounts, clearAllFavorites, favoriteIds } = useSite();
+  const { user, loading: authLoading } = useAuth();
+  const { siteSettings, categories, refreshCounts, clearAllFavorites, replaceFavoriteIds, favoriteIds } = useSite();
   const [favoriteProducts, setFavoriteProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showClearModal, setShowClearModal] = useState(false);
@@ -22,63 +23,90 @@ export default function FavoritesPage() {
   }, []);
 
   useEffect(() => {
+    if (authLoading) return;
     let isMounted = true;
-    Promise.all([
-      productApi.getUserFavoriteIds(),
-      productApi.getProducts({ limit: 100 })
-    ])
-      .then(([favIdsRes, prodsRes]) => {
+    setLoading(true);
+
+    const loadFavorites = async () => {
+      try {
+        // 1. Prefer dedicated GET /api/favorites endpoint (returns all active favorited products with no pagination cap)
+        const directRes = await productApi.getFavoriteProducts();
         if (!isMounted) return;
 
-        const rawIds = favIdsRes?.favoriteIds || favIdsRes?.ids || [];
-        const serverIds = Array.isArray(rawIds) ? rawIds.map(String) : [];
-        const localIds = getLocalFavoriteIds().map(String);
-        const mergedIds = syncLocalFavoriteIds([...serverIds, ...localIds]);
-        const allProds = prodsRes?.success && Array.isArray(prodsRes.products) ? prodsRes.products : [];
-
-        // Filter products that are in user's / guest's favorites
-        const matched = allProds
-          .filter((p) => mergedIds.includes(String(p.id)) || mergedIds.includes(Number(p.id)))
-          .map((p) => ({ ...p, isFavorited: true }));
-
-        // Reconcile phantom IDs: only existing products should count
-        if (allProds.length > 0) {
-          const validIds = matched.map((p) => String(p.id));
-          if (validIds.length !== mergedIds.length) {
-            syncLocalFavoriteIds(validIds);
+        if (directRes?.success && Array.isArray(directRes.products)) {
+          const validProducts = directRes.products.map((p) => ({ ...p, isFavorited: true }));
+          setFavoriteProducts(validProducts);
+          if (typeof replaceFavoriteIds === 'function') {
+            replaceFavoriteIds(validProducts.map((p) => String(p.id)));
           }
+          return;
         }
 
+        // 2. Fallback for older backend deployments without GET /api/favorites
+        const favIdsRes = await productApi.getUserFavoriteIds();
+        if (!isMounted) return;
+
+        const rawIds = favIdsRes?.success ? (favIdsRes.favoriteIds || favIdsRes.ids || []) : [];
+        const targetIds = Array.from(new Set((Array.isArray(rawIds) ? rawIds : []).map(String)));
+
+        if (targetIds.length === 0) {
+          setFavoriteProducts([]);
+          if (typeof replaceFavoriteIds === 'function') {
+            replaceFavoriteIds([]);
+          }
+          return;
+        }
+
+        // Fetch across all catalog pages so no favorited product beyond page 1 is missed
+        const allProds = [];
+        let currentPage = 1;
+        let hasMorePages = true;
+        while (hasMorePages && currentPage <= 20) {
+          const prodsRes = await productApi.getProducts({ page: currentPage, limit: 48 });
+          if (!isMounted) return;
+          if (!prodsRes?.success || !Array.isArray(prodsRes.products)) break;
+          allProds.push(...prodsRes.products);
+          hasMorePages = Boolean(prodsRes.hasMore);
+          currentPage += 1;
+        }
+
+        const prodsById = new Map(allProds.map((p) => [String(p.id), p]));
+        const matched = targetIds
+          .map((id) => prodsById.get(id))
+          .filter(Boolean)
+          .map((p) => ({ ...p, isFavorited: true }));
+
         setFavoriteProducts(matched);
-      })
-      .finally(() => {
+
+        // Reconcile phantom/inactive IDs so navbar count strictly equals visible favorites
+        if (typeof replaceFavoriteIds === 'function') {
+          replaceFavoriteIds(matched.map((p) => String(p.id)));
+        }
+      } catch (err) {
+        console.warn('Failed to load favorites:', err);
+      } finally {
         if (isMounted) setLoading(false);
-      });
+      }
+    };
+
+    loadFavorites();
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [authLoading, user?.id, replaceFavoriteIds]);
 
-  // Listen for real-time favorites updates across other components
+  // Keep rendered cards strictly synchronized with global favoriteIds state
   useEffect(() => {
-    const handleFavsChanged = (e) => {
-      const ids = e.detail?.favoriteIds;
-      if (Array.isArray(ids)) {
-        const idSet = new Set(ids.map(String));
-        setFavoriteProducts((prev) => prev.filter((p) => idSet.has(String(p.id))));
-      }
-    };
-    window.addEventListener('ks:favorites_updated', handleFavsChanged);
-    return () => window.removeEventListener('ks:favorites_updated', handleFavsChanged);
-  }, []);
+    if (loading) return;
+    const idSet = new Set((favoriteIds || []).map(String));
+    setFavoriteProducts((prev) => prev.filter((p) => idSet.has(String(p.id))));
+  }, [favoriteIds, loading]);
 
-  // Synchronous zero-latency removal when heart is untoggled
+  // Instant UI removal when heart is untoggled on a card (SiteContext.toggleFavorite handles storage, count & API)
   const handleFavoriteToggled = (productId, isFav) => {
     if (!isFav) {
-      removeLocalFavoriteId(productId);
       setFavoriteProducts((prev) => prev.filter((p) => String(p.id) !== String(productId)));
-      if (typeof refreshCounts === 'function') refreshCounts();
     }
   };
 
@@ -86,27 +114,21 @@ export default function FavoritesPage() {
   const handleClearFavorites = async () => {
     if (clearingFavorites) return;
     setClearingFavorites(true);
-
-    // 1. Instant zero-latency UI clear
     setFavoriteProducts([]);
-    clearLocalFavorites();
-    if (typeof clearAllFavorites === 'function') {
-      clearAllFavorites();
-    }
     setShowClearModal(false);
 
-    // 2. Background server clear
     try {
-      await productApi.clearFavorites();
-      if (typeof refreshCounts === 'function') refreshCounts();
+      if (typeof clearAllFavorites === 'function') {
+        await clearAllFavorites();
+      }
     } catch (err) {
-      console.warn("Failed to clear favorites on server:", err);
+      console.warn('Failed to clear favorites:', err);
     } finally {
       setClearingFavorites(false);
     }
   };
 
-  const hasAnyFavorites = favoriteProducts.length > 0 || (favoriteIds && favoriteIds.length > 0);
+  const hasAnyFavorites = favoriteProducts.length > 0;
 
   return (
     <div className="ks-page-canvas">

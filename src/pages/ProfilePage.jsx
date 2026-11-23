@@ -28,7 +28,7 @@ import Footer from '../components/Footer';
 
 export default function ProfilePage() {
   const { user, loading: authLoading, logout, updateUser } = useAuth();
-  const { siteSettings, categories, counts } = useSite();
+  const { siteSettings, categories, counts, favoriteIds } = useSite();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
@@ -407,7 +407,7 @@ export default function ProfilePage() {
                   FAVORITES
                 </div>
                 <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--ks-text-title, #fff)' }}>
-                  {counts?.favorites || 0} Items
+                  {favoriteIds ? favoriteIds.length : (counts?.favorites || 0)} Items
                 </div>
               </div>
             </div>

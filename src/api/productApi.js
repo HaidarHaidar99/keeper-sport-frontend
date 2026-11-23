@@ -165,12 +165,16 @@ export const productApi = {
   },
 
   /**
-   * Toggle product favorite (guests & users)
+   * Toggle or explicitly add/remove product favorite (guests & users)
    */
-  async toggleFavorite(productId) {
+  async toggleFavorite(productId, action = null) {
+    const payload = { productId };
+    if (action === 'add' || action === 'remove') {
+      payload.action = action;
+    }
     return safeRequest(`${API_BASE}/favorites/toggle`, {
       method: 'POST',
-      body: JSON.stringify({ productId })
+      body: JSON.stringify(payload)
     });
   },
 
@@ -179,6 +183,13 @@ export const productApi = {
    */
   async getUserFavoriteIds() {
     return safeRequest(`${API_BASE}/favorites/ids`);
+  },
+
+  /**
+   * Get full favorited active products directly from server
+   */
+  async getFavoriteProducts() {
+    return safeRequest(`${API_BASE}/favorites`);
   },
 
   /**

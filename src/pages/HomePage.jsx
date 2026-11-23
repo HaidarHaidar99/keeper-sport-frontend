@@ -211,12 +211,8 @@ export default function HomePage() {
     }
   };
 
-  const handleFavoriteToggled = (_productId, _isFav, newCount) => {
-    if (typeof newCount === 'number' && updateFavoritesCount) {
-      updateFavoritesCount(newCount);
-    } else {
-      refreshCounts();
-    }
+  const handleFavoriteToggled = () => {
+    // SiteContext.toggleFavorite already handles optimistic state, persistence, and count sync
   };
 
   return (

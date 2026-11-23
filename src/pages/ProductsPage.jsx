@@ -202,7 +202,7 @@ export default function ProductsPage() {
     }
   };
 
-  // Callback when a product favorite is toggled
+  // Callback when a product favorite is toggled (SiteContext.toggleFavorite already syncs global count)
   const handleFavoriteToggled = (productId, isFav) => {
     setProducts((prev) =>
       prev.map((p) => (p.id === productId ? { ...p, isFavorited: isFav } : p))
@@ -210,9 +210,6 @@ export default function ProductsPage() {
     setFeaturedProducts((prev) =>
       prev.map((p) => (p.id === productId ? { ...p, isFavorited: isFav } : p))
     );
-    if (typeof refreshUserCounts === 'function') {
-      refreshUserCounts();
-    }
   };
 
   // When onSaleOnly is true, only show products that genuinely have an active discount/offer

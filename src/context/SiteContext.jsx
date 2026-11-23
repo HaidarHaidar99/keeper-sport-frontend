@@ -1,13 +1,13 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { contentApi } from '../api/contentApi';
 import { productApi } from '../api/productApi';
+import { useAuth } from './AuthContext';
 import {
   getGuestOrders,
   getHiddenOrderIds,
   getLocalFavoriteIds,
-  addLocalFavoriteId,
-  removeLocalFavoriteId,
-  syncLocalFavoriteIds
+  setLocalFavoriteIds,
+  clearLocalFavorites
 } from '../utils/guestIdentity';
 
 const SiteContext = createContext(null);
@@ -41,7 +41,14 @@ export const DEFAULT_SITE_SETTINGS = {
   }
 };
 
+function normalizeIdList(ids) {
+  if (!Array.isArray(ids)) return [];
+  return Array.from(new Set(ids.filter((id) => id != null && id !== '').map(String)));
+}
+
 export function SiteProvider({ children }) {
+  const { user, loading: authLoading } = useAuth();
+
   // Read initial cache if available for instant zero-latency render, fallback to default settings
   const [siteSettings, setSiteSettings] = useState(() => {
     try {
@@ -68,6 +75,11 @@ export function SiteProvider({ children }) {
     }
   });
 
+  // Single source of truth for favorited product IDs across the entire app
+  const [favoriteIds, setFavoriteIds] = useState(() => normalizeIdList(getLocalFavoriteIds()));
+  const favoriteIdsRef = useRef(favoriteIds);
+  const pendingFavTogglesRef = useRef(new Set());
+
   const [counts, setCounts] = useState(() => {
     try {
       const cached = localStorage.getItem(COUNTS_STORAGE_KEY) || sessionStorage.getItem(COUNTS_STORAGE_KEY);
@@ -76,17 +88,40 @@ export function SiteProvider({ children }) {
       if ((!parsed.orders || parsed.orders === 0) && localOrders.length > 0) {
         parsed.orders = localOrders.length;
       }
-      const localFavs = getLocalFavoriteIds();
-      if ((!parsed.favorites || parsed.favorites === 0) && localFavs.length > 0) {
-        parsed.favorites = localFavs.length;
-      }
+      parsed.favorites = favoriteIdsRef.current.length;
       return parsed;
     } catch {
-      return { cart: 0, favorites: 0, orders: 0, notifications: 0 };
+      return { cart: 0, favorites: favoriteIdsRef.current.length, orders: 0, notifications: 0 };
     }
   });
 
   const [isInitialized, setIsInitialized] = useState(false);
+
+  const persistCounts = useCallback((updated) => {
+    try {
+      sessionStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
+      localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
+    } catch {}
+  }, []);
+
+  // Atomically replace favorite IDs and keep ref, localStorage, and counts.favorites strictly in sync
+  const replaceFavoriteIds = useCallback(
+    (ids, { persist = true } = {}) => {
+      const normalized = normalizeIdList(ids);
+      favoriteIdsRef.current = normalized;
+      setFavoriteIds(normalized);
+      if (persist) {
+        setLocalFavoriteIds(normalized);
+      }
+      setCounts((prev) => {
+        const updated = { ...prev, favorites: normalized.length };
+        persistCounts(updated);
+        return updated;
+      });
+      return normalized;
+    },
+    [persistCounts]
+  );
 
   // Fetch Settings
   const refreshSettings = useCallback(async () => {
@@ -122,6 +157,21 @@ export function SiteProvider({ children }) {
     }
   }, []);
 
+  // Fetch authoritative favorite IDs from backend (replaces stale local cache)
+  const refreshFavorites = useCallback(async () => {
+    try {
+      const res = await productApi.getUserFavoriteIds();
+      if (res?.success) {
+        const raw = res.favoriteIds || res.ids || [];
+        if (pendingFavTogglesRef.current.size === 0) {
+          replaceFavoriteIds(raw);
+        }
+      }
+    } catch (err) {
+      console.warn('SiteContext: Failed to sync favorites', err);
+    }
+  }, [replaceFavoriteIds]);
+
   // Fetch User Counts
   const refreshCounts = useCallback(async () => {
     try {
@@ -133,61 +183,53 @@ export function SiteProvider({ children }) {
           if ((!updated.orders || updated.orders === 0) && localOrders.length > 0) {
             updated.orders = localOrders.length;
           }
-          const localFavs = getLocalFavoriteIds();
-          updated.favorites = localFavs.length;
         } catch {}
+        // Always keep favorites count strictly matching favoriteIds
+        updated.favorites = favoriteIdsRef.current.length;
         setCounts(updated);
-        try {
-          sessionStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
-          localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
-        } catch {}
+        persistCounts(updated);
       }
     } catch (err) {
       console.warn('SiteContext: Failed to load user counts', err);
     }
-  }, []);
+  }, [persistCounts]);
 
   // In-memory zero-latency count updates from mutation responses
-  const updateCartCount = useCallback((newCartCount) => {
-    if (typeof newCartCount !== 'number') return;
-    setCounts((prev) => {
-      const updated = { ...prev, cart: newCartCount };
-      try {
-        sessionStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
-        localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
-      } catch {}
-      return updated;
-    });
-  }, []);
+  const updateCartCount = useCallback(
+    (newCartCount) => {
+      if (typeof newCartCount !== 'number') return;
+      setCounts((prev) => {
+        const updated = { ...prev, cart: newCartCount };
+        persistCounts(updated);
+        return updated;
+      });
+    },
+    [persistCounts]
+  );
 
-  const updateFavoritesCount = useCallback((newFavCount) => {
-    if (typeof newFavCount !== 'number') return;
-    setCounts((prev) => {
-      const updated = { ...prev, favorites: newFavCount };
-      try {
-        sessionStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
-        localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
-      } catch {}
-      return updated;
-    });
-  }, []);
+  const updateFavoritesCount = useCallback(
+    (newFavCount) => {
+      if (typeof newFavCount !== 'number') return;
+      setCounts((prev) => {
+        const updated = { ...prev, favorites: Math.max(0, newFavCount) };
+        persistCounts(updated);
+        return updated;
+      });
+    },
+    [persistCounts]
+  );
 
-  const updateOrdersCount = useCallback((newOrdersCount) => {
-    if (typeof newOrdersCount !== 'number') return;
-    setCounts((prev) => {
-      const updated = { ...prev, orders: newOrdersCount };
-      try {
-        sessionStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
-        localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
-      } catch {}
-      return updated;
-    });
-  }, []);
-
-  // Single source of truth for favorited product IDs across the entire app
-  const [favoriteIds, setFavoriteIds] = useState(() => {
-    return getLocalFavoriteIds().map(String);
-  });
+  const updateOrdersCount = useCallback(
+    (newOrdersCount) => {
+      if (typeof newOrdersCount !== 'number') return;
+      setCounts((prev) => {
+        const updated = { ...prev, orders: newOrdersCount };
+        persistCounts(updated);
+        return updated;
+      });
+    },
+    [persistCounts]
+  );
 
   const isFavorite = useCallback(
     (productOrId) => {
@@ -206,114 +248,147 @@ export function SiteProvider({ children }) {
     (productId) => {
       if (!productId) return;
       const idStr = String(productId);
-      setFavoriteIds((prev) => {
-        if (prev.includes(idStr)) return prev;
-        const next = [...prev, idStr];
-        addLocalFavoriteId(idStr);
-        updateFavoritesCount(next.length);
-        return next;
-      });
+      if (favoriteIdsRef.current.includes(idStr)) return;
+      replaceFavoriteIds([...favoriteIdsRef.current, idStr]);
     },
-    [updateFavoritesCount]
+    [replaceFavoriteIds]
   );
 
   const clearAllFavorites = useCallback(async () => {
-    setFavoriteIds([]);
+    replaceFavoriteIds([], { persist: false });
     clearLocalFavorites();
-    updateFavoritesCount(0);
     try {
       await productApi.clearFavorites();
     } catch (e) {
       console.warn('Could not clear favorites on backend:', e);
     }
-  }, [updateFavoritesCount]);
+  }, [replaceFavoriteIds]);
 
   const toggleFavorite = useCallback(
     async (productId) => {
       if (!productId) return { success: false, isFavorited: false };
       const idStr = String(productId);
-      let willBeFav = false;
 
-      // 1. Synchronous Instant Zero-latency Optimistic Update
-      setFavoriteIds((prev) => {
-        const wasFav = prev.includes(idStr);
-        willBeFav = !wasFav;
-        const nextIds = willBeFav
-          ? Array.from(new Set([...prev, idStr]))
-          : prev.filter((id) => id !== idStr);
+      // Prevent duplicate concurrent toggles on the same product
+      if (pendingFavTogglesRef.current.has(idStr)) {
+        return { success: true, isFavorited: favoriteIdsRef.current.includes(idStr) };
+      }
 
-        if (willBeFav) {
-          addLocalFavoriteId(idStr);
-        } else {
-          removeLocalFavoriteId(idStr);
-        }
-        updateFavoritesCount(nextIds.length);
-        return nextIds;
-      });
+      const wasFav = favoriteIdsRef.current.includes(idStr);
+      const willBeFav = !wasFav;
+      const optimisticNext = willBeFav
+        ? [...favoriteIdsRef.current, idStr]
+        : favoriteIdsRef.current.filter((id) => id !== idStr);
 
-      // 2. Background Network Sync
+      pendingFavTogglesRef.current.add(idStr);
+
+      // 1. Synchronous Instant Zero-Latency Optimistic Update (outside any setState updater)
+      replaceFavoriteIds(optimisticNext);
+
+      // 2. Authoritative Server Sync with explicit action ('add' | 'remove')
       try {
-        const res = await productApi.toggleFavorite(productId);
-        if (res && res.success) {
-          if (typeof res.favoritesCount === 'number') {
-            updateFavoritesCount(res.favoritesCount);
-          }
-          if (typeof res.isFavorited === 'boolean') {
-            setFavoriteIds((prev) => {
-              const hasIt = prev.includes(idStr);
-              if (res.isFavorited && !hasIt) return [...prev, idStr];
-              if (!res.isFavorited && hasIt) return prev.filter((id) => id !== idStr);
-              return prev;
-            });
-          }
-          return { success: true, isFavorited: res.isFavorited };
+        let res = await productApi.toggleFavorite(productId, willBeFav ? 'add' : 'remove');
+
+        // Compatibility safeguard: if a backend without `action` support was out of sync and toggled the wrong way, toggle once more
+        if (res?.success && typeof res.isFavorited === 'boolean' && res.isFavorited !== willBeFav) {
+          res = await productApi.toggleFavorite(productId, willBeFav ? 'add' : 'remove');
         }
-        return { success: true, isFavorited: willBeFav };
-      } catch (err) {
-        return { success: true, isFavorited: willBeFav };
+
+        if (res && res.success) {
+          if (Array.isArray(res.favoriteIds)) {
+            replaceFavoriteIds(res.favoriteIds);
+          } else {
+            const finalIsFav = typeof res.isFavorited === 'boolean' ? res.isFavorited : willBeFav;
+            const current = favoriteIdsRef.current;
+            const reconciled = finalIsFav
+              ? [...current, idStr]
+              : current.filter((id) => id !== idStr);
+            replaceFavoriteIds(reconciled);
+          }
+          return {
+            success: true,
+            isFavorited: typeof res.isFavorited === 'boolean' ? res.isFavorited : willBeFav,
+            favoritesCount: favoriteIdsRef.current.length
+          };
+        }
+
+        // Revert on server failure
+        const reverted = wasFav
+          ? [...favoriteIdsRef.current, idStr]
+          : favoriteIdsRef.current.filter((id) => id !== idStr);
+        replaceFavoriteIds(reverted);
+        return { success: false, isFavorited: wasFav, message: res?.message || 'Failed to update favorite.' };
+      } catch {
+        const reverted = wasFav
+          ? [...favoriteIdsRef.current, idStr]
+          : favoriteIdsRef.current.filter((id) => id !== idStr);
+        replaceFavoriteIds(reverted);
+        return { success: false, isFavorited: wasFav, message: 'Network error updating favorite.' };
+      } finally {
+        pendingFavTogglesRef.current.delete(idStr);
       }
     },
-    [updateFavoritesCount]
+    [replaceFavoriteIds]
   );
 
-  // Sync favorites with server on mount
+  // Sync favorites & user counts whenever auth identity is ready or changes (login / logout)
   useEffect(() => {
-    productApi.getUserFavoriteIds()
-      .then((res) => {
-        const raw = res?.favoriteIds || res?.ids || [];
-        const serverIds = Array.isArray(raw) ? raw.map(String) : [];
-        const localIds = getLocalFavoriteIds().map(String);
-        const merged = Array.from(new Set([...localIds, ...serverIds]));
-        setFavoriteIds(merged);
-        syncLocalFavoriteIds(merged);
-        updateFavoritesCount(merged.length);
+    if (authLoading) return;
+    let isMounted = true;
+
+    Promise.all([
+      productApi.getUserFavoriteIds(),
+      contentApi.getUserCounts()
+    ])
+      .then(([favRes, countsRes]) => {
+        if (!isMounted) return;
+
+        let syncedFavIds = favoriteIdsRef.current;
+        if (favRes?.success && pendingFavTogglesRef.current.size === 0) {
+          const raw = favRes.favoriteIds || favRes.ids || [];
+          syncedFavIds = replaceFavoriteIds(raw);
+        }
+
+        if (countsRes?.success && countsRes.counts) {
+          const updatedCounts = { ...countsRes.counts };
+          try {
+            const localOrders = getGuestOrders().filter((o) => !getHiddenOrderIds().includes(o.id));
+            if ((!updatedCounts.orders || updatedCounts.orders === 0) && localOrders.length > 0) {
+              updatedCounts.orders = localOrders.length;
+            }
+          } catch {}
+          updatedCounts.favorites = syncedFavIds.length;
+          setCounts(updatedCounts);
+          persistCounts(updatedCounts);
+        }
       })
       .catch(() => {});
-  }, [updateFavoritesCount]);
 
-  // Listen for real-time favorites updates
+    return () => {
+      isMounted = false;
+    };
+  }, [authLoading, user?.id, replaceFavoriteIds, persistCounts]);
+
+  // Listen for external cross-component favorite updates (e.g. clearLocalFavorites)
   useEffect(() => {
     const handleFavUpdated = (e) => {
       const ids = e.detail?.favoriteIds;
       if (Array.isArray(ids)) {
-        const strList = ids.map(String);
-        setFavoriteIds(strList);
-        updateFavoritesCount(strList.length);
+        replaceFavoriteIds(ids, { persist: false });
       }
     };
     window.addEventListener('ks:favorites_updated', handleFavUpdated);
     return () => window.removeEventListener('ks:favorites_updated', handleFavUpdated);
-  }, [updateFavoritesCount]);
+  }, [replaceFavoriteIds]);
 
-  // Initial fetch on mount - run in parallel once
+  // Initial public site data fetch on mount
   useEffect(() => {
     let isMounted = true;
     Promise.all([
       contentApi.getSiteSettings(),
-      contentApi.getCategories(),
-      contentApi.getUserCounts()
+      contentApi.getCategories()
     ])
-      .then(([settingsRes, catsRes, countsRes]) => {
+      .then(([settingsRes, catsRes]) => {
         if (!isMounted) return;
         if (settingsRes?.success && settingsRes.settings) {
           const merged = { ...DEFAULT_SITE_SETTINGS, ...settingsRes.settings };
@@ -337,20 +412,6 @@ export function SiteProvider({ children }) {
             sessionStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(catsRes.categories));
           } catch {}
         }
-        if (countsRes?.success && countsRes.counts) {
-          const updatedCounts = { ...countsRes.counts };
-          try {
-            const localFavs = getLocalFavoriteIds();
-            if (localFavs.length > (updatedCounts.favorites || 0)) {
-              updatedCounts.favorites = localFavs.length;
-            }
-          } catch {}
-          setCounts(updatedCounts);
-          try {
-            localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updatedCounts));
-            sessionStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updatedCounts));
-          } catch {}
-        }
       })
       .catch((err) => {
         console.warn('SiteContext initialization error:', err);
@@ -372,6 +433,8 @@ export function SiteProvider({ children }) {
     isFavorite,
     toggleFavorite,
     registerFavorite,
+    replaceFavoriteIds,
+    refreshFavorites,
     clearAllFavorites,
     isInitialized,
     refreshSettings,
@@ -396,6 +459,12 @@ export function useSite() {
       siteSettings: null,
       categories: [],
       counts: { cart: 0, favorites: 0, orders: 0, notifications: 0 },
+      favoriteIds: [],
+      isFavorite: () => false,
+      toggleFavorite: async () => ({ success: false, isFavorited: false }),
+      replaceFavoriteIds: () => [],
+      refreshFavorites: async () => {},
+      clearAllFavorites: async () => {},
       isInitialized: true,
       refreshSettings: async () => {},
       refreshCategories: async () => {},
