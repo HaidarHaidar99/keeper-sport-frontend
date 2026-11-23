@@ -1,30 +1,64 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, Search, ShieldCheck, CheckCircle2, Clock, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import {
+  Users,
+  Search,
+  ShieldCheck,
+  CheckCircle2,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  UserPlus,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Send,
+  AlertCircle,
+  Loader2
+} from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import AdminLoader from '../../components/admin/AdminLoader';
 
 export default function AdminUsersPage() {
   const { adminUser: currentUser } = useAdminAuth();
-  const [users, setUsers] = useState([]);
-  const [stats, setStats] = useState({ total: 0, verified: 0, unverified: 0, admins: 0 });
-  const [totalCount, setTotalCount] = useState(0);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const isSuperAdmin = currentUser?.role === 'super_admin';
+
+  const cachedInit = adminApi.peekCache('/users?page=1&limit=15');
+  const [users, setUsers] = useState(() => cachedInit?.users || []);
+  const [stats, setStats] = useState(() => cachedInit?.stats || { total: 0, verified: 0, unverified: 0, admins: 0 });
+  const [totalCount, setTotalCount] = useState(() => cachedInit?.total || 0);
+  const [page, setPage] = useState(() => cachedInit?.page || 1);
+  const [totalPages, setTotalPages] = useState(() => cachedInit?.totalPages || 1);
+  const [loading, setLoading] = useState(() => !cachedInit);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
 
+  // Add Administrator Modal (Super Admin Only)
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [adminForm, setAdminForm] = useState({
+    full_name: '',
+    email: '',
+    password: '',
+    confirm_password: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [addError, setAddError] = useState('');
+  const [creatingAdmin, setCreatingAdmin] = useState(false);
+  const [resendingId, setResendingId] = useState(null);
+
   // Toast
   const [toastMessage, setToastMessage] = useState(null);
   const showToast = (msg) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
+    setTimeout(() => setToastMessage(null), 4500);
   };
 
-  const fetchUsers = useCallback(async (targetPage = 1) => {
-    setLoading(true);
+  const fetchUsers = useCallback(async (targetPage = 1, { silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
       const res = await adminApi.getUsers({
         page: targetPage,
@@ -48,7 +82,8 @@ export default function AdminUsersPage() {
   }, [searchTerm, selectedRole]);
 
   useEffect(() => {
-    fetchUsers(1);
+    const isDefaultQuery = !searchTerm && !selectedRole;
+    fetchUsers(1, { silent: isDefaultQuery && Boolean(cachedInit) });
   }, [fetchUsers]);
 
   const handleSearchSubmit = (e) => {
@@ -69,12 +104,84 @@ export default function AdminUsersPage() {
           prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
         );
         showToast(`User role updated to ${newRole}.`);
-        fetchUsers(page);
+        fetchUsers(page, { silent: true });
       } else {
         showToast(res.message || 'Failed to update user role.');
       }
     } catch {
       showToast('Network error updating role.');
+    }
+  };
+
+  const openAddAdminModal = () => {
+    setAdminForm({ full_name: '', email: '', password: '', confirm_password: '' });
+    setShowPassword(false);
+    setAddError('');
+    setAddModalOpen(true);
+  };
+
+  const handleCreateAdmin = async (e) => {
+    e.preventDefault();
+    setAddError('');
+
+    const fullName = adminForm.full_name.trim();
+    const email = adminForm.email.trim().toLowerCase();
+    const password = adminForm.password;
+    const confirmPassword = adminForm.confirm_password;
+
+    if (fullName.length < 2) {
+      setAddError('Full name must be at least 2 characters.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setAddError('Please enter a valid email address.');
+      return;
+    }
+    if (password.length < 8) {
+      setAddError('Password must be at least 8 characters long.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setAddError('Passwords do not match.');
+      return;
+    }
+
+    setCreatingAdmin(true);
+    try {
+      const res = await adminApi.createAdmin({
+        full_name: fullName,
+        email,
+        password
+      });
+
+      if (res && res.success) {
+        setAddModalOpen(false);
+        showToast(res.message || `Administrator added. Verification link sent to ${email}.`);
+        fetchUsers(1, { silent: true });
+      } else {
+        setAddError(res?.message || 'Failed to add administrator.');
+      }
+    } catch {
+      setAddError('Network error creating administrator.');
+    } finally {
+      setCreatingAdmin(false);
+    }
+  };
+
+  const handleResendVerification = async (u) => {
+    if (resendingId) return;
+    setResendingId(u.id);
+    try {
+      const res = await adminApi.resendAdminVerification(u.id);
+      if (res && res.success) {
+        showToast(res.message || `Verification link resent to ${u.email}.`);
+      } else {
+        showToast(res?.message || 'Failed to resend verification email.');
+      }
+    } catch {
+      showToast('Network error resending verification link.');
+    } finally {
+      setResendingId(null);
     }
   };
 
@@ -93,6 +200,17 @@ export default function AdminUsersPage() {
           <span className="ks-admin-header-eyebrow">ACCOUNTS &amp; SECURITY</span>
           <h1 className="ks-admin-page-title">Users Management</h1>
         </div>
+
+        {isSuperAdmin && (
+          <button
+            type="button"
+            onClick={openAddAdminModal}
+            className="ks-admin-btn-primary"
+          >
+            <UserPlus size={16} />
+            <span>Add Administrator</span>
+          </button>
+        )}
       </div>
 
       {/* STAT CARDS */}
@@ -181,7 +299,7 @@ export default function AdminUsersPage() {
       <section className="ks-admin-panel" aria-label="Users Table">
         <div className="ks-admin-panel-body" style={{ padding: 0 }}>
           {loading ? (
-            <div className="ks-admin-table-loading">Loading users...</div>
+            <AdminLoader message="Loading users..." />
           ) : users.length === 0 ? (
             <div className="ks-admin-empty-notice" style={{ padding: '48px 24px' }}>
               <span>No user accounts found matching your query.</span>
@@ -194,7 +312,7 @@ export default function AdminUsersPage() {
                     <th>User</th>
                     <th>Email</th>
                     <th>Auth Provider</th>
-                    <th>Verification</th>
+                    <th>Status / Verification</th>
                     <th>Role</th>
                     <th>Registered</th>
                   </tr>
@@ -203,6 +321,7 @@ export default function AdminUsersPage() {
                   {users.map((u) => {
                     const isSelf = u.id === currentUser?.id;
                     const initial = u.full_name?.trim()?.charAt(0)?.toUpperCase() || 'U';
+                    const isPendingAdmin = u.role === 'admin' && !u.is_verified;
 
                     return (
                       <tr key={u.id}>
@@ -221,9 +340,30 @@ export default function AdminUsersPage() {
                           <span className="ks-provider-pill">{u.auth_provider?.toUpperCase()}</span>
                         </td>
                         <td>
-                          <span className={`ks-verify-pill ${u.is_verified ? 'is-verified' : 'is-pending'}`}>
-                            {u.is_verified ? 'Verified' : 'Pending'}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <span className={`ks-verify-pill ${u.is_verified ? 'is-verified' : 'is-pending'}`}>
+                              {u.is_verified
+                                ? (u.role === 'admin' || u.role === 'super_admin' ? 'Active · Verified' : 'Verified')
+                                : (isPendingAdmin ? 'Inactive · Pending Email' : 'Pending')}
+                            </span>
+
+                            {isSuperAdmin && isPendingAdmin && (
+                              <button
+                                type="button"
+                                onClick={() => handleResendVerification(u)}
+                                disabled={resendingId === u.id}
+                                className="ks-admin-mini-resend-btn"
+                                title="Resend activation verification link"
+                              >
+                                {resendingId === u.id ? (
+                                  <Loader2 size={12} className="ks-spin-icon" />
+                                ) : (
+                                  <Send size={12} />
+                                )}
+                                <span>{resendingId === u.id ? 'Sending...' : 'Resend Link'}</span>
+                              </button>
+                            )}
+                          </div>
                         </td>
                         <td>
                           {u.role === 'super_admin' ? (
@@ -281,6 +421,152 @@ export default function AdminUsersPage() {
           )}
         </div>
       </section>
+
+      {/* ADD ADMINISTRATOR MODAL (SUPER ADMIN ONLY) */}
+      {isSuperAdmin && addModalOpen && (
+        <div
+          className="ks-admin-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-admin-modal-title"
+          onClick={() => !creatingAdmin && setAddModalOpen(false)}
+        >
+          <div className="ks-admin-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="ks-admin-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <ShieldCheck size={20} style={{ color: 'var(--ks-accent-red)' }} />
+                <h2 id="add-admin-modal-title" className="ks-admin-modal-title">
+                  Add New Administrator
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => !creatingAdmin && setAddModalOpen(false)}
+                className="ks-admin-modal-close-btn"
+                aria-label="Close modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateAdmin} noValidate>
+              <div className="ks-admin-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div className="ks-admin-info-callout">
+                  <Mail size={16} style={{ flexShrink: 0, color: 'var(--ks-accent-red)' }} />
+                  <span>
+                    A verification link will be emailed to the new administrator. Their account will remain{' '}
+                    <strong>inactive</strong> until they verify their email address.
+                  </span>
+                </div>
+
+                {addError && (
+                  <div className="ks-alert ks-alert-error" role="alert" style={{ margin: 0 }}>
+                    <AlertCircle size={15} style={{ flexShrink: 0 }} />
+                    <span>{addError}</span>
+                  </div>
+                )}
+
+                <div className="ks-form-group" style={{ marginBottom: 0 }}>
+                  <label className="ks-label" htmlFor="new-admin-name">FULL NAME *</label>
+                  <input
+                    id="new-admin-name"
+                    type="text"
+                    className="ks-input"
+                    placeholder="e.g. Rami Mansour"
+                    value={adminForm.full_name}
+                    onChange={(e) => setAdminForm((prev) => ({ ...prev, full_name: e.target.value }))}
+                    disabled={creatingAdmin}
+                    required
+                  />
+                </div>
+
+                <div className="ks-form-group" style={{ marginBottom: 0 }}>
+                  <label className="ks-label" htmlFor="new-admin-email">EMAIL ADDRESS *</label>
+                  <input
+                    id="new-admin-email"
+                    type="email"
+                    className="ks-input"
+                    placeholder="admin.member@keepersportlb.com"
+                    value={adminForm.email}
+                    onChange={(e) => setAdminForm((prev) => ({ ...prev, email: e.target.value }))}
+                    disabled={creatingAdmin}
+                    required
+                  />
+                </div>
+
+                <div className="ks-form-group" style={{ marginBottom: 0 }}>
+                  <label className="ks-label" htmlFor="new-admin-password">PASSWORD (MIN 8 CHARACTERS) *</label>
+                  <div className="ks-input-container">
+                    <input
+                      id="new-admin-password"
+                      type={showPassword ? 'text' : 'password'}
+                      className="ks-input ks-input-has-eye"
+                      placeholder="Set initial administrator password"
+                      value={adminForm.password}
+                      onChange={(e) => setAdminForm((prev) => ({ ...prev, password: e.target.value }))}
+                      disabled={creatingAdmin}
+                      minLength={8}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="ks-eye-btn"
+                      onClick={() => setShowPassword((s) => !s)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="ks-form-group" style={{ marginBottom: 0 }}>
+                  <label className="ks-label" htmlFor="new-admin-confirm">CONFIRM PASSWORD *</label>
+                  <input
+                    id="new-admin-confirm"
+                    type={showPassword ? 'text' : 'password'}
+                    className="ks-input"
+                    placeholder="Re-enter password"
+                    value={adminForm.confirm_password}
+                    onChange={(e) => setAdminForm((prev) => ({ ...prev, confirm_password: e.target.value }))}
+                    disabled={creatingAdmin}
+                    minLength={8}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="ks-admin-modal-footer">
+                <button
+                  type="button"
+                  onClick={() => setAddModalOpen(false)}
+                  disabled={creatingAdmin}
+                  className="ks-admin-btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingAdmin}
+                  className="ks-admin-btn-primary"
+                >
+                  {creatingAdmin ? (
+                    <>
+                      <Loader2 size={15} className="ks-spin-icon" />
+                      <span>Sending Verification...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock size={15} />
+                      <span>Create &amp; Send Link</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

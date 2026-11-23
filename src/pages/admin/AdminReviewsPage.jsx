@@ -2,14 +2,16 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Star, Eye, EyeOff, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import ConfirmModal from '../../components/admin/ConfirmModal';
+import AdminLoader from '../../components/admin/AdminLoader';
 
 export default function AdminReviewsPage() {
-  const [reviews, setReviews] = useState([]);
-  const [stats, setStats] = useState({ total: 0, visible: 0, hidden: 0, averageRating: 0 });
-  const [totalCount, setTotalCount] = useState(0);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const cachedRevs = adminApi.peekCache('/reviews?page=1&limit=15');
+  const [reviews, setReviews] = useState(() => cachedRevs?.reviews || []);
+  const [stats, setStats] = useState(() => cachedRevs?.stats || { total: 0, visible: 0, hidden: 0, averageRating: 0 });
+  const [totalCount, setTotalCount] = useState(() => cachedRevs?.total || 0);
+  const [page, setPage] = useState(() => cachedRevs?.page || 1);
+  const [totalPages, setTotalPages] = useState(() => cachedRevs?.totalPages || 1);
+  const [loading, setLoading] = useState(() => !cachedRevs);
 
   // Delete Modal
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
@@ -22,8 +24,8 @@ export default function AdminReviewsPage() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const fetchReviews = useCallback(async (targetPage = 1) => {
-    setLoading(true);
+  const fetchReviews = useCallback(async (targetPage = 1, { silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
       const res = await adminApi.getReviews({ page: targetPage, limit: 15 });
       if (res && res.success) {
@@ -41,7 +43,7 @@ export default function AdminReviewsPage() {
   }, []);
 
   useEffect(() => {
-    fetchReviews(1);
+    fetchReviews(1, { silent: Boolean(cachedRevs) });
   }, [fetchReviews]);
 
   const handleToggleVisibility = async (rev) => {
@@ -140,7 +142,7 @@ export default function AdminReviewsPage() {
       <section className="ks-admin-panel" aria-label="Reviews Moderation Table">
         <div className="ks-admin-panel-body" style={{ padding: 0 }}>
           {loading ? (
-            <div className="ks-admin-table-loading">Loading reviews...</div>
+            <AdminLoader message="Loading reviews..." />
           ) : reviews.length === 0 ? (
             <div className="ks-admin-empty-notice" style={{ padding: '48px 24px' }}>
               <span>No product reviews submitted yet.</span>

@@ -17,12 +17,14 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import ConfirmModal from '../../components/admin/ConfirmModal';
+import AdminLoader from '../../components/admin/AdminLoader';
 
 export default function AdminFormsPage() {
-  const [forms, setForms] = useState([]);
-  const [stats, setStats] = useState({ total: 0, unread: 0, read: 0 });
-  const [pagination, setPagination] = useState({ page: 1, limit: 15, total: 0, totalPages: 1 });
-  const [loading, setLoading] = useState(true);
+  const cachedForms = adminApi.peekCache('/forms?page=1&limit=15');
+  const [forms, setForms] = useState(() => cachedForms?.forms || []);
+  const [stats, setStats] = useState(() => cachedForms?.stats || { total: 0, unread: 0, read: 0 });
+  const [pagination, setPagination] = useState(() => cachedForms?.pagination || { page: 1, limit: 15, total: 0, totalPages: 1 });
+  const [loading, setLoading] = useState(() => !cachedForms);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -42,8 +44,8 @@ export default function AdminFormsPage() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const fetchForms = useCallback(async (targetPage = 1) => {
-    setLoading(true);
+  const fetchForms = useCallback(async (targetPage = 1, { silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
       const res = await adminApi.getForms({
         page: targetPage,
@@ -68,7 +70,8 @@ export default function AdminFormsPage() {
   }, [search, statusFilter]);
 
   useEffect(() => {
-    fetchForms(1);
+    const isDefault = !search && statusFilter === 'all';
+    fetchForms(1, { silent: isDefault && Boolean(cachedForms) });
   }, [fetchForms]);
 
   const handleMarkAsRead = async (id) => {
@@ -236,10 +239,7 @@ export default function AdminFormsPage() {
       {/* SUBMISSIONS TABLE */}
       <div className="ks-admin-table-card">
         {loading ? (
-          <div className="ks-admin-loading-state">
-            <div className="ks-admin-spinner" />
-            <p>Loading contact form submissions...</p>
-          </div>
+          <AdminLoader message="Loading contact form submissions..." />
         ) : forms.length === 0 ? (
           <div className="ks-admin-empty-state">
             <Inbox size={48} className="ks-admin-empty-icon" />

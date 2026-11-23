@@ -13,6 +13,7 @@ export default function VerifyEmailPage() {
   // status: 'verifying' | 'success' | 'expired' | 'invalid'
   const [status, setStatus] = useState('verifying');
   const [message, setMessage] = useState('');
+  const [verifiedRole, setVerifiedRole] = useState('user');
 
   // Resend form state
   const [resendEmail, setResendEmail] = useState('');
@@ -31,6 +32,7 @@ export default function VerifyEmailPage() {
     authApi.verifyEmail(token)
       .then((data) => {
         setStatus('success');
+        if (data?.role) setVerifiedRole(data.role);
         setMessage(data.message || 'Email verified successfully! You can now sign in.');
       })
       .catch((err) => {
@@ -120,8 +122,14 @@ export default function VerifyEmailPage() {
               </p>
             </div>
 
-            <Link to="/login" className="ks-btn-primary" style={{ textDecoration: 'none' }}>
-              SIGN IN TO YOUR ACCOUNT
+            <Link
+              to={verifiedRole === 'admin' || verifiedRole === 'super_admin' ? '/admin/login' : '/login'}
+              className="ks-btn-primary"
+              style={{ textDecoration: 'none' }}
+            >
+              {verifiedRole === 'admin' || verifiedRole === 'super_admin'
+                ? 'SIGN IN TO ADMIN PANEL'
+                : 'SIGN IN TO YOUR ACCOUNT'}
             </Link>
           </div>
         ) : status === 'expired' ? (

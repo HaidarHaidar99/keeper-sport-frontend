@@ -12,15 +12,17 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
+import AdminLoader from '../../components/admin/AdminLoader';
 
 export default function AdminDashboardPage() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const cachedDash = adminApi.peekCache('/dashboard');
+  const [data, setData] = useState(() => cachedDash || null);
+  const [loading, setLoading] = useState(() => !cachedDash);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchDashboard = async (isManual = false) => {
+  const fetchDashboard = async (isManual = false, { silent = false } = {}) => {
     if (isManual) setRefreshing(true);
-    else setLoading(true);
+    else if (!silent) setLoading(true);
 
     try {
       const res = await adminApi.getDashboard();
@@ -36,7 +38,7 @@ export default function AdminDashboardPage() {
   };
 
   useEffect(() => {
-    fetchDashboard(false);
+    fetchDashboard(false, { silent: Boolean(cachedDash) });
   }, []);
 
   const stats = data?.stats || {};
@@ -173,7 +175,7 @@ export default function AdminDashboardPage() {
 
           <div className="ks-admin-panel-body">
             {loading ? (
-              <div className="ks-admin-table-loading">Loading inventory data...</div>
+              <AdminLoader message="Loading inventory data..." />
             ) : outOfStockItems.length === 0 ? (
               <div className="ks-admin-empty-notice">
                 <span>All products are currently in stock.</span>
@@ -213,7 +215,7 @@ export default function AdminDashboardPage() {
 
           <div className="ks-admin-panel-body">
             {loading ? (
-              <div className="ks-admin-table-loading">Loading recent orders...</div>
+              <AdminLoader message="Loading recent orders..." />
             ) : recentOrders.length === 0 ? (
               <div className="ks-admin-empty-notice">
                 <span>No customer orders recorded yet.</span>
@@ -258,7 +260,7 @@ export default function AdminDashboardPage() {
 
           <div className="ks-admin-panel-body">
             {loading ? (
-              <div className="ks-admin-table-loading">Loading users...</div>
+              <AdminLoader message="Loading users..." />
             ) : recentUsers.length === 0 ? (
               <div className="ks-admin-empty-notice">
                 <span>No users registered yet.</span>
@@ -296,7 +298,7 @@ export default function AdminDashboardPage() {
 
           <div className="ks-admin-panel-body">
             {loading ? (
-              <div className="ks-admin-table-loading">Loading notifications...</div>
+              <AdminLoader message="Loading notifications..." />
             ) : recentNotifications.length === 0 ? (
               <div className="ks-admin-empty-notice">
                 <span>No notifications available.</span>

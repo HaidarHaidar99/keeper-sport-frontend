@@ -19,11 +19,13 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
+import AdminLoader from '../../components/admin/AdminLoader';
 
 export default function AdminNotificationsPage() {
-  const [notifications, setNotifications] = useState([]);
-  const [stats, setStats] = useState({ total: 0, unread: 0, read: 0 });
-  const [loading, setLoading] = useState(true);
+  const cachedNotifs = adminApi.peekCache('/notifications');
+  const [notifications, setNotifications] = useState(() => cachedNotifs?.notifications || []);
+  const [stats, setStats] = useState(() => cachedNotifs?.stats || { total: 0, unread: 0, read: 0 });
+  const [loading, setLoading] = useState(() => !cachedNotifs);
 
   // Filter & Search states
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'broadcast' | 'order' | 'contact' | 'unread'
@@ -45,8 +47,8 @@ export default function AdminNotificationsPage() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const loadNotifications = async () => {
-    setLoading(true);
+  const loadNotifications = async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
       const res = await adminApi.getNotifications();
       if (res && res.success) {
@@ -61,7 +63,7 @@ export default function AdminNotificationsPage() {
   };
 
   useEffect(() => {
-    loadNotifications();
+    loadNotifications({ silent: Boolean(cachedNotifs) });
   }, []);
 
   const handleMarkRead = async (id) => {
@@ -359,10 +361,7 @@ export default function AdminNotificationsPage() {
       <section className="ks-admin-panel" aria-label="Notifications List">
         <div className="ks-admin-panel-body">
           {loading ? (
-            <div className="ks-admin-table-loading" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '40px 0' }}>
-              <Loader2 size={20} className="ks-spin-icon" style={{ color: 'var(--ks-accent-red)' }} />
-              <span>Loading notifications...</span>
-            </div>
+            <AdminLoader message="Loading notifications..." />
           ) : filteredNotifications.length === 0 ? (
             <div className="ks-admin-empty-notice" style={{ padding: '48px 20px', textAlign: 'center' }}>
               <Bell size={32} style={{ opacity: 0.3, marginBottom: '12px', color: 'var(--ks-text-muted)' }} />

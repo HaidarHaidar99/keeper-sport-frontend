@@ -34,8 +34,10 @@ export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [unreadForms, setUnreadForms] = useState(0);
+  const cachedNotifs = adminApi.peekCache('/notifications');
+  const cachedForms = adminApi.peekCache('/forms?limit=1');
+  const [unreadNotifications, setUnreadNotifications] = useState(() => cachedNotifs?.stats?.unread || 0);
+  const [unreadForms, setUnreadForms] = useState(() => cachedForms?.stats?.unread || 0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);

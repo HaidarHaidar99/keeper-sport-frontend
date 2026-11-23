@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import ConfirmModal from '../../components/admin/ConfirmModal';
+import AdminLoader from '../../components/admin/AdminLoader';
 
 // Preset color options for quick admin picking
 const PRESET_COLORS = [
@@ -40,13 +41,17 @@ const PRESET_COLORS = [
 const QUICK_SIZES = ['39', '40', '41', '42', '43', '44', '45', '7', '8', '8.5', '9', '9.5', '10', '10.5', '11', 'S', 'M', 'L', 'XL', 'XXL'];
 
 export default function AdminProductsPage() {
-  const [stats, setStats] = useState({ total: 0, active: 0, outOfStock: 0, lowStock: 0, featured: 0, lowStockThreshold: 5 });
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const cachedStats = adminApi.peekCache('/products/overview');
+  const cachedProds = adminApi.peekCache('/products?page=1&limit=15');
+  const cachedCats = adminApi.peekCache('/categories');
+
+  const [stats, setStats] = useState(() => cachedStats?.stats || { total: 0, active: 0, outOfStock: 0, lowStock: 0, featured: 0, lowStockThreshold: 5 });
+  const [products, setProducts] = useState(() => cachedProds?.products || []);
+  const [categories, setCategories] = useState(() => cachedCats?.categories || []);
+  const [totalCount, setTotalCount] = useState(() => cachedProds?.total || 0);
+  const [page, setPage] = useState(() => cachedProds?.page || 1);
+  const [totalPages, setTotalPages] = useState(() => cachedProds?.totalPages || 1);
+  const [loading, setLoading] = useState(() => !cachedProds);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -125,8 +130,8 @@ export default function AdminProductsPage() {
   };
 
   // Fetch Products
-  const fetchProducts = useCallback(async (targetPage = 1) => {
-    setLoading(true);
+  const fetchProducts = useCallback(async (targetPage = 1, { silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
       const res = await adminApi.getProducts({
         page: targetPage,
@@ -150,8 +155,9 @@ export default function AdminProductsPage() {
   }, [searchTerm, selectedCategory, selectedStatus]);
 
   useEffect(() => {
+    const isDefault = !searchTerm && !selectedCategory && selectedStatus === 'all';
     fetchStats();
-    fetchProducts(1);
+    fetchProducts(1, { silent: isDefault && Boolean(cachedProds) });
   }, [fetchProducts]);
 
   const handleSearchSubmit = (e) => {
@@ -685,7 +691,7 @@ export default function AdminProductsPage() {
       <section className="ks-admin-panel" aria-label="Products Table">
         <div className="ks-admin-panel-body" style={{ padding: 0 }}>
           {loading ? (
-            <div className="ks-admin-table-loading">Loading products catalog...</div>
+            <AdminLoader message="Loading products catalog..." />
           ) : products.length === 0 ? (
             <div className="ks-admin-empty-notice" style={{ padding: '48px 24px' }}>
               <span>No products match the selected criteria. Click "New Product" to add your first item.</span>

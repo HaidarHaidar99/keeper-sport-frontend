@@ -1,19 +1,15 @@
 import React from 'react';
 import { Navigate, useLocation, Link, Outlet } from 'react-router-dom';
-import { ShieldAlert, ArrowLeft, Loader2 } from 'lucide-react';
+import { ShieldAlert, ArrowLeft } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import AdminLoader from './AdminLoader';
 
 export default function AdminGuard({ children }) {
   const { adminUser, adminLoading } = useAdminAuth();
   const location = useLocation();
 
   if (adminLoading) {
-    return (
-      <div className="ks-admin-loading-screen" aria-live="polite">
-        <Loader2 size={32} className="ks-spin-icon" style={{ color: 'var(--ks-accent-red)' }} />
-        <span>Verifying Administrator Privileges...</span>
-      </div>
-    );
+    return <AdminLoader fullScreen message="Verifying Administrator Privileges..." />;
   }
 
   // If user is unauthenticated in admin context, redirect to dedicated admin login portal

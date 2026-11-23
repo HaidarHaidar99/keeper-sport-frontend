@@ -15,12 +15,22 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import ConfirmModal from '../../components/admin/ConfirmModal';
+import AdminLoader from '../../components/admin/AdminLoader';
 
 export default function AdminHomePage() {
-  const [stats, setStats] = useState({ totalSlides: 0, activeSlides: 0, totalOffers: 0, activeOffers: 0 });
-  const [slides, setSlides] = useState([]);
-  const [offers, setOffers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const cachedOverview = adminApi.peekCache('/home/overview');
+  const cachedSlides = adminApi.peekCache('/hero-slides');
+  const cachedOffers = adminApi.peekCache('/offer-bars');
+  const cachedStory = adminApi.peekCache('/homepage-story');
+  const cachedStoreOffers = adminApi.peekCache('/offers');
+  const cachedCats = adminApi.peekCache('/categories');
+  const cachedProds = adminApi.peekCache('/products?limit=200');
+  const hasHomeCache = Boolean(cachedSlides || cachedOffers || cachedOverview);
+
+  const [stats, setStats] = useState(() => cachedOverview?.stats || { totalSlides: 0, activeSlides: 0, totalOffers: 0, activeOffers: 0 });
+  const [slides, setSlides] = useState(() => cachedSlides?.slides || []);
+  const [offers, setOffers] = useState(() => cachedOffers?.offers || []);
+  const [loading, setLoading] = useState(() => !hasHomeCache);
 
   // Hero Slide Modal State
   const [slideModalOpen, setSlideModalOpen] = useState(false);
@@ -108,8 +118,8 @@ export default function AdminHomePage() {
   };
 
   // Load All Home Data
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
       const [overviewRes, slidesRes, offersRes, storyRes, storeOffersRes, catRes, prodRes] = await Promise.all([
         adminApi.getHomeOverview(),
@@ -136,7 +146,11 @@ export default function AdminHomePage() {
   };
 
   useEffect(() => {
-    loadData();
+    if (cachedStory?.story) setStoryData(cachedStory.story);
+    if (Array.isArray(cachedStoreOffers?.offers)) setStoreOffers(cachedStoreOffers.offers);
+    if (Array.isArray(cachedCats?.categories)) setAvailableCategories(cachedCats.categories);
+    if (Array.isArray(cachedProds?.products)) setAvailableProducts(cachedProds.products);
+    loadData({ silent: hasHomeCache });
   }, []);
 
   // Handle Hero Slide File Upload
@@ -532,7 +546,7 @@ export default function AdminHomePage() {
 
         <div className="ks-admin-panel-body">
           {loading ? (
-            <div className="ks-admin-table-loading">Loading hero slides...</div>
+            <AdminLoader message="Loading hero slides..." />
           ) : slides.length === 0 ? (
             <div className="ks-admin-empty-notice">
               <span>No hero slides created yet. Add your first slide to display on the storefront.</span>
@@ -644,7 +658,7 @@ export default function AdminHomePage() {
 
         <div className="ks-admin-panel-body">
           {loading ? (
-            <div className="ks-admin-table-loading">Loading offers...</div>
+            <AdminLoader message="Loading offers..." />
           ) : offers.length === 0 ? (
             <div className="ks-admin-empty-notice">
               <span>No top announcements configured yet.</span>

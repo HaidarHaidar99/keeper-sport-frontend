@@ -18,14 +18,16 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import ConfirmModal from '../../components/admin/ConfirmModal';
+import AdminLoader from '../../components/admin/AdminLoader';
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState([]);
-  const [stats, setStats] = useState({ total: 0, pending: 0, preparing: 0, onDelivery: 0, delivered: 0, cancelled: 0 });
-  const [totalCount, setTotalCount] = useState(0);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const cachedOrders = adminApi.peekCache('/orders?page=1&limit=15');
+  const [orders, setOrders] = useState(() => cachedOrders?.orders || []);
+  const [stats, setStats] = useState(() => cachedOrders?.stats || { total: 0, pending: 0, preparing: 0, onDelivery: 0, delivered: 0, cancelled: 0 });
+  const [totalCount, setTotalCount] = useState(() => cachedOrders?.total || 0);
+  const [page, setPage] = useState(() => cachedOrders?.page || 1);
+  const [totalPages, setTotalPages] = useState(() => cachedOrders?.totalPages || 1);
+  const [loading, setLoading] = useState(() => !cachedOrders);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,8 +56,8 @@ export default function AdminOrdersPage() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const fetchOrders = useCallback(async (targetPage = 1) => {
-    setLoading(true);
+  const fetchOrders = useCallback(async (targetPage = 1, { silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
       const res = await adminApi.getOrders({
         page: targetPage,
@@ -79,7 +81,8 @@ export default function AdminOrdersPage() {
   }, [searchTerm, selectedStatus]);
 
   useEffect(() => {
-    fetchOrders(1);
+    const isDefault = !searchTerm && !selectedStatus;
+    fetchOrders(1, { silent: isDefault && Boolean(cachedOrders) });
   }, [fetchOrders]);
 
   const handleSearchSubmit = (e) => {
@@ -281,7 +284,7 @@ export default function AdminOrdersPage() {
       <section className="ks-admin-panel" aria-label="Orders Table">
         <div className="ks-admin-panel-body" style={{ padding: 0 }}>
           {loading ? (
-            <div className="ks-admin-table-loading">Loading orders...</div>
+            <AdminLoader message="Loading orders..." />
           ) : orders.length === 0 ? (
             <div className="ks-admin-empty-notice" style={{ padding: '48px 24px' }}>
               <span>No orders found matching the selected criteria.</span>

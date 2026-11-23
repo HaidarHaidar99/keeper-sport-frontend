@@ -3,6 +3,7 @@ import { Tags, Plus, Edit2, Trash2, Check, X, Upload, Image as ImageIcon, Loader
 import { adminApi } from '../../api/adminApi';
 import { useSite } from '../../context/SiteContext';
 import ConfirmModal from '../../components/admin/ConfirmModal';
+import AdminLoader from '../../components/admin/AdminLoader';
 
 // Helper to compress large camera/phone images (> 1.5MB) before upload to avoid Vercel 4.5MB payload limit
 async function compressImageIfNeeded(file) {
@@ -60,9 +61,10 @@ async function compressImageIfNeeded(file) {
 
 export default function AdminCategoriesPage() {
   const { refreshCategories } = useSite();
-  const [categories, setCategories] = useState([]);
-  const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0 });
-  const [loading, setLoading] = useState(true);
+  const cachedCats = adminApi.peekCache('/categories');
+  const [categories, setCategories] = useState(() => cachedCats?.categories || []);
+  const [stats, setStats] = useState(() => cachedCats?.stats || { total: 0, active: 0, inactive: 0 });
+  const [loading, setLoading] = useState(() => !cachedCats);
 
   // Modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -85,8 +87,8 @@ export default function AdminCategoriesPage() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const loadCategories = async () => {
-    setLoading(true);
+  const loadCategories = async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
       const res = await adminApi.getCategories();
       if (res && res.success) {
@@ -101,7 +103,7 @@ export default function AdminCategoriesPage() {
   };
 
   useEffect(() => {
-    loadCategories();
+    loadCategories({ silent: Boolean(cachedCats) });
   }, []);
 
   const openModal = (cat = null) => {
@@ -284,7 +286,7 @@ export default function AdminCategoriesPage() {
       <section className="ks-admin-panel" aria-label="Categories Table">
         <div className="ks-admin-panel-body" style={{ padding: 0 }}>
           {loading ? (
-            <div className="ks-admin-table-loading">Loading categories...</div>
+            <AdminLoader message="Loading categories..." />
           ) : categories.length === 0 ? (
             <div className="ks-admin-empty-notice" style={{ padding: '48px 24px' }}>
               <span>No categories created yet. Click "New Category" to create your first one.</span>

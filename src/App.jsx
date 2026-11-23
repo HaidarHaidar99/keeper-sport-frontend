@@ -68,20 +68,20 @@ const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
 
-// Admin Components & Pages (Code-split into isolated chunks)
-const AdminGuard = lazy(() => import('./components/admin/AdminGuard'));
-const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
-const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage'));
-const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'));
-const AdminHomePage = lazy(() => import('./pages/admin/AdminHomePage'));
-const AdminProductsPage = lazy(() => import('./pages/admin/AdminProductsPage'));
-const AdminCategoriesPage = lazy(() => import('./pages/admin/AdminCategoriesPage'));
-const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'));
-const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'));
-const AdminReviewsPage = lazy(() => import('./pages/admin/AdminReviewsPage'));
-const AdminNotificationsPage = lazy(() => import('./pages/admin/AdminNotificationsPage'));
-const AdminFormsPage = lazy(() => import('./pages/admin/AdminFormsPage'));
-const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'));
+// Admin Components & Pages (Directly bundled for instant 0ms admin route transitions)
+import AdminGuard from './components/admin/AdminGuard';
+import AdminLayout from './components/admin/AdminLayout';
+import AdminLoginPage from './pages/admin/AdminLoginPage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminHomePage from './pages/admin/AdminHomePage';
+import AdminProductsPage from './pages/admin/AdminProductsPage';
+import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
+import AdminOrdersPage from './pages/admin/AdminOrdersPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminReviewsPage from './pages/admin/AdminReviewsPage';
+import AdminNotificationsPage from './pages/admin/AdminNotificationsPage';
+import AdminFormsPage from './pages/admin/AdminFormsPage';
+import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 
 const PageFallback = () => (
   <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

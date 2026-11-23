@@ -10730,3 +10730,365 @@ video.ks-details-img {
 .ks-nav-theme-toggle:hover {
   transform: scale(1.08);
 }
+
+
+/* =============================================================================
+   KEEPER SPORTS — ADMIN PANEL TYPOGRAPHY, BORDER SYSTEM & CENTERED LOADERS
+   Fonts: Plus Jakarta Sans (UI/Body) + Space Grotesk (Display/Metrics) + JetBrains Mono (Badges/Meta)
+   Borders: Crisp 1.5px Architectural Framing | 14px Panels & Cards | 10px Controls & Rows
+   ============================================================================= */
+
+.ks-admin-root,
+.ks-admin-loading-screen,
+.ks-admin-unauthorized-container,
+.ks-admin-auth-card {
+  --ks-admin-font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --ks-admin-font-display: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+  --ks-admin-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ks-admin-border: rgba(255, 255, 255, 0.11);
+  --ks-admin-border-strong: rgba(255, 255, 255, 0.19);
+  --ks-admin-border-accent: rgba(225, 6, 0, 0.45);
+  --ks-admin-rim: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --ks-admin-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
+  font-family: var(--ks-admin-font-body);
+}
+
+[data-theme="light"] .ks-admin-root,
+[data-theme="light"] .ks-admin-loading-screen,
+[data-theme="light"] .ks-admin-unauthorized-container,
+[data-theme="light"] .ks-admin-auth-card {
+  --ks-admin-border: rgba(15, 23, 42, 0.13);
+  --ks-admin-border-strong: rgba(15, 23, 42, 0.22);
+  --ks-admin-border-accent: rgba(225, 6, 0, 0.4);
+  --ks-admin-rim: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --ks-admin-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+}
+
+/* Typography Hierarchy inside Admin Panel */
+.ks-admin-root h1,
+.ks-admin-root h2,
+.ks-admin-root h3,
+.ks-admin-root h4,
+.ks-admin-root .ks-admin-page-title,
+.ks-admin-root .ks-admin-panel-title,
+.ks-admin-root .ks-admin-brand-title,
+.ks-admin-root .ks-admin-modal-title,
+.ks-admin-root .ks-stat-card-value,
+.ks-admin-auth-card .ks-auth-title {
+  font-family: var(--ks-admin-font-display) !important;
+  letter-spacing: -0.025em;
+}
+
+.ks-admin-root button,
+.ks-admin-root input,
+.ks-admin-root select,
+.ks-admin-root textarea,
+.ks-admin-root table,
+.ks-admin-root p,
+.ks-admin-root span,
+.ks-admin-root a,
+.ks-admin-root label {
+  font-family: var(--ks-admin-font-body);
+}
+
+.ks-admin-root .ks-admin-header-eyebrow,
+.ks-admin-root .ks-admin-brand-badge,
+.ks-admin-root .ks-admin-role-badge,
+.ks-admin-root .ks-stat-card-label,
+.ks-admin-root .ks-role-pill,
+.ks-admin-root .ks-verify-pill,
+.ks-admin-root .ks-provider-pill,
+.ks-admin-root .ks-stock-pill,
+.ks-admin-root .ks-status-badge,
+.ks-admin-root .ks-admin-nav-badge,
+.ks-admin-root .ks-admin-topbar-badge,
+.ks-admin-root .ks-date-meta,
+.ks-admin-auth-card .ks-admin-auth-badge {
+  font-family: var(--ks-admin-font-mono) !important;
+  letter-spacing: 0.06em;
+}
+
+/* Architectural Border System across ALL Admin Content */
+.ks-admin-root .ks-admin-sidebar {
+  border-right: 1.5px solid var(--ks-admin-border);
+}
+
+.ks-admin-root .ks-admin-sidebar-header {
+  border-bottom: 1.5px solid var(--ks-admin-border);
+}
+
+.ks-admin-root .ks-admin-sidebar-footer {
+  border-top: 1.5px solid var(--ks-admin-border);
+}
+
+.ks-admin-root .ks-admin-topbar {
+  border-bottom: 1.5px solid var(--ks-admin-border);
+}
+
+.ks-admin-root .ks-admin-header-row {
+  border-bottom: 1.5px dashed var(--ks-admin-border-strong);
+  padding-bottom: 18px;
+}
+
+.ks-admin-root .ks-admin-nav-link {
+  border-radius: 10px !important;
+  border: 1px solid transparent;
+  border-left: 3px solid transparent;
+}
+
+.ks-admin-root .ks-admin-nav-link:hover {
+  border-color: var(--ks-admin-border);
+  border-left-color: rgba(225, 6, 0, 0.45);
+}
+
+.ks-admin-root .ks-admin-nav-link.is-active {
+  border-color: rgba(225, 6, 0, 0.25);
+  border-left-color: var(--ks-accent-red);
+}
+
+/* Panels, Cards & Modals: unified 14px architectural borders */
+.ks-admin-root .ks-admin-panel,
+.ks-admin-root .ks-admin-table-card,
+.ks-admin-root .ks-admin-modal-box,
+.ks-admin-root .ks-admin-account-dropdown,
+.ks-admin-auth-card {
+  border: 1.5px solid var(--ks-admin-border) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--ks-admin-shadow), var(--ks-admin-rim) !important;
+}
+
+.ks-admin-root .ks-admin-panel-header,
+.ks-admin-root .ks-admin-modal-header {
+  border-bottom: 1.5px solid var(--ks-admin-border);
+}
+
+.ks-admin-root .ks-admin-modal-footer {
+  border-top: 1.5px solid var(--ks-admin-border);
+}
+
+/* Stat Cards: crisp 14px framed cards with left accent bar */
+.ks-admin-root .ks-admin-stat-card {
+  border: 1.5px solid var(--ks-admin-border) !important;
+  border-left: 3.5px solid var(--ks-admin-border-strong) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--ks-admin-shadow), var(--ks-admin-rim);
+  transition: transform 0.16s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ks-admin-root .ks-admin-stat-card:hover {
+  border-color: var(--ks-admin-border-strong) !important;
+  border-left-color: var(--ks-accent-red) !important;
+  transform: translateY(-1px);
+}
+
+.ks-admin-root .ks-admin-stat-card.is-warning {
+  border-left-color: var(--ks-accent-red) !important;
+}
+
+.ks-admin-root .ks-stat-card-icon-wrap {
+  border-radius: 10px !important;
+  border: 1.5px solid var(--ks-admin-border) !important;
+}
+
+/* Mini list rows, table frames & pills */
+.ks-admin-root .ks-mini-item-row {
+  border-radius: 10px !important;
+  border: 1.5px solid var(--ks-admin-border) !important;
+  transition: border-color 0.15s ease;
+}
+
+.ks-admin-root .ks-mini-item-row:hover {
+  border-color: var(--ks-admin-border-strong) !important;
+}
+
+.ks-admin-root .ks-admin-table th {
+  font-family: var(--ks-admin-font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  border-bottom: 1.5px solid var(--ks-admin-border-strong);
+}
+
+.ks-admin-root .ks-admin-table td {
+  border-bottom: 1px solid var(--ks-admin-border);
+}
+
+.ks-admin-root .ks-role-pill,
+.ks-admin-root .ks-verify-pill,
+.ks-admin-root .ks-provider-pill,
+.ks-admin-root .ks-stock-pill,
+.ks-admin-root .ks-status-badge {
+  border-radius: 8px !important;
+  border-width: 1.5px;
+}
+
+/* Structured Admin Inputs, Selects, Textareas, Search Bars & Buttons (10px crisp corners) */
+.ks-admin-root input[type="text"],
+.ks-admin-root input[type="email"],
+.ks-admin-root input[type="password"],
+.ks-admin-root input[type="search"],
+.ks-admin-root input[type="tel"],
+.ks-admin-root input[type="number"],
+.ks-admin-root input[type="url"],
+.ks-admin-root input[type="datetime-local"],
+.ks-admin-root select,
+.ks-admin-root textarea,
+.ks-admin-root .ks-input,
+.ks-admin-root .ks-admin-select,
+.ks-admin-root .ks-role-select,
+.ks-admin-root .ks-shop-search-form,
+.ks-admin-root .ks-shop-search-input,
+.ks-admin-auth-card .ks-input {
+  border-radius: 10px !important;
+  border: 1.5px solid var(--ks-admin-border-strong) !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ks-admin-root .ks-shop-search-form .ks-shop-search-input {
+  border: none !important;
+}
+
+.ks-admin-root input:focus,
+.ks-admin-root select:focus,
+.ks-admin-root textarea:focus,
+.ks-admin-root .ks-input:focus,
+.ks-admin-root .ks-admin-select:focus,
+.ks-admin-root .ks-role-select:focus {
+  border-color: var(--ks-accent-red) !important;
+  box-shadow: 0 0 0 3px rgba(225, 6, 0, 0.14) !important;
+  outline: none;
+}
+
+.ks-admin-root .ks-admin-btn-primary,
+.ks-admin-root .ks-admin-btn-secondary,
+.ks-admin-root .ks-admin-topbar-store-link,
+.ks-admin-root .ks-admin-topbar-action-btn,
+.ks-admin-root .ks-admin-account-btn,
+.ks-admin-root .ks-admin-collapse-btn,
+.ks-admin-root .ks-table-page-btn,
+.ks-admin-root .ks-table-icon-btn {
+  border-radius: 10px !important;
+  border-width: 1.5px;
+}
+
+.ks-admin-root .ks-admin-btn-primary {
+  border: 1.5px solid var(--ks-accent-red);
+  box-shadow: 0 4px 14px rgba(225, 6, 0, 0.22);
+}
+
+.ks-admin-root .ks-admin-btn-secondary {
+  border: 1.5px solid var(--ks-admin-border-strong);
+}
+
+/* Info Callout & Mini Resend Verification Button (Super Admin Users UI) */
+.ks-admin-info-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(225, 6, 0, 0.3);
+  background: rgba(225, 6, 0, 0.06);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--ks-text-title);
+}
+
+.ks-admin-mini-resend-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 8px;
+  border: 1.5px solid var(--ks-admin-border-strong);
+  background: transparent;
+  color: var(--ks-text-title);
+  font-family: var(--ks-admin-font-mono) !important;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+}
+
+.ks-admin-mini-resend-btn:hover:not(:disabled) {
+  border-color: var(--ks-accent-red);
+  color: var(--ks-accent-red);
+  background: rgba(225, 6, 0, 0.06);
+}
+
+.ks-admin-mini-resend-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* =============================================================================
+   CENTERED ADMIN LOADING UI (Dead-Center Horizontally & Vertically — Never Top)
+   ============================================================================= */
+
+.ks-admin-loading-screen {
+  position: fixed;
+  inset: 0;
+  min-height: 100vh;
+  width: 100vw;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  background: var(--ks-bg-canvas);
+}
+
+.ks-admin-center-loader,
+.ks-admin-root .ks-admin-table-loading,
+.ks-admin-root .ks-admin-loading-state,
+.ks-admin-root .ks-admin-content-loading {
+  width: 100%;
+  min-height: 36vh;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+  padding: 48px 24px !important;
+  box-sizing: border-box;
+}
+
+.ks-admin-dashboard-split .ks-admin-center-loader,
+.ks-admin-dashboard-split .ks-admin-table-loading {
+  min-height: 220px;
+}
+
+.ks-admin-loader-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 22px 32px;
+  border-radius: 14px;
+  border: 1.5px solid var(--ks-admin-border);
+  background: var(--ks-bg-card);
+  box-shadow: var(--ks-admin-shadow), var(--ks-admin-rim);
+}
+
+.ks-admin-loader-ring {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(225, 6, 0, 0.3);
+  background: rgba(225, 6, 0, 0.08);
+  color: var(--ks-accent-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ks-admin-loader-text {
+  font-family: var(--ks-admin-font-body);
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--ks-text-subtitle);
+  letter-spacing: 0.01em;
+}

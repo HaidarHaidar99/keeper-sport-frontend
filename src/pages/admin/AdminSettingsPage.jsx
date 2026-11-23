@@ -2,31 +2,45 @@ import React, { useState, useEffect } from 'react';
 import { Settings, Upload, Save, Loader2, MapPin, Share2, Globe, Image as ImageIcon } from 'lucide-react';
 import { adminApi } from '../../api/adminApi';
 import { useSite } from '../../context/SiteContext';
+import AdminLoader from '../../components/admin/AdminLoader';
+
+function buildSettingsForm(settingsRes, locRes, socRes) {
+  const s = settingsRes?.settings || {};
+  const loc = locRes?.location || {};
+  const soc = socRes?.social || {};
+  return {
+    site_name: s.site_name || 'Keeper Sports',
+    logo_path: s.logo_path || '',
+    logo_light_path: s.logo_light_path || s.favicon_path || '',
+    phone_number: s.phone_number || '',
+    email: s.email || '',
+    whatsapp_number: s.whatsapp_number || '',
+    instagram_url: soc.instagram?.url || s.instagram_url || '',
+    facebook_url: soc.facebook?.url || s.facebook_url || '',
+    tiktok_url: soc.tiktok?.url || s.tiktok_url || '',
+    x_url: soc.x?.url || s.x_url || '',
+    youtube_url: soc.youtube?.url || s.youtube_url || '',
+    location_name: loc.store_name || s.location_name || '',
+    location_address: loc.full_address || s.full_address || s.location_name || '',
+    location_url: loc.google_maps_url || s.location_url || '',
+    location_description: loc.description || '',
+    location_is_visible: loc.is_visible !== undefined ? loc.is_visible : true,
+    about_us: s.about_us || '',
+    delivery_fee: s.delivery_fee || 0
+  };
+}
 
 export default function AdminSettingsPage() {
   const { refreshSettings } = useSite();
-  const [formData, setFormData] = useState({
-    site_name: 'Keeper Sports',
-    logo_path: '',
-    logo_light_path: '',
-    phone_number: '',
-    email: '',
-    whatsapp_number: '',
-    instagram_url: '',
-    facebook_url: '',
-    tiktok_url: '',
-    x_url: '',
-    youtube_url: '',
-    location_name: '',
-    location_address: '',
-    location_url: '',
-    location_description: '',
-    location_is_visible: true,
-    about_us: '',
-    delivery_fee: 0
-  });
+  const cachedSettings = adminApi.peekCache('/settings');
+  const cachedLocation = adminApi.peekCache('/location');
+  const cachedSocial = adminApi.peekCache('/social-media');
 
-  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState(() =>
+    buildSettingsForm(cachedSettings, cachedLocation, cachedSocial)
+  );
+
+  const [loading, setLoading] = useState(() => !cachedSettings);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingLightLogo, setUploadingLightLogo] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -205,9 +219,8 @@ export default function AdminSettingsPage() {
 
   if (loading) {
     return (
-      <div className="ks-admin-content-loading">
-        <Loader2 size={24} className="ks-spin-icon" />
-        <span>Loading store settings...</span>
+      <div className="ks-admin-page-container">
+        <AdminLoader message="Loading store settings..." />
       </div>
     );
   }

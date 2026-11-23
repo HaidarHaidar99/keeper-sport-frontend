@@ -14,7 +14,53 @@ const getApiBase = () => {
 
 const API_BASE = `${getApiBase()}/admin`;
 
+// Fast stale-while-revalidate cache so admin pages open immediately with 0ms wait time
+const ADMIN_CACHE_PREFIX = 'ks_adm_cache:';
+const memoryCache = new Map();
+
+function normalizeCacheKey(endpointPath) {
+  return String(endpointPath || '').replace(API_BASE, '') || '/';
+}
+
+function readAdminCache(endpointPath) {
+  const key = normalizeCacheKey(endpointPath);
+  if (memoryCache.has(key)) {
+    return memoryCache.get(key);
+  }
+  try {
+    const raw = sessionStorage.getItem(`${ADMIN_CACHE_PREFIX}${key}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      memoryCache.set(key, parsed);
+      return parsed;
+    }
+  } catch {}
+  return null;
+}
+
+function writeAdminCache(endpointPath, data) {
+  if (!data || !data.success) return;
+  const key = normalizeCacheKey(endpointPath);
+  memoryCache.set(key, data);
+  try {
+    sessionStorage.setItem(`${ADMIN_CACHE_PREFIX}${key}`, JSON.stringify(data));
+  } catch {}
+}
+
+function clearAdminCache() {
+  memoryCache.clear();
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < sessionStorage.length; i += 1) {
+      const k = sessionStorage.key(i);
+      if (k && k.startsWith(ADMIN_CACHE_PREFIX)) keysToRemove.push(k);
+    }
+    keysToRemove.forEach((k) => sessionStorage.removeItem(k));
+  } catch {}
+}
+
 async function adminRequest(url, options = {}) {
+  const method = (options.method || 'GET').toUpperCase();
   const isFormData = options.body instanceof FormData;
   const adminToken = localStorage.getItem('ks_admin_token');
   const authHeaders = adminToken ? { Authorization: `Bearer ${adminToken}` } : {};
@@ -69,6 +115,12 @@ async function adminRequest(url, options = {}) {
       };
     }
 
+    if (method === 'GET' && data?.success) {
+      writeAdminCache(url, data);
+    } else if (method !== 'GET' && data?.success) {
+      clearAdminCache();
+    }
+
     return data;
   } catch (err) {
     console.warn(`Admin API request to ${url} failed:`, err.message);
@@ -83,6 +135,13 @@ async function adminRequest(url, options = {}) {
 }
 
 export const adminApi = {
+  peekCache(endpointPath) {
+    return readAdminCache(endpointPath);
+  },
+
+  clearCache() {
+    clearAdminCache();
+  },
   // 1. Dashboard
   async getDashboard() {
     return adminRequest(`${API_BASE}/dashboard`);
@@ -331,6 +390,19 @@ export const adminApi = {
     return adminRequest(`${API_BASE}/users/${id}/role`, {
       method: 'PATCH',
       body: JSON.stringify({ role })
+    });
+  },
+
+  async createAdmin(data) {
+    return adminRequest(`${API_BASE}/users/create-admin`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async resendAdminVerification(id) {
+    return adminRequest(`${API_BASE}/users/${id}/resend-verification`, {
+      method: 'POST'
     });
   },
 
